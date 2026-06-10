@@ -20,19 +20,13 @@ class RegisterForm(UserCreationForm):
         required=False,
         label='Year of Study',
     )
-    role = forms.ChoiceField(
-        choices=User.Role.choices,
-        initial='student',
-        required=True,
-        label='I am joining as',
-    )
 
     class Meta:
         model  = User
         fields = [
             'username', 'first_name', 'email',
             'password1', 'password2',
-            'university', 'department', 'student_id', 'year_of_study', 'role',
+            'university', 'department', 'student_id', 'year_of_study',
         ]
 
     def save(self, commit=True):
@@ -43,7 +37,7 @@ class RegisterForm(UserCreationForm):
         user.department    = self.cleaned_data.get('department', '')
         user.student_id    = self.cleaned_data.get('student_id', '')
         user.year_of_study = self.cleaned_data.get('year_of_study', '')
-        user.role          = self.cleaned_data.get('role', 'student')
+        user.role          = 'student'  # Default all new registrations to student
         if commit:
             user.save()
         return user
