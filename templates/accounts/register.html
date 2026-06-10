@@ -41,17 +41,6 @@
       <form method="POST" class="ep-form">
         {% csrf_token %}
 
-        <div class="ep-field">
-          <label class="ep-field__label">I am a</label>
-          <div class="ep-role-toggle ep-role-toggle--3">
-            <input type="radio" name="role" id="role_student" value="student" checked />
-            <label for="role_student">🎓 Student</label>
-            <input type="radio" name="role" id="role_society" value="society" />
-            <label for="role_society">🤝 Society</label>
-            <input type="radio" name="role" id="role_staff" value="staff" />
-            <label for="role_staff">👩‍🏫 Staff</label>
-          </div>
-        </div>
 
         <div class="ep-field">
           <label class="ep-field__label">Full Name</label>
@@ -196,18 +185,4 @@
     </div>
   </div>
 </div>
-
-{% endblock %}
-
-{% block extra_js %}
-<script>
-var roleInputs    = document.querySelectorAll('input[name="role"]');
-var studentFields = document.getElementById('studentFields');
-function toggleStudentFields() {
-  var selected = document.querySelector('input[name="role"]:checked');
-  studentFields.style.display = (selected && selected.value === 'student') ? '' : 'none';
-}
-roleInputs.forEach(function(r) { r.addEventListener('change', toggleStudentFields); });
-toggleStudentFields();
-</script>
 {% endblock %}
