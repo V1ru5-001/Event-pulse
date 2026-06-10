@@ -1540,3 +1540,30 @@ button { cursor: pointer; border: none; background: none; }
   padding: 0.4rem 0.9rem;
   border-radius: 50px;
 }
+
+/* ── CUSTOM SCROLLBAR ─────────────────────── */
+
+/* Chrome, Edge, Safari */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--primary), var(--secondary));
+  border-radius: 100px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #6B86F3, #9B59F5);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--secondary) transparent;
+}
