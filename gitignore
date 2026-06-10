@@ -1,0 +1,76 @@
+# ===========================
+# EventPulse .gitignore
+# ===========================
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+
+# --- Virtual Environment ---
+venv/
+env/
+ENV/
+.venv/
+.env/
+
+# --- Environment Variables (NEVER push this) ---
+.env
+.env.local
+.env.production
+*.env
+
+# --- Django ---
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+
+# --- Static files (collected) ---
+staticfiles/
+static_root/
+
+# --- IDE & Editors ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# --- Testing ---
+.coverage
+htmlcov/
+.pytest_cache/
+coverage.xml
+
+# --- OS ---
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# --- Node (if any frontend tooling) ---
+node_modules/
+npm-debug.log
+yarn-error.log

@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}EventPulse — Campus Events{% endblock %}
+
+{% block content %}
+
+<section class="ep-hero">
+  <div class="ep-hero__content">
+    <div class="ep-hero__eyebrow">
+      <svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="5" fill="#4B6BF1"/></svg>
+      {% if user.university %}{{ user.university }}{% else %}Your Campus{% endif %}
+    </div>
+    <h1 class="ep-hero__title">
+      What's Happening<br>
+      <em>On Campus Today</em>
+    </h1>
+    <p class="ep-hero__sub">Welcome back, {{ user.first_name|default:user.username }}. Here's what's on.</p>
+    <div class="ep-hero__ctas">
+      <a href="#feed" class="ep-btn ep-btn--primary">Browse Events</a>
+      <a href="{% url 'events:create' %}" class="ep-btn ep-btn--outline">+ Post Event</a>
+    </div>
+  </div>
+  <div class="ep-hero__scroll">
+    <span class="ep-icon ep-icon--chevron-down"></span>
+    Scroll
+  </div>
+</section>
+
+<div class="ep-cats">
+  <div class="ep-cats__inner">
+    <button class="ep-cat active" data-cat="all">All Events</button>
+    <button class="ep-cat" data-cat="academic"><span class="ep-cat-icon ep-cat-icon--academic"></span> Academic</button>
+    <button class="ep-cat" data-cat="social"><span class="ep-cat-icon ep-cat-icon--social"></span> Social</button>
+    <button class="ep-cat" data-cat="sports"><span class="ep-cat-icon ep-cat-icon--sports"></span> Sports</button>
+    <button class="ep-cat" data-cat="career"><span class="ep-cat-icon ep-cat-icon--career"></span> Career</button>
+    <button class="ep-cat" data-cat="arts"><span class="ep-cat-icon ep-cat-icon--arts"></span> Arts</button>
+    <button class="ep-cat" data-cat="music"><span class="ep-cat-icon ep-cat-icon--music"></span> Music</button>
+    <button class="ep-cat" data-cat="international"><span class="ep-cat-icon ep-cat-icon--international"></span> International</button>
+  </div>
+</div>
+
+<section class="ep-feed" id="feed">
+  <div class="ep-feed__header">
+    <h2 class="ep-feed__title">
+      {% if events %}{{ events|length }} Event{{ events|length|pluralize }} on Campus
+      {% else %}Campus Events{% endif %}
+    </h2>
+  </div>
+
+  <div class="ep-grid">
+    {% for event in events %}
+    <article class="ep-card" data-cat="{{ event.category.slug|default:'all' }}"
+      onclick="window.location.href='{% url "events:detail" event.slug %}'">
+      <div class="ep-card__img">
+        {% if event.cover_image %}
+          <img src="{{ event.cover_image.url }}" alt="{{ event.title }}" loading="lazy">
+        {% else %}
+          <div class="ep-card__placeholder">
+            <span class="ep-cat-icon ep-cat-icon--{{ event.category.slug|default:'academic' }}" style="width:48px;height:48px;"></span>
+          </div>
+        {% endif %}
+        <div class="ep-card__img-overlay"></div>
+        <div class="ep-card__badges">
+          <span class="ep-badge ep-badge--cat">
+            <span class="ep-cat-icon ep-cat-icon--{{ event.category.slug|default:'academic' }}"></span>
+            {% if event.category %}{{ event.category.name }}{% else %}Event{% endif %}
+          </span>
+          <div class="ep-card__badges-right">
+            {% if event.is_past %}
+              <span class="ep-badge ep-badge--ended">Ended</span>
+            {% else %}
+              {% if event.is_featured %}<span class="ep-badge ep-badge--feat">Featured</span>{% endif %}
+              {% if event.is_premium_only %}<span class="ep-badge ep-badge--prem">Premium</span>{% endif %}
+            {% endif %}
+          </div>
+        </div>
+        {% if event.is_past %}
+          <div class="ep-card__ended-overlay">
+            <span class="ep-card__ended-label">This event has ended</span>
+          </div>
+        {% endif %}
+        <div class="ep-card__view-pill">View Event →</div>
+      </div>
+      <div class="ep-card__body">
+        <h3 class="ep-card__title">{{ event.title }}</h3>
+        <div class="ep-card__meta">
+          <div class="ep-card__meta-row">
+            <span class="ep-meta-icon ep-meta-icon--calendar"></span>
+            {{ event.start_datetime|date:"D, d M Y · H:i" }}
+          </div>
+          <div class="ep-card__meta-row">
+            <span class="ep-meta-icon ep-meta-icon--pin"></span>
+            {{ event.location_name }}
+          </div>
+        </div>
+        <div class="ep-card__footer">
+          <div class="ep-card__organiser">
+            <div class="ep-card__organiser-av">{{ event.organiser.username|first|upper }}</div>
+            <span>{{ event.organiser.username }}</span>
+          </div>
+          <div class="ep-card__footer-right">
+            {% if event.capacity %}
+              <div class="ep-card__capacity">
+                <div>{{ event.approved_rsvp_count }}/{{ event.capacity }}</div>
+                <div class="ep-card__cap-bar">
+                  <div class="ep-card__cap-fill {% if event.is_full %}ep-card__cap-fill--warn{% endif %}"></div>
+                </div>
+              </div>
+            {% endif %}
+            {% if event.is_past %}
+              <span class="ep-badge ep-badge--ended">Ended</span>
+            {% elif event.is_free %}
+              <span class="ep-badge ep-badge--free">Free</span>
+            {% else %}
+              <span class="ep-badge ep-badge--paid">₦{{ event.ticket_price }}</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </article>
+    {% empty %}
+    <div class="ep-empty">
+      <div class="ep-empty-icon ep-empty-icon--events"></div>
+      <h3>No events yet</h3>
+      <p>Be the first to post a campus event.</p>
+      <a href="{% url 'events:create' %}" class="ep-btn ep-btn--primary" style="margin-top:1rem">Post an Event</a>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+{% endblock %}

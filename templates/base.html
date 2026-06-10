@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Event Pulse{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@700;800&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet" />
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'css/main.css' %}" />
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <div id="ep-preloader">
+    <canvas id="pl-stars"></canvas>
+    <div class="pl-logo">
+      <svg class="pl-icon" viewBox="0 0 56 56" fill="none">
+        <circle cx="28" cy="28" r="27" fill="rgba(75,107,241,0.12)" stroke="rgba(75,107,241,0.25)" stroke-width="1"/>
+        <path d="M28 10L31.8 20.6H43L34 27.4L37.2 38L28 31.6L18.8 38L22 27.4L13 20.6H24.2L28 10Z" fill="url(#plGrad)"/>
+        <defs>
+          <linearGradient id="plGrad" x1="13" y1="10" x2="43" y2="38" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#4B6BF1"/>
+            <stop offset="0.5" stop-color="#7C3AED"/>
+            <stop offset="1" stop-color="#EC4899"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <div class="pl-name">EventPulse</div>
+      <div class="pl-tagline">Your campus · Your events</div>
+    </div>
+    <div class="pl-bar-wrap">
+      <div class="pl-bar" id="plBar"></div>
+    </div>
+    <div class="pl-dots">
+      <div class="pl-dot"></div>
+      <div class="pl-dot"></div>
+      <div class="pl-dot"></div>
+    </div>
+    <div class="pl-status" id="plStatus">Loading events…</div>
+  </div>
+
+<canvas id="aurora-canvas"></canvas>
+{% block aurora %}{% endblock %}
+
+{% block navbar %}
+<nav class="ep-nav" id="epNav">
+  <div class="ep-nav__inner">
+
+    <a href="{% if user.is_authenticated %}{% url 'events:home' %}{% else %}{% url 'events:landing' %}{% endif %}" class="ep-nav__logo">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+        <path d="M11 2L13.5 8H20L14.5 12.5L16.5 19L11 15L5.5 19L7.5 12.5L2 8H8.5L11 2Z" fill="url(#nG)"/>
+        <defs>
+          <linearGradient id="nG" x1="2" y1="2" x2="20" y2="19" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#4B6BF1"/><stop offset="1" stop-color="#7C3AED"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <span>Event Pulse</span>
+    </a>
+
+    <div class="ep-nav__search">
+      <span class="ep-icon ep-icon--search"></span>
+      <input type="text" placeholder="Search events, societies…" />
+    </div>
+
+    <div class="ep-nav__actions">
+
+      <span class="ep-nav__location">
+        <span class="ep-icon ep-icon--pin"></span>
+        {% if user.is_authenticated and user.university %}{{ user.university|truncatechars:16 }}{% else %}Campus{% endif %}
+      </span>
+
+      {% if user.is_authenticated %}
+
+        <a href="{% url 'events:create' %}" class="ep-btn ep-btn--create ep-btn--sm">
+          <span class="ep-icon ep-icon--plus"></span>
+          Post Event
+        </a>
+
+        <div class="ep-nav__user-menu" id="userMenu">
+          <div class="ep-nav__avatar" id="avatarBtn">{{ user.username|first|upper }}</div>
+          <div class="ep-nav__dropdown" id="userDropdown">
+            <span class="ep-nav__dropdown-name">{{ user.username }}</span>
+            <a href="{% url 'accounts:profile' user.username %}" class="ep-nav__dropdown-item">
+              <span class="ep-icon ep-icon--user ep-icon--purple"></span>
+              My Profile
+            </a>
+            <a href="{% url 'events:create' %}" class="ep-nav__dropdown-item">
+              <span class="ep-icon ep-icon--plus ep-icon--purple"></span>
+              Post an Event
+            </a>
+            <a href="{% url 'accounts:logout' %}" class="ep-nav__dropdown-item ep-nav__dropdown-item--danger">
+              <span class="ep-icon ep-icon--logout ep-icon--coral"></span>
+              Sign Out
+            </a>
+            <a href="{% url 'payments:pricing' %}" class="ep-nav__dropdown-item">
+              <span class="ep-icon ep-icon--star ep-icon--purple"></span>
+              Upgrade Plan
+            </a>
+          </div>
+        </div>
+
+      {% else %}
+
+        <a href="{% url 'accounts:login' %}"    class="ep-btn ep-btn--outline ep-btn--sm">Sign In</a>
+        <a href="{% url 'accounts:register' %}" class="ep-btn ep-btn--primary ep-btn--sm">Register</a>
+
+      {% endif %}
+
+    </div>
+  </div>
+</nav>
+{% endblock %}
+
+{% if messages %}
+<div class="ep-messages">
+  {% for message in messages %}
+  <div class="ep-message ep-message--{{ message.tags }}">
+    {{ message }}
+    <button onclick="this.parentElement.remove()" class="ep-message__close">✕</button>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% block content %}{% endblock %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+{% load static %}
+<script src="{% static 'js/three_bg.js' %}"></script>
+<script src="{% static 'js/main.js' %}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

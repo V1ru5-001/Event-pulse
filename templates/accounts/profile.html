@@ -1,0 +1,256 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ profile_user.username }} — EventPulse{% endblock %}
+
+{% block content %}
+<div class="ep-profile-page">
+
+  <div class="ep-profile-hero">
+    <div class="ep-profile-hero__inner">
+
+      <div class="ep-profile-avatar">
+        {% if profile_user.profile_picture %}
+          <img src="{{ profile_user.profile_picture.url }}" alt="{{ profile_user.username }}" />
+        {% else %}
+          <span>{{ profile_user.username|first|upper }}</span>
+        {% endif %}
+      </div>
+
+      <div class="ep-profile-info">
+        <h1 class="ep-profile-name">
+          {{ profile_user.get_full_name|default:profile_user.username }}
+          {% if profile_user.is_verified_organiser %}
+            <span class="ep-profile-verified" title="Verified Organiser">✓</span>
+          {% endif %}
+        </h1>
+        <p class="ep-profile-username">@{{ profile_user.username }}</p>
+
+        <div class="ep-profile-meta">
+          {% if profile_user.university %}
+            <span class="ep-profile-meta-item">
+              <span class="ep-icon ep-icon--home ep-icon--purple"></span>
+              {{ profile_user.university }}
+            </span>
+          {% endif %}
+          {% if profile_user.course %}
+            <span class="ep-profile-meta-item">
+              <span class="ep-icon ep-icon--book ep-icon--purple"></span>
+              {{ profile_user.course }}
+            </span>
+          {% endif %}
+          {% if profile_user.display_year %}
+            <span class="ep-profile-meta-item">
+              <span class="ep-cat-icon ep-cat-icon--academic"></span>
+              {{ profile_user.display_year }}
+            </span>
+          {% endif %}
+          <span class="ep-profile-meta-item ep-profile-role ep-profile-role--{{ profile_user.role }}">
+            <span class="ep-icon ep-icon--user ep-icon--purple"></span>
+            {% if profile_user.role == 'student' %}Student
+            {% elif profile_user.role == 'society' %}Society
+            {% elif profile_user.role == 'staff' %}Staff
+            {% else %}{{ profile_user.role|capfirst }}{% endif %}
+          </span>
+        </div>
+
+        {% if profile_user.bio %}
+          <p class="ep-profile-bio">{{ profile_user.bio }}</p>
+        {% endif %}
+      </div>
+
+      <div class="ep-profile-stats">
+        <div class="ep-profile-stat">
+          <span class="ep-profile-stat__num">{{ posted_events.count }}</span>
+          <span class="ep-profile-stat__label">Events</span>
+        </div>
+        <div class="ep-profile-stat">
+          <span class="ep-profile-stat__num">{{ rsvp_count }}</span>
+          <span class="ep-profile-stat__label">RSVPs</span>
+        </div>
+      </div>
+
+      {% if is_own_profile %}
+        <a href="{% url 'accounts:edit_profile' %}" class="ep-btn ep-btn--outline ep-btn--sm ep-profile-edit-btn">
+          <span class="ep-icon ep-icon--edit ep-icon--purple"></span>
+          Edit Profile
+        </a>
+      {% endif %}
+
+    </div>
+  </div>
+
+  <div class="ep-profile-tabs">
+    <div class="ep-profile-tabs__inner">
+      <button class="ep-profile-tab active" data-tab="posted">
+        Posted Events <span class="ep-profile-tab__count">{{ posted_events.count }}</span>
+      </button>
+      {% if is_own_profile %}
+        <button class="ep-profile-tab" data-tab="attending">
+          Attending <span class="ep-profile-tab__count">{{ attending_events.count }}</span>
+        </button>
+        <button class="ep-profile-tab" data-tab="drafts">
+          Drafts <span class="ep-profile-tab__count">{{ draft_events.count }}</span>
+        </button>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="ep-profile-content" id="tab-posted">
+    <div class="ep-grid ep-profile-grid">
+      {% for event in posted_events %}
+      <article class="ep-card" data-cat="{{ event.category.slug|default:'all' }}"
+        onclick="window.location.href='{% url 'events:detail' event.slug %}'">
+        <div class="ep-card__img">
+          {% if event.cover_image %}
+            <img src="{{ event.cover_image.url }}" alt="{{ event.title }}" loading="lazy">
+          {% else %}
+            <div class="ep-card__placeholder">
+              <span class="ep-cat-icon ep-cat-icon--{{ event.category.slug|default:'academic' }}" style="width:48px;height:48px;"></span>
+            </div>
+          {% endif %}
+          <div class="ep-card__img-overlay"></div>
+          <div class="ep-card__badges">
+            <span class="ep-badge ep-badge--cat">
+              <span class="ep-cat-icon ep-cat-icon--{{ event.category.slug|default:'academic' }}"></span>
+              {% if event.category %}{{ event.category.name }}{% else %}Event{% endif %}
+            </span>
+            <div class="ep-card__badges-right">
+              {% if event.status == 'draft' %}
+                <span class="ep-badge" style="background:rgba(100,116,139,0.25);border:1px solid rgba(100,116,139,0.4);color:#94A3B8;">Draft</span>
+              {% endif %}
+            </div>
+          </div>
+          <div class="ep-card__view-pill">View Event →</div>
+        </div>
+        <div class="ep-card__body">
+          <h3 class="ep-card__title">{{ event.title }}</h3>
+          <div class="ep-card__meta">
+            <div class="ep-card__meta-row">
+              <span class="ep-meta-icon ep-meta-icon--calendar"></span>
+              {{ event.start_datetime|date:"D, d M Y · H:i" }}
+            </div>
+            <div class="ep-card__meta-row">
+              <span class="ep-meta-icon ep-meta-icon--pin"></span>
+              {{ event.location_name }}
+            </div>
+          </div>
+          <div class="ep-card__footer">
+            <div class="ep-card__organiser">
+              <div class="ep-card__organiser-av">{{ event.organiser.username|first|upper }}</div>
+              <span>{{ event.rsvps.count }} RSVPs</span>
+            </div>
+            {% if is_own_profile %}
+              <a href="{% url 'events:edit' event.slug %}" class="ep-btn ep-btn--ghost ep-btn--sm"
+                onclick="event.stopPropagation()" style="font-size:.72rem;padding:.3rem .7rem;">Edit</a>
+            {% endif %}
+          </div>
+        </div>
+      </article>
+      {% empty %}
+      <div class="ep-empty" style="grid-column:1/-1">
+        <div class="ep-empty-icon ep-empty-icon--events"></div>
+        <h3>No events posted yet</h3>
+        {% if is_own_profile %}
+          <p>Ready to host something?</p>
+          <a href="{% url 'events:create' %}" class="ep-btn ep-btn--primary" style="margin-top:1rem">Post an Event</a>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  {% if is_own_profile %}
+  <div class="ep-profile-content" id="tab-attending" style="display:none">
+    <div class="ep-grid ep-profile-grid">
+      {% for rsvp in attending_events %}
+      <article class="ep-card" onclick="window.location.href='{% url 'events:detail' rsvp.event.slug %}'">
+        <div class="ep-card__img">
+          {% if rsvp.event.cover_image %}
+            <img src="{{ rsvp.event.cover_image.url }}" alt="{{ rsvp.event.title }}" loading="lazy">
+          {% else %}
+            <div class="ep-card__placeholder">
+              <span class="ep-cat-icon ep-cat-icon--{{ rsvp.event.category.slug|default:'academic' }}" style="width:48px;height:48px;"></span>
+            </div>
+          {% endif %}
+          <div class="ep-card__img-overlay"></div>
+          <div class="ep-card__badges">
+            <span class="ep-badge" style="background:rgba(16,185,129,0.2);border:1px solid rgba(16,185,129,0.4);color:#6EE7B7;">
+              {% if rsvp.status == 'approved' %}Approved
+              {% elif rsvp.status == 'pending' %}Pending
+              {% else %}{{ rsvp.status|capfirst }}{% endif %}
+            </span>
+          </div>
+        </div>
+        <div class="ep-card__body">
+          <h3 class="ep-card__title">{{ rsvp.event.title }}</h3>
+          <div class="ep-card__meta">
+            <div class="ep-card__meta-row">
+              <span class="ep-meta-icon ep-meta-icon--calendar"></span>
+              {{ rsvp.event.start_datetime|date:"D, d M Y · H:i" }}
+            </div>
+          </div>
+        </div>
+      </article>
+      {% empty %}
+      <div class="ep-empty" style="grid-column:1/-1">
+        <div class="ep-empty-icon ep-empty-icon--ticket"></div>
+        <h3>No events yet</h3>
+        <p>Browse events and request to attend.</p>
+        <a href="{% url 'events:home' %}" class="ep-btn ep-btn--primary" style="margin-top:1rem">Browse Events</a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="ep-profile-content" id="tab-drafts" style="display:none">
+    <div class="ep-grid ep-profile-grid">
+      {% for event in draft_events %}
+      <article class="ep-card" onclick="window.location.href='{% url 'events:detail' event.slug %}'">
+        <div class="ep-card__img">
+          {% if event.cover_image %}
+            <img src="{{ event.cover_image.url }}" alt="{{ event.title }}" loading="lazy">
+          {% else %}
+            <div class="ep-card__placeholder">
+              <span class="ep-empty-icon ep-empty-icon--draft" style="width:48px;height:48px;border-radius:12px;"></span>
+            </div>
+          {% endif %}
+          <div class="ep-card__img-overlay"></div>
+          <div class="ep-card__badges">
+            <span class="ep-badge" style="background:rgba(100,116,139,0.25);border:1px solid rgba(100,116,139,0.4);color:#94A3B8;">Draft</span>
+          </div>
+        </div>
+        <div class="ep-card__body">
+          <h3 class="ep-card__title">{{ event.title }}</h3>
+          <div class="ep-card__footer">
+            <span style="font-size:.75rem;color:var(--muted2);">Last edited {{ event.updated_at|date:"d M Y" }}</span>
+            <a href="{% url 'events:edit' event.slug %}" class="ep-btn ep-btn--primary ep-btn--sm" onclick="event.stopPropagation()">Publish</a>
+          </div>
+        </div>
+      </article>
+      {% empty %}
+      <div class="ep-empty" style="grid-column:1/-1">
+        <div class="ep-empty-icon ep-empty-icon--draft"></div>
+        <h3>No drafts</h3>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('.ep-profile-tab').forEach(function(tab) {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.ep-profile-tab').forEach(function(t) { t.classList.remove('active'); });
+    document.querySelectorAll('.ep-profile-content').forEach(function(c) { c.style.display = 'none'; });
+    tab.classList.add('active');
+    var target = document.getElementById('tab-' + tab.dataset.tab);
+    if (target) target.style.display = '';
+  });
+});
+</script>
+{% endblock %}

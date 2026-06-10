@@ -1,0 +1,258 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}EventPulse — Your Campus Event Hub{% endblock %}
+
+{% block content %}
+
+<section class="land-hero" id="landHero">
+  <div class="land-floaters" id="landFloaters"></div>
+  <div class="land-hero__content">
+    <div class="land-hero__badge">
+      <span class="land-hero__badge-dot"></span>
+      Live events happening on campus now
+    </div>
+    <h1 class="land-hero__title">
+      Your Campus.<br>
+      <span class="land-grad">Your Events.</span><br>
+      Your Community.
+    </h1>
+    <p class="land-hero__sub">
+      Discover lectures, socials, sports days, career fairs and parties
+      happening at your university — all in one place.
+    </p>
+    <div class="land-hero__ctas">
+      <a href="{% url 'accounts:register' %}" class="ep-btn ep-btn--primary land-cta-btn">Join Free →</a>
+      <a href="{% url 'accounts:login' %}" class="ep-btn ep-btn--outline">Sign In</a>
+    </div>
+    <div class="land-hero__stats">
+      <div class="land-stat">
+        <span class="land-stat__num" data-target="1200">0</span>
+        <span class="land-stat__label">Students</span>
+      </div>
+      <div class="land-stat__divider"></div>
+      <div class="land-stat">
+        <span class="land-stat__num" data-target="340">0</span>
+        <span class="land-stat__label">Events Posted</span>
+      </div>
+      <div class="land-stat__divider"></div>
+      <div class="land-stat">
+        <span class="land-stat__num" data-target="48">0</span>
+        <span class="land-stat__label">Societies</span>
+      </div>
+    </div>
+  </div>
+  <div class="land-hero__scroll">
+    <span class="ep-icon ep-icon--chevron-down"></span>
+    Scroll to explore
+  </div>
+</section>
+
+<section class="land-features">
+  <div class="land-features__inner">
+    <p class="land-section-label">Why EventPulse?</p>
+    <h2 class="land-section-title">Everything campus life<br><span>in one feed</span></h2>
+    <div class="land-features-grid">
+
+      <div class="land-feat-card" style="--accent:#4B6BF1">
+        <div class="ep-feat-icon-box ep-feat-icon-box--academic"></div>
+        <h3 class="land-feat-title">Academic Events</h3>
+        <p class="land-feat-desc">Lectures, seminars, workshops and study groups from every department.</p>
+      </div>
+
+      <div class="land-feat-card" style="--accent:#EC4899">
+        <div class="ep-feat-icon-box ep-feat-icon-box--social"></div>
+        <h3 class="land-feat-title">Social Hangouts</h3>
+        <p class="land-feat-desc">Parties, game nights, movie screenings and casual meetups organised by students.</p>
+      </div>
+
+      <div class="land-feat-card" style="--accent:#10B981">
+        <div class="ep-feat-icon-box ep-feat-icon-box--sports"></div>
+        <h3 class="land-feat-title">Sports & Fitness</h3>
+        <p class="land-feat-desc">Tournaments, training sessions and fun runs hosted by sports societies.</p>
+      </div>
+
+      <div class="land-feat-card" style="--accent:#F59E0B">
+        <div class="ep-feat-icon-box ep-feat-icon-box--career"></div>
+        <h3 class="land-feat-title">Career Events</h3>
+        <p class="land-feat-desc">Job fairs, networking nights, CV workshops and employer talks.</p>
+      </div>
+
+      <div class="land-feat-card" style="--accent:#8B5CF6">
+        <div class="ep-feat-icon-box ep-feat-icon-box--arts"></div>
+        <h3 class="land-feat-title">Arts & Culture</h3>
+        <p class="land-feat-desc">Theatre, exhibitions, spoken word and creative showcases.</p>
+      </div>
+
+      <div class="land-feat-card" style="--accent:#06B6D4">
+        <div class="ep-feat-icon-box ep-feat-icon-box--international"></div>
+        <h3 class="land-feat-title">International</h3>
+        <p class="land-feat-desc">Cultural celebrations, language exchange and international society events.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section class="land-preview">
+  <div class="land-preview__inner">
+    <p class="land-section-label">Upcoming Events</p>
+    <h2 class="land-section-title">See what's <span>happening now</span></h2>
+    <p class="land-preview__note">Sign in or register to RSVP, create events and connect with your campus.</p>
+
+    <div class="ep-grid land-preview__grid">
+      {% for event in events %}
+      <article class="ep-card land-preview__card" data-cat="{{ event.category.slug|default:'all' }}">
+        <div class="ep-card__img">
+          {% if event.cover_image %}
+            <img src="{{ event.cover_image.url }}" alt="{{ event.title }}" loading="lazy">
+          {% else %}
+            <div class="ep-card__placeholder">
+              <span class="ep-cat-icon ep-cat-icon--{{ event.category.slug|default:'academic' }}" style="width:48px;height:48px;"></span>
+            </div>
+          {% endif %}
+          <div class="ep-card__img-overlay"></div>
+          <div class="ep-card__badges">
+            <span class="ep-badge ep-badge--cat">
+              <span class="ep-cat-icon ep-cat-icon--{{ event.category.slug|default:'academic' }}"></span>
+              {% if event.category %}{{ event.category.name }}{% else %}Event{% endif %}
+            </span>
+            <div class="ep-card__badges-right">
+              {% if event.is_past %}
+                <span class="ep-badge ep-badge--ended">Ended</span>
+              {% else %}
+                {% if event.is_featured %}<span class="ep-badge ep-badge--feat">Featured</span>{% endif %}
+              {% endif %}
+            </div>
+          </div>
+          {% if event.is_past %}
+            <div class="ep-card__ended-overlay">
+              <span class="ep-card__ended-label">This event has ended</span>
+            </div>
+          {% endif %}
+          <div class="land-card-lock">
+            <div class="land-card-lock__inner">
+              <span class="ep-icon ep-icon--lock ep-icon--lg" style="opacity:1;filter:brightness(10);"></span>
+              <p>Sign in to RSVP</p>
+              <a href="{% url 'accounts:login' %}" class="ep-btn ep-btn--primary" style="font-size:.75rem;padding:.4rem .9rem;">Sign In</a>
+            </div>
+          </div>
+        </div>
+        <div class="ep-card__body">
+          <h3 class="ep-card__title">{{ event.title }}</h3>
+          <div class="ep-card__meta">
+            <div class="ep-card__meta-row">
+              <span class="ep-meta-icon ep-meta-icon--calendar"></span>
+              {{ event.start_datetime|date:"D, d M Y · H:i" }}
+            </div>
+            <div class="ep-card__meta-row">
+              <span class="ep-meta-icon ep-meta-icon--pin"></span>
+              {{ event.location_name }}
+            </div>
+          </div>
+          <div class="ep-card__footer">
+            <div class="ep-card__organiser">
+              <div class="ep-card__organiser-av">{{ event.organiser.username|first|upper }}</div>
+              <span>{{ event.organiser.username }}</span>
+            </div>
+            {% if event.is_past %}<span class="ep-badge ep-badge--ended">Ended</span>
+            {% elif event.is_free %}<span class="ep-badge ep-badge--free">Free</span>
+            {% else %}<span class="ep-badge ep-badge--paid">₦{{ event.ticket_price }}</span>{% endif %}
+          </div>
+        </div>
+      </article>
+      {% empty %}
+      <div class="ep-empty" style="grid-column:1/-1">
+        <div class="ep-empty-icon ep-empty-icon--events"></div>
+        <h3>Events coming soon</h3>
+        <p>Be the first to post a campus event.</p>
+        <a href="{% url 'accounts:register' %}" class="ep-btn ep-btn--primary" style="margin-top:1rem">Get Started</a>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if events %}
+    <div style="text-align:center;margin-top:2.5rem;">
+      <a href="{% url 'accounts:register' %}" class="ep-btn ep-btn--outline" style="font-size:.9rem;">
+        See all events — Sign up free →
+      </a>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<section class="land-cta-banner">
+  <div class="land-cta-banner__inner">
+    <div class="land-cta-banner__glow"></div>
+    <h2 class="land-cta-banner__title">Ready to join your campus?</h2>
+    <p class="land-cta-banner__sub">Create a free account in 30 seconds and never miss an event again.</p>
+    <div class="land-cta-banner__btns">
+      <a href="{% url 'accounts:register' %}" class="ep-btn ep-btn--primary land-cta-btn">Create Free Account →</a>
+      <a href="{% url 'accounts:login' %}" class="ep-btn ep-btn--outline">Already have an account?</a>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+  var container = document.getElementById('landFloaters');
+  if (!container) return;
+  var cards = [
+    { cat:'academic',      catName:'Academic',   title:'Python Workshop',         meta:'Today · CS Building'   },
+    { cat:'social',        catName:'Social',     title:'Freshers Welcome Night',  meta:'Fri · Student Union'   },
+    { cat:'sports',        catName:'Sports',     title:'5-a-Side Tournament',     meta:'Sat · Sports Centre'   },
+    { cat:'career',        catName:'Career',     title:'Goldman Sachs Talk',      meta:'Thu · Lecture Hall A'  },
+    { cat:'arts',          catName:'Arts',       title:'Drama Society Auditions', meta:'Wed · Arts Building'   },
+    { cat:'international', catName:'Cultural',   title:'International Food Fair', meta:'Sun · Main Quad'       },
+    { cat:'music',         catName:'Music',      title:'Open Mic Night',          meta:'Fri · Campus Bar'      },
+    { cat:'academic',      catName:'Academic',   title:'Research Symposium',      meta:'Mon · Library Hall'    },
+  ];
+  var positions = [
+    {left:'2%',  bottom:'18%', rot:'-5deg'},
+    {left:'78%', bottom:'12%', rot:'4deg'},
+    {left:'70%', top:'22%',    rot:'-3deg'},
+    {left:'1%',  top:'28%',    rot:'6deg'},
+    {left:'38%', bottom:'6%',  rot:'-4deg'},
+    {left:'85%', top:'48%',    rot:'5deg'},
+    {left:'18%', top:'18%',    rot:'-6deg'},
+    {left:'55%', top:'12%',    rot:'3deg'},
+  ];
+  cards.forEach(function(c, i) {
+    var pos = positions[i % positions.length];
+    var div = document.createElement('div');
+    div.className = 'land-float';
+    var s = 'animation-duration:'+(12+i*2.5)+'s;animation-delay:'+(i*1.6)+'s;';
+    if (pos.bottom) s += 'bottom:'+pos.bottom+';top:auto;';
+    else            s += 'top:'+pos.top+';';
+    s += 'left:'+pos.left+';--rot:'+pos.rot+';';
+    div.style.cssText = s;
+    div.innerHTML =
+      '<div class="land-float__cat" style="display:flex;align-items:center;gap:.35rem;">' +
+        '<span class="ep-cat-icon ep-cat-icon--'+c.cat+'"></span>'+c.catName+
+      '</div>' +
+      '<div class="land-float__title">'+c.title+'</div>' +
+      '<div class="land-float__meta">'+c.meta+'</div>';
+    container.appendChild(div);
+  });
+})();
+
+document.querySelectorAll('.land-stat__num').forEach(function(el) {
+  var target = parseInt(el.dataset.target, 10);
+  var t0 = null, dur = 1800;
+  function tick(ts) {
+    if (!t0) t0 = ts;
+    var pct = Math.min((ts - t0) / dur, 1);
+    el.textContent = Math.floor(pct * target).toLocaleString();
+    if (pct < 1) requestAnimationFrame(tick);
+    else el.textContent = target.toLocaleString() + '+';
+  }
+  var obs = new IntersectionObserver(function(entries) {
+    if (entries[0].isIntersecting) { requestAnimationFrame(tick); obs.disconnect(); }
+  });
+  obs.observe(el);
+});
+</script>
+{% endblock %}

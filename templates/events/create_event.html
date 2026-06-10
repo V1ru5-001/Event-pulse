@@ -1,0 +1,258 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Post an Event — EventPulse{% endblock %}
+
+{% block content %}
+<div class="ep-create-page">
+
+  <div class="ep-create-header">
+    <a href="{% url 'events:home' %}" class="ep-create-back">
+      <span class="ep-icon ep-icon--back"></span>
+      Back
+    </a>
+    <div>
+      <h1 class="ep-create-title">Post an Event</h1>
+      <p class="ep-create-sub">Fill in the details and let your campus know.</p>
+    </div>
+  </div>
+
+  {% if form.non_field_errors %}
+    {% for error in form.non_field_errors %}
+      <div class="ep-inline-error">{{ error }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="POST" enctype="multipart/form-data" class="ep-create-form" id="createForm">
+    {% csrf_token %}
+
+    <div class="ep-create-card">
+      <h2 class="ep-create-section-title">
+        <span class="ep-create-section-num">1</span>
+        Event Basics
+      </h2>
+
+      <div class="ep-field">
+        <label class="ep-field__label">Event Title *</label>
+        <div class="ep-field__input-wrap">
+          <span class="ep-icon ep-icon--edit"></span>
+          <input type="text" name="title" class="ep-input"
+            placeholder="Give your event a great title"
+            value="{{ request.POST.title|default:'' }}" required />
+        </div>
+      </div>
+
+      <div class="ep-field" style="margin-top:1rem;">
+        <label class="ep-field__label">Description *</label>
+        <textarea name="description" class="ep-textarea" rows="4"
+          placeholder="Tell people what to expect, who it's for, what to bring..."
+          required>{{ request.POST.description|default:'' }}</textarea>
+      </div>
+
+      <div class="ep-create-grid" style="margin-top:1rem;">
+        <div class="ep-field">
+          <label class="ep-field__label">Category *</label>
+          <select name="category" class="ep-select" required>
+            <option value="" disabled {% if not request.POST.category %}selected{% endif %}>Select a category</option>
+            {% if categories %}
+              {% for cat in categories %}
+                <option value="{{ cat.id }}" {% if request.POST.category == cat.id|stringformat:"s" %}selected{% endif %}>
+                  {{ cat.icon }} {{ cat.name }}
+                </option>
+              {% endfor %}
+            {% else %}
+              <option value="academic"      {% if request.POST.category == 'academic'      %}selected{% endif %}>🎓 Academic</option>
+              <option value="social"        {% if request.POST.category == 'social'        %}selected{% endif %}>🎉 Social</option>
+              <option value="sports"        {% if request.POST.category == 'sports'        %}selected{% endif %}>⚽ Sports</option>
+              <option value="career"        {% if request.POST.category == 'career'        %}selected{% endif %}>💼 Career</option>
+              <option value="arts"          {% if request.POST.category == 'arts'          %}selected{% endif %}>🎭 Arts &amp; Culture</option>
+              <option value="music"         {% if request.POST.category == 'music'         %}selected{% endif %}>🎵 Music &amp; Parties</option>
+              <option value="international" {% if request.POST.category == 'international' %}selected{% endif %}>🌍 International</option>
+              <option value="clubs"         {% if request.POST.category == 'clubs'         %}selected{% endif %}>🤝 Clubs &amp; Societies</option>
+            {% endif %}
+          </select>
+        </div>
+
+        <div class="ep-field">
+          <label class="ep-field__label">Department / Society</label>
+          <div class="ep-field__input-wrap">
+            <span class="ep-icon ep-icon--home"></span>
+            <input type="text" name="department" class="ep-input"
+              placeholder="e.g. Computer Science Society"
+              value="{{ request.POST.department|default:'' }}" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ep-create-card">
+      <h2 class="ep-create-section-title">
+        <span class="ep-create-section-num">2</span>
+        Cover Image
+      </h2>
+      <input type="file" name="cover_image" id="id_cover_image" accept="image/*" style="display:none;" />
+      <div class="ep-upload-zone" id="uploadZone">
+        <div id="uploadPlaceholder">
+          <div class="ep-upload-zone__icon">🖼️</div>
+          <div class="ep-upload-zone__text">
+            <strong>Click to upload</strong> or drag and drop<br>
+            <span style="font-size:.78rem;color:var(--muted2);">PNG, JPG up to 5MB</span>
+          </div>
+        </div>
+        <div id="uploadPreview" style="display:none;">
+          <img id="previewImg" src="" alt="Preview" style="width:100%;max-height:220px;object-fit:cover;border-radius:8px;" />
+          <p style="margin-top:.6rem;font-size:.78rem;color:var(--muted);text-align:center;">Click to change image</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="ep-create-card">
+      <h2 class="ep-create-section-title">
+        <span class="ep-create-section-num">3</span>
+        Date, Time &amp; Location
+      </h2>
+      <div class="ep-create-grid">
+        <div class="ep-field">
+          <label class="ep-field__label">Start Date &amp; Time *</label>
+          <input type="datetime-local" name="start_datetime" class="ep-input ep-input--no-icon"
+            value="{{ request.POST.start_datetime|default:'' }}" required />
+        </div>
+        <div class="ep-field">
+          <label class="ep-field__label">End Date &amp; Time</label>
+          <input type="datetime-local" name="end_datetime" class="ep-input ep-input--no-icon"
+            value="{{ request.POST.end_datetime|default:'' }}" />
+        </div>
+      </div>
+      <div class="ep-create-grid" style="margin-top:1rem;">
+        <div class="ep-field">
+          <label class="ep-field__label">Venue on Campus *</label>
+          <div class="ep-field__input-wrap">
+            <span class="ep-icon ep-icon--pin"></span>
+            <input type="text" name="location_name" class="ep-input"
+              placeholder="e.g. Main Hall, Library, Sports Centre"
+              value="{{ request.POST.location_name|default:'' }}" required />
+          </div>
+        </div>
+        <div class="ep-field">
+          <label class="ep-field__label">Full Address</label>
+          <div class="ep-field__input-wrap">
+            <span class="ep-icon ep-icon--home"></span>
+            <input type="text" name="location_address" class="ep-input"
+              placeholder="e.g. University Road, Block C"
+              value="{{ request.POST.location_address|default:'' }}" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ep-create-card">
+      <h2 class="ep-create-section-title">
+        <span class="ep-create-section-num">4</span>
+        Tickets &amp; Capacity
+      </h2>
+      <div class="ep-field">
+        <label class="ep-field__label">Price Type</label>
+        <div class="ep-price-toggle">
+          <input type="radio" name="price_type" id="price_free" value="free"
+            {% if not request.POST.price_type or request.POST.price_type == 'free' %}checked{% endif %} />
+          <label for="price_free">🆓 Free</label>
+          <input type="radio" name="price_type" id="price_paid" value="paid"
+            {% if request.POST.price_type == 'paid' %}checked{% endif %} />
+          <label for="price_paid">💳 Paid</label>
+        </div>
+      </div>
+
+      <div id="priceField" style="margin-top:1rem;">
+        <div class="ep-field">
+          <label class="ep-field__label">Ticket Price (₦)</label>
+          <div class="ep-field__input-wrap">
+            <span class="ep-icon ep-icon--money"></span>
+            <input type="number" name="ticket_price" class="ep-input"
+              placeholder="0.00" min="0" step="0.01"
+              value="{{ request.POST.ticket_price|default:'' }}" />
+          </div>
+        </div>
+      </div>
+
+      <div class="ep-create-grid" style="margin-top:1rem;">
+        <div class="ep-field">
+          <label class="ep-field__label">
+            Capacity
+            <span style="color:var(--muted2);font-weight:400;text-transform:none;">(blank = unlimited)</span>
+          </label>
+          <div class="ep-field__input-wrap">
+            <span class="ep-icon ep-icon--people"></span>
+            <input type="number" name="capacity" class="ep-input"
+              placeholder="e.g. 100" min="1"
+              value="{{ request.POST.capacity|default:'' }}" />
+          </div>
+        </div>
+        <div class="ep-field">
+          <label class="ep-field__label">Visibility</label>
+          <div class="ep-role-toggle">
+            <input type="radio" name="is_premium_only" id="vis_all" value="false"
+              {% if not request.POST.is_premium_only or request.POST.is_premium_only == 'false' %}checked{% endif %} />
+            <label for="vis_all">👥 Everyone</label>
+            <input type="radio" name="is_premium_only" id="vis_prem" value="true"
+              {% if request.POST.is_premium_only == 'true' %}checked{% endif %} />
+            <label for="vis_prem">⭐ Premium</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ep-create-actions">
+      <button type="submit" name="action" value="draft" class="ep-btn ep-btn--outline">Save as Draft</button>
+      <button type="submit" name="action" value="publish" class="ep-btn ep-btn--primary">
+        Publish Event
+        <span class="ep-icon ep-icon--arrow-right ep-icon--lg" style="filter:brightness(10);"></span>
+      </button>
+    </div>
+
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var zone        = document.getElementById('uploadZone');
+var fileInput   = document.getElementById('id_cover_image');
+var placeholder = document.getElementById('uploadPlaceholder');
+var preview     = document.getElementById('uploadPreview');
+var previewImg  = document.getElementById('previewImg');
+
+function showPreview(file) {
+  if (!file || !file.type.startsWith('image/')) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    previewImg.src = e.target.result;
+    placeholder.style.display = 'none';
+    preview.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+zone.addEventListener('click', function() { fileInput.click(); });
+fileInput.addEventListener('change', function() {
+  if (fileInput.files && fileInput.files[0]) showPreview(fileInput.files[0]);
+});
+zone.addEventListener('dragover', function(e) {
+  e.preventDefault(); zone.style.borderColor='var(--primary)'; zone.style.background='rgba(75,107,241,0.06)';
+});
+zone.addEventListener('dragleave', function() { zone.style.borderColor=''; zone.style.background=''; });
+zone.addEventListener('drop', function(e) {
+  e.preventDefault(); zone.style.borderColor=''; zone.style.background='';
+  var file = e.dataTransfer.files[0];
+  if (file) { var dt=new DataTransfer(); dt.items.add(file); fileInput.files=dt.files; showPreview(file); }
+});
+
+var priceRadios = document.querySelectorAll('input[name="price_type"]');
+var priceField  = document.getElementById('priceField');
+priceRadios.forEach(function(r) {
+  r.addEventListener('change', function() {
+    priceField.style.display = (r.value === 'paid' && r.checked) ? 'block' : 'none';
+  });
+});
+var checked = document.querySelector('input[name="price_type"]:checked');
+if (checked) priceField.style.display = checked.value === 'free' ? 'none' : 'block';
+</script>
+{% endblock %}

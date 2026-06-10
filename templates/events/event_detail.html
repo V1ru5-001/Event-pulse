@@ -1,0 +1,236 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ event.title }} — EventPulse{% endblock %}
+
+{% block content %}
+<div class="detail-page">
+
+  <div class="detail-hero">
+    {% if event.cover_image %}
+      <div class="detail-hero__img" style="background-image:url('{{ event.cover_image.url }}')"></div>
+    {% else %}
+      <div class="detail-hero__img detail-hero__img--placeholder">
+        <span class="ep-cat-icon ep-cat-icon--{{ event.category.slug|default:'academic' }}" style="width:72px;height:72px;opacity:.6;"></span>
+      </div>
+    {% endif %}
+    <div class="detail-hero__overlay"></div>
+
+    <div class="detail-hero__nav">
+      <a href="{% url 'events:home' %}" class="detail-hero__back">
+        <span class="ep-icon ep-icon--back" style="filter:brightness(10);opacity:1;"></span>
+        Back
+      </a>
+      <div class="detail-hero__nav-right">
+        <button class="detail-hero__share" onclick="navigator.clipboard.writeText(window.location.href);alert('Link copied!')">
+          <span class="ep-icon ep-icon--share" style="filter:brightness(10);opacity:1;"></span>
+          Share
+        </button>
+      </div>
+    </div>
+
+    <div class="detail-hero__content">
+      <div class="detail-hero__badges">
+        {% if event.category %}
+          <span class="ep-badge ep-badge--cat">
+            <span class="ep-cat-icon ep-cat-icon--{{ event.category.slug }}"></span>
+            {{ event.category.name }}
+          </span>
+        {% endif %}
+        {% if event.is_past %}
+          <span class="ep-badge ep-badge--sold">Ended</span>
+        {% elif event.is_free %}
+          <span class="ep-badge ep-badge--free">Free</span>
+        {% else %}
+          <span class="ep-badge ep-badge--paid">₦{{ event.ticket_price }}</span>
+        {% endif %}
+        {% if event.is_premium_only %}
+          <span class="ep-badge ep-badge--prem">
+            <span class="ep-icon ep-icon--lock" style="width:12px;height:12px;filter:brightness(3);"></span>
+            Premium Only
+          </span>
+        {% endif %}
+      </div>
+      <h1 class="detail-hero__title">{{ event.title }}</h1>
+    </div>
+  </div>
+
+  <div class="detail-body">
+    <div class="detail-body__inner">
+
+      <div class="detail-left">
+
+        <div class="detail-section">
+          <div class="detail-meta-block">
+            <div class="detail-meta-item">
+              <div class="ep-detail-icon ep-detail-icon--calendar"></div>
+              <div>
+                <div class="detail-meta-label">Date & Time</div>
+                <div class="detail-meta-value">{{ event.start_datetime|date:"l, d F Y" }}</div>
+                <div class="detail-meta-sub">
+                  {{ event.start_datetime|date:"H:i" }}
+                  {% if event.end_datetime %} — {{ event.end_datetime|date:"H:i" }}{% endif %}
+                </div>
+              </div>
+            </div>
+
+            <div class="detail-meta-item">
+              <div class="ep-detail-icon ep-detail-icon--pin"></div>
+              <div>
+                <div class="detail-meta-label">Location</div>
+                <div class="detail-meta-value">{{ event.location_name }}</div>
+                {% if event.location_address %}
+                  <div class="detail-meta-sub">{{ event.location_address }}</div>
+                {% endif %}
+              </div>
+            </div>
+
+            {% if event.capacity %}
+            <div class="detail-meta-item">
+              <div class="ep-detail-icon ep-detail-icon--people"></div>
+              <div>
+                <div class="detail-meta-label">Capacity</div>
+                <div class="detail-meta-value">{{ event.approved_rsvp_count }} / {{ event.capacity }} spots filled</div>
+                <div class="detail-cap-bar">
+                  <div class="detail-cap-fill"></div>
+                </div>
+              </div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <h2 class="detail-section__title">About this Event</h2>
+          <div class="detail-description">{{ event.description|linebreaks }}</div>
+        </div>
+
+        <div class="detail-section">
+          <h2 class="detail-section__title">Organiser</h2>
+          <div class="detail-organiser">
+            <div class="detail-organiser__av">{{ event.organiser.username|first|upper }}</div>
+            <div class="detail-organiser__info">
+              <div class="detail-organiser__name">{{ event.organiser.get_full_name|default:event.organiser.username }}</div>
+              <div class="detail-organiser__username">@{{ event.organiser.username }}</div>
+              {% if event.organiser.university %}
+                <div class="detail-organiser__uni">{{ event.organiser.university }}</div>
+              {% endif %}
+            </div>
+            <a href="{% url 'accounts:profile' event.organiser.username %}" class="ep-btn ep-btn--outline ep-btn--sm">View Profile</a>
+            {% if user == event.organiser %}
+              <a href="{% url 'events:manage_rsvps' event.slug %}" class="ep-btn ep-btn--outline ep-btn--sm">
+                Manage RSVPs ({{ event.rsvps.count }})
+              </a>
+            {% endif %}
+          </div>
+        </div>
+
+      </div>
+
+      <div class="detail-right">
+        <div class="detail-rsvp-card">
+
+          <div class="detail-rsvp-price">
+            {% if event.is_free %}
+              <span class="detail-rsvp-price__free">Free</span>
+            {% else %}
+              <span class="detail-rsvp-price__amount">₦{{ event.ticket_price }}</span>
+              <span class="detail-rsvp-price__per">per person</span>
+            {% endif %}
+          </div>
+
+          {% if event.capacity %}
+            <div class="detail-rsvp-cap">
+              <div class="detail-rsvp-cap__label">
+                {% if event.spots_remaining == 0 %}Sold out
+                {% elif event.spots_remaining <= 5 %}Only {{ event.spots_remaining }} spot{{ event.spots_remaining|pluralize }} left!
+                {% else %}{{ event.spots_remaining }} spots remaining{% endif %}
+              </div>
+              <div class="detail-rsvp-cap__bar">
+                <div class="detail-rsvp-cap__fill {% if event.spots_remaining == 0 %}detail-rsvp-cap__fill--full{% endif %}"></div>
+              </div>
+            </div>
+          {% endif %}
+
+          {% if not user.is_authenticated %}
+            <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="ep-btn ep-btn--primary ep-btn--full">Sign in to RSVP</a>
+          {% elif event.is_past %}
+            <div style="
+              background: rgba(255,77,109,0.08);
+              border: 1px solid rgba(255,77,109,0.25);
+              border-radius: 14px;
+              padding: 1.25rem;
+              text-align: center;
+              margin-bottom: .5rem;
+            ">
+              <div style="margin-bottom:.5rem;">
+                <span class="ep-empty-icon ep-empty-icon--events"
+                  style="width:40px;height:40px;background:rgba(255,77,109,0.12);
+                         background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23FF4D6D'%3E%3Cpath d='M20 3h-1V1h-2v2H7V1H5v2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 18H4V8h16v13z'/%3E%3C/svg%3E&quot;);
+                         background-size:22px;display:inline-flex;border-radius:10px;">
+                </span>
+              </div>
+              <div style="font-weight:700;font-size:.95rem;color:#FCA5A5;margin-bottom:.25rem;">
+                This event has ended
+              </div>
+              <div style="font-size:.78rem;color:var(--muted2);">
+                {{ event.start_datetime|date:"d M Y" }}
+              </div>
+            </div>
+            <a href="{% url 'events:home' %}" class="ep-btn ep-btn--outline ep-btn--full" style="margin-top:.25rem;">
+              Browse More Events
+            </a>
+          {% elif event.is_full and not user_rsvp %}
+            <form method="POST" action="{% url 'events:rsvp' event.slug %}">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="waitlist" />
+              <button type="submit" class="ep-btn ep-btn--coral ep-btn--full">Join Waitlist</button>
+            </form>
+          {% elif user_rsvp %}
+            {% if user_rsvp.status == 'approved' %}
+              <button class="ep-btn ep-btn--full" disabled style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#6EE7B7;cursor:default;">You're going!</button>
+              {% if event.qr_code %}
+                <div class="detail-qr">
+                  <img src="{{ event.qr_code.url }}" alt="Check-in QR Code" />
+                  <p>Show this at the door to check in</p>
+                </div>
+              {% endif %}
+            {% elif user_rsvp.status == 'pending' %}
+              <button class="ep-btn ep-btn--full" disabled style="background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);color:#FDE68A;cursor:default;">Request pending</button>
+            {% elif user_rsvp.status == 'waitlist' %}
+              <button class="ep-btn ep-btn--full" disabled style="background:rgba(75,107,241,0.15);border:1px solid rgba(75,107,241,0.3);color:#A5B4FC;cursor:default;">On waitlist</button>
+            {% else %}
+              <form method="POST" action="{% url 'events:rsvp' event.slug %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="rsvp" />
+                <button type="submit" class="ep-btn ep-btn--primary ep-btn--full">Request to Join</button>
+              </form>
+            {% endif %}
+          {% elif event.is_premium_only and not user.is_premium %}
+            <div class="detail-premium-lock">
+              <p>This event is for Premium members only.</p>
+              <a href="{% url 'payments:pricing' %}" class="ep-btn ep-btn--primary ep-btn--full">Upgrade to Premium</a>
+            </div>
+          {% else %}
+            <form method="POST" action="{% url 'events:rsvp' event.slug %}">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="rsvp" />
+              <textarea name="note" class="ep-textarea" placeholder="Optional message to the organiser..." rows="2" style="margin-bottom:.75rem;border-radius:10px;font-size:.85rem;"></textarea>
+              <button type="submit" class="ep-btn ep-btn--primary ep-btn--full">Request to Join</button>
+            </form>
+          {% endif %}
+
+          <div class="detail-share">
+            <span>Share:</span>
+            <a href="https://wa.me/?text={{ event.title|urlencode }}%20{{ request.build_absolute_uri }}" target="_blank" class="detail-share__btn detail-share__btn--wa">WhatsApp</a>
+            <button onclick="navigator.clipboard.writeText(window.location.href);alert('Copied!')" class="detail-share__btn">Copy Link</button>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}

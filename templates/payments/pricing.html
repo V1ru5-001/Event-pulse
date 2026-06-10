@@ -1,0 +1,264 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Upgrade Plan — EventPulse{% endblock %}
+
+{% block content %}
+<div class="pay-page">
+
+  <div class="pay-header">
+    <div class="pay-header__inner">
+      <div class="pay-header__badge">Upgrade Your Account</div>
+      <h1 class="pay-header__title">Choose Your Plan</h1>
+      <p class="pay-header__sub">Unlock more features and get the most out of EventPulse.</p>
+    </div>
+  </div>
+
+  <div class="pay-plans">
+
+    <!-- FREE -->
+    <div class="pay-plan" id="plan-free" data-plan="free" data-price="0">
+      <div class="pay-plan__header">
+        <div class="ep-plan-icon ep-plan-icon--free"></div>
+        <h2 class="pay-plan__name">Free</h2>
+        <div class="pay-plan__price">
+          <span class="pay-plan__amount">₦0</span>
+          <span class="pay-plan__period">/ forever</span>
+        </div>
+        <p class="pay-plan__tagline">Get started with the basics</p>
+      </div>
+      <ul class="pay-plan__features">
+        <li class="pay-plan__feat pay-plan__feat--yes">Browse all public events</li>
+        <li class="pay-plan__feat pay-plan__feat--yes">RSVP to free events</li>
+        <li class="pay-plan__feat pay-plan__feat--yes">View event details</li>
+        <li class="pay-plan__feat pay-plan__feat--no">Post events</li>
+        <li class="pay-plan__feat pay-plan__feat--no">Attend paid events</li>
+        <li class="pay-plan__feat pay-plan__feat--no">Premium-only events</li>
+        <li class="pay-plan__feat pay-plan__feat--no">Priority RSVP</li>
+        <li class="pay-plan__feat pay-plan__feat--no">Ad-free experience</li>
+      </ul>
+      <button class="ep-btn ep-btn--outline pay-plan__btn pay-select-btn" data-plan="free">Current Plan</button>
+    </div>
+
+    <!-- STUDENT PLUS -->
+    <div class="pay-plan pay-plan--popular" id="plan-student" data-plan="student" data-price="1500">
+      <div class="pay-plan__popular-badge">Most Popular</div>
+      <div class="pay-plan__header">
+        <div class="ep-plan-icon ep-plan-icon--student"></div>
+        <h2 class="pay-plan__name">Student Plus</h2>
+        <div class="pay-plan__price">
+          <span class="pay-plan__amount">₦1,500</span>
+          <span class="pay-plan__period">/ month</span>
+        </div>
+        <p class="pay-plan__tagline">For active students who do it all</p>
+      </div>
+      <ul class="pay-plan__features">
+        <li class="pay-plan__feat pay-plan__feat--yes">Everything in Free</li>
+        <li class="pay-plan__feat pay-plan__feat--yes">Post up to 5 events/month</li>
+        <li class="pay-plan__feat pay-plan__feat--yes">RSVP to paid events</li>
+        <li class="pay-plan__feat pay-plan__feat--yes">QR code attendance</li>
+        <li class="pay-plan__feat pay-plan__feat--yes">Ad-free experience</li>
+        <li class="pay-plan__feat pay-plan__feat--no">Premium-only events</li>
+        <li class="pay-plan__feat pay-plan__feat--no">Featured event listing</li>
+        <li class="pay-plan__feat pay-plan__feat--no">Attendee CSV export</li>
+      </ul>
+      <button class="ep-btn ep-btn--primary pay-plan__btn pay-select-btn" data-plan="student">Choose Student Plus</button>
+    </div>
+
+    <!-- ORGANISER PRO -->
+    <div class="pay-plan" id="plan-organiser" data-plan="organiser" data-price="4500">
+      <div class="pay-plan__header">
+        <div class="ep-plan-icon ep-plan-icon--organiser"></div>
+        <h2 class="pay-plan__name">Organiser Pro</h2>
+        <div class="pay-plan__price">
+          <span class="pay-plan__amount">₦4,500</span>
+          <span class="pay-plan__period">/ month</span>
+        </div>
+        <p class="pay-plan__tagline">For societies and serious organisers</p>
+      </div>
+      <ul class="pay-plan__features">
+        <li class="pay-plan__feat pay-plan__feat--yes">Everything in Student Plus</li>
+        <li class="pay-plan__feat pay-plan__feat--yes">Unlimited event posting</li>
+        <li class="pay-plan__feat pay-plan__feat--yes">Access premium-only events</li>
+        <li class="pay-plan__feat pay-plan__feat--yes">Featured event listing (1 pinned)</li>
+        <li class="pay-plan__feat pay-plan__feat--yes">Attendee list CSV export</li>
+        <li class="pay-plan__feat pay-plan__feat--yes">Priority RSVP approval</li>
+        <li class="pay-plan__feat pay-plan__feat--yes">Analytics dashboard</li>
+        <li class="pay-plan__feat pay-plan__feat--yes">Dedicated support</li>
+      </ul>
+      <button class="ep-btn ep-btn--outline pay-plan__btn pay-select-btn" data-plan="organiser">Choose Organiser Pro</button>
+    </div>
+
+  </div>
+
+  <div class="pay-form-wrap" id="payFormWrap" style="display:none;">
+    <div class="pay-form-card">
+      <div class="pay-form-header">
+        <button class="pay-form-back" id="payFormBack">
+          <span class="ep-icon ep-icon--back ep-icon--purple"></span>
+        </button>
+        <div>
+          <h2 class="pay-form-title">Complete Payment</h2>
+          <p class="pay-form-sub" id="payFormSub">Student Plus — ₦1,500/month</p>
+        </div>
+        <div class="pay-form-secure">
+          <span class="ep-icon ep-icon--secure" style="width:14px;height:14px;"></span>
+          Secure
+        </div>
+      </div>
+
+      <form method="POST" action="{% url 'payments:checkout' %}" class="ep-form" id="paymentForm">
+        {% csrf_token %}
+        <input type="hidden" name="plan" id="selectedPlan" value="" />
+        <input type="hidden" name="amount" id="selectedAmount" value="" />
+
+        <div class="pay-summary" id="paySummary">
+          <div class="pay-summary__row">
+            <span id="summaryPlan">Student Plus</span>
+            <span id="summaryPrice">₦1,500</span>
+          </div>
+          <div class="pay-summary__row pay-summary__row--total">
+            <span>Total today</span>
+            <span id="summaryTotal">₦1,500</span>
+          </div>
+        </div>
+
+        <div class="ep-field">
+          <label class="ep-field__label">Cardholder Name *</label>
+          <div class="ep-field__input-wrap">
+            <span class="ep-icon ep-icon--user"></span>
+            <input type="text" name="cardholder_name" class="ep-input" placeholder="Name as it appears on card" required autocomplete="cc-name" />
+          </div>
+        </div>
+
+        <div class="ep-field">
+          <label class="ep-field__label">Card Number *</label>
+          <div class="ep-field__input-wrap">
+            <span class="ep-icon ep-icon--card"></span>
+            <input type="text" name="card_number" id="cardNumber" class="ep-input" placeholder="1234 5678 9012 3456" maxlength="19" required autocomplete="cc-number" />
+            <div class="pay-card-icons" id="cardBrandIcon">
+              <svg width="32" height="20" viewBox="0 0 32 20" fill="none">
+                <rect width="32" height="20" rx="3" fill="#1A1F71"/>
+                <circle cx="12" cy="10" r="6" fill="#EB001B"/>
+                <circle cx="20" cy="10" r="6" fill="#F79E1B"/>
+                <path d="M16 5.5a6 6 0 0 1 0 9 6 6 0 0 1 0-9z" fill="#FF5F00"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="pay-card-row">
+          <div class="ep-field">
+            <label class="ep-field__label">Expiry Date *</label>
+            <div class="ep-field__input-wrap">
+              <span class="ep-icon ep-icon--calendar"></span>
+              <input type="text" name="expiry" id="cardExpiry" class="ep-input" placeholder="MM / YY" maxlength="7" required autocomplete="cc-exp" />
+            </div>
+          </div>
+          <div class="ep-field">
+            <label class="ep-field__label">CVV *</label>
+            <div class="ep-field__input-wrap">
+              <span class="ep-icon ep-icon--lock"></span>
+              <input type="text" name="cvv" id="cardCvv" class="ep-input" placeholder="123" maxlength="4" required autocomplete="cc-csc" />
+            </div>
+          </div>
+        </div>
+
+        <div class="ep-field">
+          <label class="ep-field__label">Email for Receipt *</label>
+          <div class="ep-field__input-wrap">
+            <span class="ep-icon ep-icon--mail"></span>
+            <input type="email" name="email" class="ep-input" placeholder="your@email.com" required autocomplete="email" value="{{ user.email|default:'' }}" />
+          </div>
+        </div>
+
+        <div class="ep-field">
+          <label class="ep-field__label">Billing Address</label>
+          <div class="ep-field__input-wrap">
+            <span class="ep-icon ep-icon--home"></span>
+            <input type="text" name="billing_address" class="ep-input" placeholder="Street address, City" autocomplete="street-address" />
+          </div>
+        </div>
+
+        <label class="ep-checkbox">
+          <input type="checkbox" name="save_card" />
+          <span class="ep-checkbox__box">
+            <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+              <path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <span>Save card for future payments</span>
+        </label>
+
+        <button type="submit" class="ep-btn ep-btn--primary ep-btn--full pay-submit-btn" id="paySubmitBtn">
+          <span class="ep-icon ep-icon--lock" style="filter:brightness(10);opacity:1;"></span>
+          Pay <span id="btnAmount">₦1,500</span>
+        </button>
+
+        <p class="pay-disclaimer">
+          Your payment is encrypted and secure. You can cancel anytime from your account settings.
+          Powered by EventPulse Payments.
+        </p>
+      </form>
+    </div>
+  </div>
+
+  <div class="pay-faq">
+    <div class="pay-faq__inner">
+      <h2 class="pay-faq__title">Common Questions</h2>
+      <div class="pay-faq__grid">
+        <div class="pay-faq__item"><h3>Can I cancel anytime?</h3><p>Yes. Cancel from your account settings and your plan stays active until the end of the billing period.</p></div>
+        <div class="pay-faq__item"><h3>Is my card data safe?</h3><p>We never store raw card numbers. All payments are processed through secure encrypted channels.</p></div>
+        <div class="pay-faq__item"><h3>Can I upgrade or downgrade?</h3><p>Yes, you can switch plans at any time. Upgrades take effect immediately, downgrades at next billing cycle.</p></div>
+        <div class="pay-faq__item"><h3>Do you offer refunds?</h3><p>We offer a 7-day refund on your first payment if you are not satisfied.</p></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var plans = {
+  free:      { name:'Free',          price:0,    display:'₦0/forever'   },
+  student:   { name:'Student Plus',  price:1500, display:'₦1,500/month' },
+  organiser: { name:'Organiser Pro', price:4500, display:'₦4,500/month' }
+};
+document.querySelectorAll('.pay-select-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    var plan = btn.dataset.plan;
+    if (plan === 'free') return;
+    var p = plans[plan];
+    document.getElementById('selectedPlan').value   = plan;
+    document.getElementById('selectedAmount').value = p.price;
+    document.getElementById('payFormSub').textContent   = p.name + ' — ' + p.display;
+    document.getElementById('summaryPlan').textContent  = p.name;
+    document.getElementById('summaryPrice').textContent = '₦' + p.price.toLocaleString();
+    document.getElementById('summaryTotal').textContent = '₦' + p.price.toLocaleString();
+    document.getElementById('btnAmount').textContent    = '₦' + p.price.toLocaleString();
+    document.getElementById('payFormWrap').style.display = 'block';
+    document.getElementById('payFormWrap').scrollIntoView({ behavior:'smooth', block:'start' });
+    document.querySelectorAll('.pay-plan').forEach(function(c) { c.classList.remove('pay-plan--selected'); });
+    document.getElementById('plan-' + plan).classList.add('pay-plan--selected');
+  });
+});
+document.getElementById('payFormBack').addEventListener('click', function() {
+  document.getElementById('payFormWrap').style.display = 'none';
+  document.querySelectorAll('.pay-plan').forEach(function(c) { c.classList.remove('pay-plan--selected'); });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+document.getElementById('cardNumber').addEventListener('input', function() {
+  var v = this.value.replace(/\D/g,'').substring(0,16);
+  this.value = v.replace(/(.{4})/g,'$1 ').trim();
+});
+document.getElementById('cardExpiry').addEventListener('input', function() {
+  var v = this.value.replace(/\D/g,'').substring(0,4);
+  if (v.length >= 2) v = v.substring(0,2) + ' / ' + v.substring(2);
+  this.value = v;
+});
+document.getElementById('cardCvv').addEventListener('input', function() {
+  this.value = this.value.replace(/\D/g,'').substring(0,4);
+});
+</script>
+{% endblock %}

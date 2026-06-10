@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Create Account — EventPulse{% endblock %}
+{% block aurora %}<canvas id="aurora-canvas"></canvas>{% endblock %}
+{% block navbar %}{% endblock %}
+
+{% block content %}
+<div class="ep-auth" style="align-items:flex-start;padding-top:5rem;padding-bottom:3rem;">
+  <div class="ep-auth--register">
+
+    <div class="ep-auth__splash">
+      <div class="ep-auth__splash-img"></div>
+      <div class="ep-auth__splash-overlay"></div>
+      <div class="ep-auth__splash-content">
+        <p class="ep-auth__splash-quote">"Your campus.<br>Your events.<br>Your community."</p>
+        <p class="ep-auth__splash-sub">Find lectures, socials, sports days, career fairs and parties at your university.</p>
+      </div>
+    </div>
+
+    <div class="ep-auth__form-side" style="justify-content:flex-start;overflow-y:auto;max-height:90vh;">
+
+      <div class="ep-auth__logo">
+        <svg width="20" height="20" viewBox="0 0 22 22" fill="none">
+          <path d="M11 2L13.5 8H20L14.5 12.5L16.5 19L11 15L5.5 19L7.5 12.5L2 8H8.5L11 2Z" fill="url(#lr)"/>
+          <defs><linearGradient id="lr" x1="2" y1="2" x2="20" y2="19" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#4B6BF1"/><stop offset="1" stop-color="#7C3AED"/>
+          </linearGradient></defs>
+        </svg>
+        <span>EventPulse</span>
+      </div>
+
+      <h1 class="ep-auth__title">Create Account</h1>
+      <p class="ep-auth__sub">Join your campus community today.</p>
+
+      {% if form.non_field_errors %}
+        {% for error in form.non_field_errors %}
+          <div class="ep-inline-error">{{ error }}</div>
+        {% endfor %}
+      {% endif %}
+
+      <form method="POST" class="ep-form">
+        {% csrf_token %}
+
+        <div class="ep-field">
+          <label class="ep-field__label">I am a</label>
+          <div class="ep-role-toggle ep-role-toggle--3">
+            <input type="radio" name="role" id="role_student" value="student" checked />
+            <label for="role_student">🎓 Student</label>
+            <input type="radio" name="role" id="role_society" value="society" />
+            <label for="role_society">🤝 Society</label>
+            <input type="radio" name="role" id="role_staff" value="staff" />
+            <label for="role_staff">👩‍🏫 Staff</label>
+          </div>
+        </div>
+
+        <div class="ep-field">
+          <label class="ep-field__label">Full Name</label>
+          <div class="ep-field__input-wrap">
+            <span class="ep-icon ep-icon--user"></span>
+            <input type="text" name="first_name" class="ep-input"
+              placeholder="Your full name" value="{{ request.POST.first_name|default:'' }}" />
+          </div>
+        </div>
+
+        <div class="ep-field">
+          <label class="ep-field__label">Username</label>
+          <div class="ep-field__input-wrap">
+            <span class="ep-icon ep-icon--user"></span>
+            <input type="text" name="{{ form.username.html_name }}" id="{{ form.username.id_for_label }}"
+              class="ep-input {% if form.username.errors %}ep-input--error{% endif %}"
+              placeholder="Choose a username" value="{{ form.username.value|default:'' }}" autocomplete="username" />
+          </div>
+          {% if form.username.errors %}<span class="ep-field__error">{{ form.username.errors.0 }}</span>{% endif %}
+        </div>
+
+        <div class="ep-field">
+          <label class="ep-field__label">University Email</label>
+          <div class="ep-field__input-wrap">
+            <span class="ep-icon ep-icon--mail"></span>
+            <input type="email" name="{{ form.email.html_name }}" id="{{ form.email.id_for_label }}"
+              class="ep-input {% if form.email.errors %}ep-input--error{% endif %}"
+              placeholder="yourname@university.ac.uk" value="{{ form.email.value|default:'' }}" autocomplete="email" />
+          </div>
+          {% if form.email.errors %}<span class="ep-field__error">{{ form.email.errors.0 }}</span>{% endif %}
+        </div>
+
+        <div class="ep-field">
+          <label class="ep-field__label">University</label>
+          <div class="ep-field__input-wrap">
+            <span class="ep-icon ep-icon--home"></span>
+            <input type="text" name="university" class="ep-input"
+              placeholder="e.g. University of Lagos" value="{{ request.POST.university|default:'' }}" />
+          </div>
+        </div>
+
+        <div id="studentFields">
+          <div class="ep-field">
+            <label class="ep-field__label">Course / Programme</label>
+            <div class="ep-field__input-wrap">
+              <span class="ep-icon ep-icon--book"></span>
+              <input type="text" name="course" class="ep-input"
+                placeholder="e.g. Computer Science" value="{{ request.POST.course|default:'' }}" />
+            </div>
+          </div>
+
+          <div class="ep-field">
+            <label class="ep-field__label">Year of Study</label>
+            <select name="year_of_study" class="ep-select">
+              <option value="" disabled {% if not request.POST.year_of_study %}selected{% endif %}>Select your year</option>
+              <option value="1"   {% if request.POST.year_of_study == '1'   %}selected{% endif %}>Year 1 — Foundation</option>
+              <option value="2"   {% if request.POST.year_of_study == '2'   %}selected{% endif %}>Year 2</option>
+              <option value="3"   {% if request.POST.year_of_study == '3'   %}selected{% endif %}>Year 3</option>
+              <option value="4"   {% if request.POST.year_of_study == '4'   %}selected{% endif %}>Year 4</option>
+              <option value="pg"  {% if request.POST.year_of_study == 'pg'  %}selected{% endif %}>Postgraduate</option>
+              <option value="phd" {% if request.POST.year_of_study == 'phd' %}selected{% endif %}>PhD</option>
+            </select>
+          </div>
+
+          <div class="ep-field">
+            <label class="ep-field__label">
+              Student ID
+              <span style="color:var(--muted2);font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span>
+            </label>
+            <div class="ep-field__input-wrap">
+              <span class="ep-icon ep-icon--id"></span>
+              <input type="text" name="student_id" class="ep-input"
+                placeholder="e.g. STU2024001" value="{{ request.POST.student_id|default:'' }}" />
+            </div>
+          </div>
+        </div>
+
+        <div class="ep-field">
+          <label class="ep-field__label">Password</label>
+          <div class="ep-field__input-wrap">
+            <span class="ep-icon ep-icon--lock"></span>
+            <input type="password" name="{{ form.password1.html_name }}" id="id_password1"
+              class="ep-input ep-input--has-eye {% if form.password1.errors %}ep-input--error{% endif %}"
+              placeholder="Create a strong password" autocomplete="new-password" />
+            <button type="button" class="ep-field__eye" aria-label="Toggle password">
+              <svg class="eye-show" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+              <svg class="eye-hide" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:none">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                <line x1="1" y1="1" x2="23" y2="23"/>
+              </svg>
+            </button>
+          </div>
+          {% if form.password1.errors %}<span class="ep-field__error">{{ form.password1.errors.0 }}</span>{% endif %}
+          <div class="ep-strength">
+            <div class="ep-strength__bar"><div class="ep-strength__fill" id="strengthFill"></div></div>
+            <span class="ep-strength__label" id="strengthLabel"></span>
+          </div>
+        </div>
+
+        <div class="ep-field">
+          <label class="ep-field__label">Confirm Password</label>
+          <div class="ep-field__input-wrap">
+            <span class="ep-icon ep-icon--lock"></span>
+            <input type="password" name="{{ form.password2.html_name }}" id="id_password2"
+              class="ep-input ep-input--has-eye {% if form.password2.errors %}ep-input--error{% endif %}"
+              placeholder="Repeat your password" autocomplete="new-password" />
+            <button type="button" class="ep-field__eye" aria-label="Toggle password">
+              <svg class="eye-show" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+              <svg class="eye-hide" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:none">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                <line x1="1" y1="1" x2="23" y2="23"/>
+              </svg>
+            </button>
+          </div>
+          {% if form.password2.errors %}<span class="ep-field__error">{{ form.password2.errors.0 }}</span>{% endif %}
+        </div>
+
+        <label class="ep-checkbox">
+          <input type="checkbox" name="terms" required />
+          <span class="ep-checkbox__box">
+            <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+              <path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <span>I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></span>
+        </label>
+
+        <button type="submit" class="ep-btn ep-btn--primary ep-btn--full">
+          Join EventPulse →
+        </button>
+
+      </form>
+
+      <p class="ep-auth__footer">
+        Already have an account? <a href="{% url 'accounts:login' %}">Sign in →</a>
+      </p>
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var roleInputs    = document.querySelectorAll('input[name="role"]');
+var studentFields = document.getElementById('studentFields');
+function toggleStudentFields() {
+  var selected = document.querySelector('input[name="role"]:checked');
+  studentFields.style.display = (selected && selected.value === 'student') ? '' : 'none';
+}
+roleInputs.forEach(function(r) { r.addEventListener('change', toggleStudentFields); });
+toggleStudentFields();
+</script>
+{% endblock %}
