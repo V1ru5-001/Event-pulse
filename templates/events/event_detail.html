@@ -22,6 +22,14 @@
         Back
       </a>
       <div class="detail-hero__nav-right">
+        {% if user == event.organiser %}
+          <a href="{% url 'events:edit' event.slug %}" class="ep-btn ep-btn--outline ep-btn--sm" style="margin-right:.5rem;">✏️ Edit</a>
+          <form method="POST" action="{% url 'events:delete' event.slug %}" style="display:inline;"
+            onsubmit="return confirm('Delete this event? This cannot be undone.')">
+            {% csrf_token %}
+            <button type="submit" class="ep-btn ep-btn--sm" style="background:rgba(255,77,109,0.15);border:1px solid rgba(255,77,109,0.4);color:#FCA5A5;margin-right:.5rem;">🗑️ Delete</button>
+          </form>
+        {% endif %}
         <button class="detail-hero__share" onclick="navigator.clipboard.writeText(window.location.href);alert('Link copied!')">
           <span class="ep-icon ep-icon--share" style="filter:brightness(10);opacity:1;"></span>
           Share
@@ -37,9 +45,21 @@
             {{ event.category.name }}
           </span>
         {% endif %}
-        {% if event.is_past %}
+
+        <!-- ── STATUS BADGE ── -->
+        {% if is_ended %}
           <span class="ep-badge ep-badge--sold">Ended</span>
-        {% elif event.is_free %}
+        {% elif is_live %}
+          <span class="ep-badge ep-badge--live">
+            <span class="ep-live-dot"></span> Live Now
+          </span>
+        {% elif is_coming_soon %}
+          <span class="ep-badge ep-badge--soon">
+            <span class="ep-soon-dot"></span> Coming Soon
+          </span>
+        {% endif %}
+
+        {% if event.is_free %}
           <span class="ep-badge ep-badge--free">Free</span>
         {% else %}
           <span class="ep-badge ep-badge--paid">₦{{ event.ticket_price }}</span>
@@ -52,6 +72,33 @@
         {% endif %}
       </div>
       <h1 class="detail-hero__title">{{ event.title }}</h1>
+
+      <!-- ── LIVE BANNER ── -->
+      {% if is_live %}
+      <div class="detail-live-banner">
+        <span class="ep-live-dot ep-live-dot--lg"></span>
+        <span>This event is happening <strong>right now</strong> on campus</span>
+        {% if event.location_name %}<span class="detail-live-venue">📍 {{ event.location_name }}</span>{% endif %}
+      </div>
+      {% endif %}
+
+      <!-- ── COMING SOON COUNTDOWN ── -->
+      {% if is_coming_soon %}
+      <div class="detail-countdown-wrap">
+        <div class="detail-countdown-label">Starts in</div>
+        <div class="detail-countdown" id="eventCountdown"
+          data-start="{{ event.start_datetime|date:'c' }}">
+          <div class="detail-countdown__unit"><span id="cd-days">--</span><small>days</small></div>
+          <div class="detail-countdown__sep">:</div>
+          <div class="detail-countdown__unit"><span id="cd-hours">--</span><small>hrs</small></div>
+          <div class="detail-countdown__sep">:</div>
+          <div class="detail-countdown__unit"><span id="cd-mins">--</span><small>min</small></div>
+          <div class="detail-countdown__sep">:</div>
+          <div class="detail-countdown__unit"><span id="cd-secs">--</span><small>sec</small></div>
+        </div>
+      </div>
+      {% endif %}
+
     </div>
   </div>
 
@@ -154,70 +201,61 @@
 
           {% if not user.is_authenticated %}
             <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="ep-btn ep-btn--primary ep-btn--full">Sign in to RSVP</a>
-          {% elif event.is_past %}
-            <div style="
-              background: rgba(255,77,109,0.08);
-              border: 1px solid rgba(255,77,109,0.25);
-              border-radius: 14px;
-              padding: 1.25rem;
-              text-align: center;
-              margin-bottom: .5rem;
-            ">
-              <div style="margin-bottom:.5rem;">
-                <span class="ep-empty-icon ep-empty-icon--events"
-                  style="width:40px;height:40px;background:rgba(255,77,109,0.12);
-                         background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23FF4D6D'%3E%3Cpath d='M20 3h-1V1h-2v2H7V1H5v2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 18H4V8h16v13z'/%3E%3C/svg%3E&quot;);
-                         background-size:22px;display:inline-flex;border-radius:10px;">
-                </span>
-              </div>
-              <div style="font-weight:700;font-size:.95rem;color:#FCA5A5;margin-bottom:.25rem;">
-                This event has ended
-              </div>
-              <div style="font-size:.78rem;color:var(--muted2);">
-                {{ event.start_datetime|date:"d M Y" }}
-              </div>
+
+          {% elif is_ended %}
+            <div class="detail-ended-box">
+              <div class="detail-ended-box__title">This event has ended</div>
+              <div class="detail-ended-box__date">{{ event.start_datetime|date:"d M Y" }}</div>
             </div>
-            <a href="{% url 'events:home' %}" class="ep-btn ep-btn--outline ep-btn--full" style="margin-top:.25rem;">
-              Browse More Events
-            </a>
-          {% elif event.is_full and not user_rsvp %}
-            <form method="POST" action="{% url 'events:rsvp' event.slug %}">
-              {% csrf_token %}
-              <input type="hidden" name="action" value="waitlist" />
-              <button type="submit" class="ep-btn ep-btn--coral ep-btn--full">Join Waitlist</button>
-            </form>
-          {% elif user_rsvp %}
-            {% if user_rsvp.status == 'approved' %}
-              <button class="ep-btn ep-btn--full" disabled style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#6EE7B7;cursor:default;">You're going!</button>
-              {% if event.qr_code %}
-                <div class="detail-qr">
-                  <img src="{{ event.qr_code.url }}" alt="Check-in QR Code" />
-                  <p>Show this at the door to check in</p>
-                </div>
+            <a href="{% url 'events:home' %}" class="ep-btn ep-btn--outline ep-btn--full" style="margin-top:.5rem;">Browse More Events</a>
+
+          {% elif is_coming_soon %}
+            {% if user_rsvp %}
+              {% if user_rsvp.status == 'approved' %}
+                <button class="ep-btn ep-btn--full" disabled style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#6EE7B7;cursor:default;">✅ You're going!</button>
+              {% elif user_rsvp.status == 'pending' %}
+                <button class="ep-btn ep-btn--full" disabled style="background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);color:#FDE68A;cursor:default;">⏳ Request pending</button>
+              {% elif user_rsvp.status == 'waitlist' %}
+                <button class="ep-btn ep-btn--full" disabled style="background:rgba(75,107,241,0.15);border:1px solid rgba(75,107,241,0.3);color:#A5B4FC;cursor:default;">📋 On waitlist</button>
               {% endif %}
-            {% elif user_rsvp.status == 'pending' %}
-              <button class="ep-btn ep-btn--full" disabled style="background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);color:#FDE68A;cursor:default;">Request pending</button>
-            {% elif user_rsvp.status == 'waitlist' %}
-              <button class="ep-btn ep-btn--full" disabled style="background:rgba(75,107,241,0.15);border:1px solid rgba(75,107,241,0.3);color:#A5B4FC;cursor:default;">On waitlist</button>
+            {% elif event.is_full %}
+              <form method="POST" action="{% url 'events:rsvp' event.slug %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="waitlist" />
+                <button type="submit" class="ep-btn ep-btn--coral ep-btn--full">Join Waitlist</button>
+              </form>
+            {% elif event.is_premium_only and not user.is_premium %}
+              <div class="detail-premium-lock">
+                <p>This event is for Premium members only.</p>
+                <a href="{% url 'payments:pricing' %}" class="ep-btn ep-btn--primary ep-btn--full">Upgrade to Premium</a>
+              </div>
             {% else %}
               <form method="POST" action="{% url 'events:rsvp' event.slug %}">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="rsvp" />
-                <button type="submit" class="ep-btn ep-btn--primary ep-btn--full">Request to Join</button>
+                <textarea name="note" class="ep-textarea" placeholder="Optional message to the organiser..." rows="2" style="margin-bottom:.75rem;border-radius:10px;font-size:.85rem;"></textarea>
+                <button type="submit" class="ep-btn ep-btn--primary ep-btn--full">Reserve My Spot</button>
               </form>
             {% endif %}
-          {% elif event.is_premium_only and not user.is_premium %}
-            <div class="detail-premium-lock">
-              <p>This event is for Premium members only.</p>
-              <a href="{% url 'payments:pricing' %}" class="ep-btn ep-btn--primary ep-btn--full">Upgrade to Premium</a>
-            </div>
-          {% else %}
-            <form method="POST" action="{% url 'events:rsvp' event.slug %}">
-              {% csrf_token %}
-              <input type="hidden" name="action" value="rsvp" />
-              <textarea name="note" class="ep-textarea" placeholder="Optional message to the organiser..." rows="2" style="margin-bottom:.75rem;border-radius:10px;font-size:.85rem;"></textarea>
-              <button type="submit" class="ep-btn ep-btn--primary ep-btn--full">Request to Join</button>
-            </form>
+
+          {% elif is_live %}
+            {% if user_rsvp and user_rsvp.status == 'approved' %}
+              <button class="ep-btn ep-btn--full ep-btn--live" disabled>🔴 You're checked in — Live Now</button>
+            {% elif user_rsvp %}
+              <button class="ep-btn ep-btn--full" disabled style="background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);color:#FDE68A;cursor:default;">⏳ Request pending</button>
+            {% elif event.is_full %}
+              <form method="POST" action="{% url 'events:rsvp' event.slug %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="waitlist" />
+                <button type="submit" class="ep-btn ep-btn--coral ep-btn--full">Join Waitlist</button>
+              </form>
+            {% else %}
+              <form method="POST" action="{% url 'events:rsvp' event.slug %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="rsvp" />
+                <button type="submit" class="ep-btn ep-btn--primary ep-btn--full">🔴 Join — Happening Now</button>
+              </form>
+            {% endif %}
           {% endif %}
 
           <div class="detail-share">
@@ -233,4 +271,29 @@
   </div>
 
 </div>
+{% endblock %}
+
+{% block extra_js %}
+{% if is_coming_soon %}
+<script>
+(function() {
+  var startTime = new Date("{{ event.start_datetime|date:'c' }}").getTime();
+  function tick() {
+    var now  = new Date().getTime();
+    var diff = startTime - now;
+    if (diff <= 0) { location.reload(); return; }
+    var d = Math.floor(diff / (1000*60*60*24));
+    var h = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
+    var m = Math.floor((diff % (1000*60*60)) / (1000*60));
+    var s = Math.floor((diff % (1000*60)) / 1000);
+    document.getElementById('cd-days').textContent  = String(d).padStart(2,'0');
+    document.getElementById('cd-hours').textContent = String(h).padStart(2,'0');
+    document.getElementById('cd-mins').textContent  = String(m).padStart(2,'0');
+    document.getElementById('cd-secs').textContent  = String(s).padStart(2,'0');
+  }
+  tick();
+  setInterval(tick, 1000);
+})();
+</script>
+{% endif %}
 {% endblock %}
