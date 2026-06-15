@@ -27,67 +27,31 @@
   </div>
 </section>
 
-<!-- ── SEARCH BAR ──────────────────────────── -->
-<div class="ep-search-wrap">
-  <form method="GET" action="{% url 'events:home' %}" class="ep-search-form">
-    <div class="ep-search-inner">
-      <span class="ep-search-icon"></span>
-      <input
-        type="text"
-        name="q"
-        class="ep-search-input"
-        placeholder="Search events, venues, organisers..."
-        value="{{ query }}"
-        autocomplete="off"
-      />
-      {% if query %}
-        <a href="{% url 'events:home' %}" class="ep-search-clear">✕</a>
-      {% endif %}
-      <button type="submit" class="ep-btn ep-btn--primary ep-search-btn">Search</button>
-    </div>
-  </form>
-</div>
-
-<!-- ── CATEGORY FILTER ────────────────────── -->
 <div class="ep-cats">
   <div class="ep-cats__inner">
-    <a href="{% url 'events:home' %}{% if query %}?q={{ query }}{% endif %}" class="ep-cat {% if not active_cat or active_cat == 'all' %}active{% endif %}">All Events</a>
-    <a href="?cat=academic{% if query %}&q={{ query }}{% endif %}" class="ep-cat {% if active_cat == 'academic' %}active{% endif %}"><span class="ep-cat-icon ep-cat-icon--academic"></span> Academic</a>
-    <a href="?cat=social{% if query %}&q={{ query }}{% endif %}" class="ep-cat {% if active_cat == 'social' %}active{% endif %}"><span class="ep-cat-icon ep-cat-icon--social"></span> Social</a>
-    <a href="?cat=sports{% if query %}&q={{ query }}{% endif %}" class="ep-cat {% if active_cat == 'sports' %}active{% endif %}"><span class="ep-cat-icon ep-cat-icon--sports"></span> Sports</a>
-    <a href="?cat=career{% if query %}&q={{ query }}{% endif %}" class="ep-cat {% if active_cat == 'career' %}active{% endif %}"><span class="ep-cat-icon ep-cat-icon--career"></span> Career</a>
-    <a href="?cat=arts{% if query %}&q={{ query }}{% endif %}" class="ep-cat {% if active_cat == 'arts' %}active{% endif %}"><span class="ep-cat-icon ep-cat-icon--arts"></span> Arts</a>
-    <a href="?cat=music{% if query %}&q={{ query }}{% endif %}" class="ep-cat {% if active_cat == 'music' %}active{% endif %}"><span class="ep-cat-icon ep-cat-icon--music"></span> Music</a>
-    <a href="?cat=international{% if query %}&q={{ query }}{% endif %}" class="ep-cat {% if active_cat == 'international' %}active{% endif %}"><span class="ep-cat-icon ep-cat-icon--international"></span> International</a>
+    <button class="ep-cat active" data-cat="all">All Events</button>
+    <button class="ep-cat" data-cat="academic"><span class="ep-cat-icon ep-cat-icon--academic"></span> Academic</button>
+    <button class="ep-cat" data-cat="social"><span class="ep-cat-icon ep-cat-icon--social"></span> Social</button>
+    <button class="ep-cat" data-cat="sports"><span class="ep-cat-icon ep-cat-icon--sports"></span> Sports</button>
+    <button class="ep-cat" data-cat="career"><span class="ep-cat-icon ep-cat-icon--career"></span> Career</button>
+    <button class="ep-cat" data-cat="arts"><span class="ep-cat-icon ep-cat-icon--arts"></span> Arts</button>
+    <button class="ep-cat" data-cat="music"><span class="ep-cat-icon ep-cat-icon--music"></span> Music</button>
+    <button class="ep-cat" data-cat="international"><span class="ep-cat-icon ep-cat-icon--international"></span> International</button>
   </div>
 </div>
 
-<!-- ── EVENT FEED ──────────────────────────── -->
 <section class="ep-feed" id="feed">
   <div class="ep-feed__header">
     <h2 class="ep-feed__title">
-      {% if query %}
-        Results for "{{ query }}" — {{ events|length }} found
-      {% elif active_cat and active_cat != 'all' %}
-        {{ active_cat|capfirst }} Events — {{ events|length }} found
-      {% elif events %}
-        {{ events|length }} Event{{ events|length|pluralize }} on Campus
-      {% else %}
-        Campus Events
-      {% endif %}
+      {% if events %}{{ events|length }} Event{{ events|length|pluralize }} on Campus
+      {% else %}Campus Events{% endif %}
     </h2>
   </div>
 
   <div class="ep-grid">
     {% for event in events %}
-
-    {% now "Y-m-d H:i:s" as current_time %}
-    {% with is_live=False %}
-
-    <article class="ep-card {% if event.is_past %}ep-card--ended{% endif %}"
-      data-cat="{{ event.category.slug|default:'all' }}"
+    <article class="ep-card" data-cat="{{ event.category.slug|default:'all' }}"
       onclick="window.location.href='{% url "events:detail" event.slug %}'">
-
       <div class="ep-card__img">
         {% if event.cover_image %}
           <img src="{{ event.cover_image.url }}" alt="{{ event.title }}" loading="lazy">
@@ -97,7 +61,6 @@
           </div>
         {% endif %}
         <div class="ep-card__img-overlay"></div>
-
         <div class="ep-card__badges">
           <span class="ep-badge ep-badge--cat">
             <span class="ep-cat-icon ep-cat-icon--{{ event.category.slug|default:'academic' }}"></span>
@@ -112,31 +75,13 @@
             {% endif %}
           </div>
         </div>
-
-        <!-- ── STATUS OVERLAY ── -->
         {% if event.is_past %}
           <div class="ep-card__ended-overlay">
             <span class="ep-card__ended-label">This event has ended</span>
           </div>
-        {% elif event.start_datetime > now %}
-          <div class="ep-card__soon-overlay">
-            <span class="ep-card__soon-label">
-              <span class="ep-soon-dot"></span>
-              Coming Soon
-            </span>
-          </div>
-        {% else %}
-          <div class="ep-card__live-overlay">
-            <span class="ep-card__live-label">
-              <span class="ep-live-dot"></span>
-              Live Now
-            </span>
-          </div>
         {% endif %}
-
         <div class="ep-card__view-pill">View Event →</div>
       </div>
-
       <div class="ep-card__body">
         <h3 class="ep-card__title">{{ event.title }}</h3>
         <div class="ep-card__meta">
@@ -173,17 +118,21 @@
           </div>
         </div>
 
-        <!-- ── ORGANISER CONTROLS ── -->
-        {% if user == event.organiser %}
-        <div class="ep-card__organiser-actions" onclick="event.stopPropagation()">
-          <a href="{% url 'events:edit' event.slug %}" class="ep-card__action-btn ep-card__action-btn--edit">
-            ✏️ Edit
+        <!-- only shown to the event creator -->
+        {% if request.user.is_authenticated and request.user == event.organiser %}
+        <div style="display:flex;gap:.5rem;margin-top:.75rem;padding-top:.75rem;border-top:1px solid var(--border);" onclick="event.stopPropagation()">
+          <a href="{% url 'events:edit' event.slug %}"
+            style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:.4rem;padding:.45rem .75rem;border-radius:8px;font-size:.78rem;font-weight:600;font-family:var(--font-body);text-decoration:none;background:rgba(75,107,241,.15);border:1px solid rgba(75,107,241,.35);color:#A5B4FC;">
+            <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="#A5B4FC" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit
           </a>
-          <form method="POST" action="{% url 'events:delete' event.slug %}"
-            onsubmit="return confirm('Delete \'{{ event.title }}\'? This cannot be undone.')">
+          <form method="POST" action="{% url 'events:delete' event.slug %}" style="flex:1;margin:0;"
+            onsubmit="return confirm('Delete this event? This cannot be undone.')">
             {% csrf_token %}
-            <button type="submit" class="ep-card__action-btn ep-card__action-btn--delete">
-              🗑️ Delete
+            <button type="submit"
+              style="width:100%;display:inline-flex;align-items:center;justify-content:center;gap:.4rem;padding:.45rem .75rem;border-radius:8px;font-size:.78rem;font-weight:600;font-family:var(--font-body);cursor:pointer;background:rgba(255,77,109,.18);border:1.5px solid rgba(255,77,109,.55);color:#FF4D6D;">
+              <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="#FF4D6D" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+              Delete
             </button>
           </form>
         </div>
@@ -191,20 +140,12 @@
 
       </div>
     </article>
-    {% endwith %}
-
     {% empty %}
-    <div class="ep-empty" style="grid-column:1/-1;">
+    <div class="ep-empty">
       <div class="ep-empty-icon ep-empty-icon--events"></div>
-      {% if query %}
-        <h3>No results for "{{ query }}"</h3>
-        <p>Try a different search term or browse all events.</p>
-        <a href="{% url 'events:home' %}" class="ep-btn ep-btn--outline" style="margin-top:1rem">Clear Search</a>
-      {% else %}
-        <h3>No events yet</h3>
-        <p>Be the first to post a campus event.</p>
-        <a href="{% url 'events:create' %}" class="ep-btn ep-btn--primary" style="margin-top:1rem">Post an Event</a>
-      {% endif %}
+      <h3>No events yet</h3>
+      <p>Be the first to post a campus event.</p>
+      <a href="{% url 'events:create' %}" class="ep-btn ep-btn--primary" style="margin-top:1rem">Post an Event</a>
     </div>
     {% endfor %}
   </div>

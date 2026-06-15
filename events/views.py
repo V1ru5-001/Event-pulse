@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.utils.text import slugify
 from django.utils import timezone
 from django.db.models import Q
 
@@ -24,41 +25,43 @@ def home_view(request):
     """Main event feed — authenticated users only."""
     query    = request.GET.get('q', '').strip()
     category = request.GET.get('cat', '').strip()
+    now      = timezone.now()
 
     events = Event.objects.filter(
         status=Event.Status.PUBLISHED
     ).select_related('organiser', 'category').order_by('-is_featured', '-created_at')
 
-    # ── Search ────────────────────────────────
+    # ── Search — title matched first ──────────
     if query:
         events = events.filter(
             Q(title__icontains=query) |
             Q(description__icontains=query) |
             Q(location_name__icontains=query) |
+            Q(location_address__icontains=query) |
             Q(organiser__username__icontains=query) |
-            Q(category__name__icontains=query)
+            Q(organiser__first_name__icontains=query) |
+            Q(category__name__icontains=query) |
+            Q(area__icontains=query)
         )
 
     # ── Category filter ───────────────────────
     if category and category != 'all':
         events = events.filter(category__slug=category)
 
-    now = timezone.now()
-
     return render(request, 'events/home.html', {
-        'events':        events,
-        'query':         query,
-        'active_cat':    category,
-        'now':           now,
+        'events':     events,
+        'query':      query,
+        'active_cat': category,
+        'now':        now,
     })
 
 
 @login_required(login_url='accounts:login')
 def create_event_view(request, slug=None):
     categories = Category.objects.all().order_by('name')
-    event      = None
 
-    # ── Edit mode ─────────────────────────────
+    # ── Edit mode: load existing event ────────
+    event = None
     if slug:
         event = get_object_or_404(Event, slug=slug, organiser=request.user)
 
@@ -81,6 +84,7 @@ def create_event_view(request, slug=None):
                 'categories': categories, 'event': event
             })
 
+        # ── Resolve category ──────────────────
         category = None
         if category_id:
             try:
@@ -88,20 +92,20 @@ def create_event_view(request, slug=None):
                     category = Category.objects.get(pk=category_id)
                 else:
                     slug_to_name = {
-                        'academic':      ('🎓', 'Academic'),
-                        'social':        ('🎉', 'Social'),
-                        'sports':        ('⚽', 'Sports'),
-                        'career':        ('💼', 'Career'),
-                        'arts':          ('🎭', 'Arts & Culture'),
-                        'music':         ('🎵', 'Music & Parties'),
-                        'international': ('🌍', 'International'),
-                        'clubs':         ('🤝', 'Clubs & Societies'),
+                        'academic':      ('Academic',),
+                        'social':        ('Social',),
+                        'sports':        ('Sports',),
+                        'career':        ('Career',),
+                        'arts':          ('Arts & Culture',),
+                        'music':         ('Music & Parties',),
+                        'international': ('International',),
                     }
+                    # clubs is not a valid category — never create it
                     if category_id in slug_to_name:
-                        icon, name = slug_to_name[category_id]
+                        name = slug_to_name[category_id][0]
                         category, _ = Category.objects.get_or_create(
                             slug=category_id,
-                            defaults={'name': name, 'icon': icon}
+                            defaults={'name': name}
                         )
             except Category.DoesNotExist:
                 pass
@@ -109,47 +113,47 @@ def create_event_view(request, slug=None):
         status = Event.Status.PUBLISHED if action == 'publish' else Event.Status.DRAFT
 
         if event:
-            # ── Update existing event ──────────
-            event.title           = title
-            event.description     = description
-            event.category        = category
-            event.location_name   = location
-            event.location_address= request.POST.get('location_address', '')
-            event.start_datetime  = start_dt
-            event.end_datetime    = end_dt
-            event.price_type      = price_type
-            event.ticket_price    = ticket_price
-            event.capacity        = capacity
-            event.is_premium_only = is_premium
-            event.status          = status
+            # ── UPDATE existing event ─────────
+            event.title            = title
+            event.description      = description
+            event.category         = category
+            event.location_name    = location
+            event.location_address = request.POST.get('location_address', '')
+            event.start_datetime   = start_dt
+            event.end_datetime     = end_dt
+            event.price_type       = price_type
+            event.ticket_price     = ticket_price
+            event.capacity         = capacity
+            event.is_premium_only  = is_premium
+            event.status           = status
             if 'cover_image' in request.FILES:
                 event.cover_image = request.FILES['cover_image']
             event.save()
-            messages.success(request, f'"{event.title}" has been updated! ✏️')
+            messages.success(request, f'"{event.title}" has been updated!')
         else:
-            # ── Create new event ───────────────
+            # ── CREATE new event ──────────────
             event = Event(
-                title           = title,
-                description     = description,
-                organiser       = request.user,
-                category        = category,
-                location_name   = location,
-                location_address= request.POST.get('location_address', ''),
-                start_datetime  = start_dt,
-                price_type      = price_type,
-                ticket_price    = ticket_price,
-                capacity        = capacity,
-                is_premium_only = is_premium,
-                status          = status,
+                title            = title,
+                description      = description,
+                organiser        = request.user,
+                category         = category,
+                location_name    = location,
+                location_address = request.POST.get('location_address', ''),
+                start_datetime   = start_dt,
+                price_type       = price_type,
+                ticket_price     = ticket_price,
+                capacity         = capacity,
+                is_premium_only  = is_premium,
+                status           = status,
             )
             if end_dt:
                 event.end_datetime = end_dt
             if 'cover_image' in request.FILES:
                 event.cover_image = request.FILES['cover_image']
             event.save()
+            messages.success(request, f'"{event.title}" is now live!')
 
         if action == 'publish':
-            messages.success(request, f'"{event.title}" is now live! 🚀')
             return redirect('events:detail', slug=event.slug)
         else:
             messages.info(request, f'"{event.title}" saved as draft.')
@@ -159,7 +163,6 @@ def create_event_view(request, slug=None):
         'categories': categories,
         'event':      event,
     })
-
 
 @login_required(login_url='accounts:login')
 def delete_event_view(request, slug):
@@ -174,28 +177,20 @@ def delete_event_view(request, slug):
 
 @login_required(login_url='accounts:login')
 def event_detail_view(request, slug):
-    event     = get_object_or_404(Event, slug=slug)
-    now       = timezone.now()
-    user_rsvp = None
+    event = get_object_or_404(Event, slug=slug)
 
-    if event.is_premium_only and not getattr(request.user, 'is_premium', False):
+    # check premium gate
+    if event.is_premium_only and not request.user.is_premium:
         messages.warning(request, 'This event is for premium members only.')
 
+    # get user's RSVP if any
+    user_rsvp = None
     if request.user.is_authenticated:
         user_rsvp = RSVP.objects.filter(event=event, user=request.user).first()
 
-    # ── Event status ──────────────────────────
-    is_live        = event.start_datetime <= now and (event.end_datetime is None or now <= event.end_datetime)
-    is_coming_soon = event.start_datetime > now
-    is_ended       = event.end_datetime and now > event.end_datetime or (not event.end_datetime and now > event.start_datetime)
-
     return render(request, 'events/event_detail.html', {
-        'event':         event,
-        'user_rsvp':     user_rsvp,
-        'now':           now,
-        'is_live':       is_live,
-        'is_coming_soon':is_coming_soon,
-        'is_ended':      is_ended,
+        'event':     event,
+        'user_rsvp': user_rsvp,
     })
 
 
@@ -211,7 +206,7 @@ def profile_view(request, username):
         status=Event.Status.PUBLISHED
     ).order_by('-created_at')
 
-    draft_events     = Event.objects.none()
+    draft_events = Event.objects.none()
     attending_events = RSVP.objects.none()
 
     if is_own:
@@ -237,16 +232,17 @@ def profile_view(request, username):
         'rsvp_count':      rsvp_count,
         'is_own_profile':  is_own,
     })
-
-
 @login_required(login_url='accounts:login')
 def rsvp_view(request, slug):
+    from .models import RSVP
     if request.method != 'POST':
         return redirect('events:detail', slug=slug)
 
-    event    = get_object_or_404(Event, slug=slug)
-    action   = request.POST.get('action', 'rsvp')
-    note     = request.POST.get('note', '')
+    event  = get_object_or_404(Event, slug=slug)
+    action = request.POST.get('action', 'rsvp')
+    note   = request.POST.get('note', '')
+
+    # check existing RSVP
     existing = RSVP.objects.filter(event=event, user=request.user).first()
 
     if existing:
@@ -255,16 +251,19 @@ def rsvp_view(request, slug):
 
     if action == 'waitlist':
         status = RSVP.Status.WAITLIST
-        msg    = "You've been added to the waitlist."
+        msg    = "You have been added to the waitlist."
     else:
         status = RSVP.Status.PENDING
         msg    = "Your RSVP request has been sent to the organiser."
 
-    RSVP.objects.create(event=event, user=request.user, status=status, note=note)
+    RSVP.objects.create(
+        event  = event,
+        user   = request.user,
+        status = status,
+        note   = note,
+    )
     messages.success(request, msg)
     return redirect('events:detail', slug=slug)
-
-
 @login_required(login_url='accounts:login')
 def manage_rsvps_view(request, slug):
     event = get_object_or_404(Event, slug=slug, organiser=request.user)
@@ -287,4 +286,7 @@ def manage_rsvps_view(request, slug):
             pass
         return redirect('events:manage_rsvps', slug=slug)
 
-    return render(request, 'events/manage_rsvps.html', {'event': event, 'rsvps': rsvps})
+    return render(request, 'events/manage_rsvps.html', {
+        'event': event,
+        'rsvps': rsvps,
+    })

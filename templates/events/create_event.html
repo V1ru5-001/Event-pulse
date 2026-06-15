@@ -12,8 +12,8 @@
       Back
     </a>
     <div>
-      <h1 class="ep-create-title">Post an Event</h1>
-      <p class="ep-create-sub">Fill in the details and let your campus know.</p>
+      <h1 class="ep-create-title">{% if event %}Edit Event{% else %}Post an Event{% endif %}</h1>
+      <p class="ep-create-sub">{% if event %}Update your event details below.{% else %}Fill in the details and let your campus know.{% endif %}</p>
     </div>
   </div>
 
@@ -38,7 +38,7 @@
           <span class="ep-icon ep-icon--edit"></span>
           <input type="text" name="title" class="ep-input"
             placeholder="Give your event a great title"
-            value="{{ request.POST.title|default:'' }}" required />
+            value="{% if event %}{{ request.POST.title|default:event.title }}{% else %}{{ request.POST.title|default:'' }}{% endif %}" required />
         </div>
       </div>
 
@@ -46,29 +46,33 @@
         <label class="ep-field__label">Description *</label>
         <textarea name="description" class="ep-textarea" rows="4"
           placeholder="Tell people what to expect, who it's for, what to bring..."
-          required>{{ request.POST.description|default:'' }}</textarea>
+          required>{% if event %}{{ request.POST.description|default:event.description }}{% else %}{{ request.POST.description|default:'' }}{% endif %}</textarea>
       </div>
 
       <div class="ep-create-grid" style="margin-top:1rem;">
         <div class="ep-field">
           <label class="ep-field__label">Category *</label>
           <select name="category" class="ep-select" required>
-            <option value="" disabled {% if not request.POST.category %}selected{% endif %}>Select a category</option>
+            <option value="" disabled {% if not request.POST.category and not event %}selected{% endif %}>Select a category</option>
             {% if categories %}
               {% for cat in categories %}
-                <option value="{{ cat.id }}" {% if request.POST.category == cat.id|stringformat:"s" %}selected{% endif %}>
-                  {{ cat.icon }} {{ cat.name }}
+                {% if cat.slug != 'clubs' %}
+                <option value="{{ cat.id }}"
+                  {% if request.POST.category == cat.id|stringformat:"s" %}selected
+                  {% elif event and event.category and event.category.id == cat.id %}selected
+                  {% endif %}>
+                  {{ cat.name }}
                 </option>
+                {% endif %}
               {% endfor %}
             {% else %}
-              <option value="academic"      {% if request.POST.category == 'academic'      %}selected{% endif %}>🎓 Academic</option>
-              <option value="social"        {% if request.POST.category == 'social'        %}selected{% endif %}>🎉 Social</option>
-              <option value="sports"        {% if request.POST.category == 'sports'        %}selected{% endif %}>⚽ Sports</option>
-              <option value="career"        {% if request.POST.category == 'career'        %}selected{% endif %}>💼 Career</option>
-              <option value="arts"          {% if request.POST.category == 'arts'          %}selected{% endif %}>🎭 Arts &amp; Culture</option>
-              <option value="music"         {% if request.POST.category == 'music'         %}selected{% endif %}>🎵 Music &amp; Parties</option>
-              <option value="international" {% if request.POST.category == 'international' %}selected{% endif %}>🌍 International</option>
-              <option value="clubs"         {% if request.POST.category == 'clubs'         %}selected{% endif %}>🤝 Clubs &amp; Societies</option>
+              <option value="academic"      {% if request.POST.category == 'academic'      %}selected{% endif %}>Academic</option>
+              <option value="social"        {% if request.POST.category == 'social'        %}selected{% endif %}>Social</option>
+              <option value="sports"        {% if request.POST.category == 'sports'        %}selected{% endif %}>Sports</option>
+              <option value="career"        {% if request.POST.category == 'career'        %}selected{% endif %}>Career</option>
+              <option value="arts"          {% if request.POST.category == 'arts'          %}selected{% endif %}>Arts &amp; Culture</option>
+              <option value="music"         {% if request.POST.category == 'music'         %}selected{% endif %}>Music &amp; Parties</option>
+              <option value="international" {% if request.POST.category == 'international' %}selected{% endif %}>International</option>
             {% endif %}
           </select>
         </div>
@@ -93,7 +97,7 @@
       <input type="file" name="cover_image" id="id_cover_image" accept="image/*" style="display:none;" />
       <div class="ep-upload-zone" id="uploadZone">
         <div id="uploadPlaceholder">
-          <div class="ep-upload-zone__icon">🖼️</div>
+          <div class="ep-upload-zone__icon"></div>
           <div class="ep-upload-zone__text">
             <strong>Click to upload</strong> or drag and drop<br>
             <span style="font-size:.78rem;color:var(--muted2);">PNG, JPG up to 5MB</span>
@@ -115,12 +119,12 @@
         <div class="ep-field">
           <label class="ep-field__label">Start Date &amp; Time *</label>
           <input type="datetime-local" name="start_datetime" class="ep-input ep-input--no-icon"
-            value="{{ request.POST.start_datetime|default:'' }}" required />
+            value="{% if event %}{{ request.POST.start_datetime|default:event.start_datetime|date:'Y-m-d\TH:i' }}{% else %}{{ request.POST.start_datetime|default:'' }}{% endif %}" required />
         </div>
         <div class="ep-field">
           <label class="ep-field__label">End Date &amp; Time</label>
           <input type="datetime-local" name="end_datetime" class="ep-input ep-input--no-icon"
-            value="{{ request.POST.end_datetime|default:'' }}" />
+            value="{% if event %}{{ request.POST.end_datetime|default:event.end_datetime|date:'Y-m-d\TH:i' }}{% else %}{{ request.POST.end_datetime|default:'' }}{% endif %}" />
         </div>
       </div>
       <div class="ep-create-grid" style="margin-top:1rem;">
@@ -130,7 +134,7 @@
             <span class="ep-icon ep-icon--pin"></span>
             <input type="text" name="location_name" class="ep-input"
               placeholder="e.g. Main Hall, Library, Sports Centre"
-              value="{{ request.POST.location_name|default:'' }}" required />
+              value="{% if event %}{{ request.POST.location_name|default:event.location_name }}{% else %}{{ request.POST.location_name|default:'' }}{% endif %}" required />
           </div>
         </div>
         <div class="ep-field">
@@ -139,7 +143,7 @@
             <span class="ep-icon ep-icon--home"></span>
             <input type="text" name="location_address" class="ep-input"
               placeholder="e.g. University Road, Block C"
-              value="{{ request.POST.location_address|default:'' }}" />
+              value="{% if event %}{{ request.POST.location_address|default:event.location_address }}{% else %}{{ request.POST.location_address|default:'' }}{% endif %}" />
           </div>
         </div>
       </div>
@@ -155,10 +159,10 @@
         <div class="ep-price-toggle">
           <input type="radio" name="price_type" id="price_free" value="free"
             {% if not request.POST.price_type or request.POST.price_type == 'free' %}checked{% endif %} />
-          <label for="price_free">🆓 Free</label>
+          <label for="price_free">Free</label>
           <input type="radio" name="price_type" id="price_paid" value="paid"
             {% if request.POST.price_type == 'paid' %}checked{% endif %} />
-          <label for="price_paid">💳 Paid</label>
+          <label for="price_paid">Paid</label>
         </div>
       </div>
 
@@ -169,7 +173,7 @@
             <span class="ep-icon ep-icon--money"></span>
             <input type="number" name="ticket_price" class="ep-input"
               placeholder="0.00" min="0" step="0.01"
-              value="{{ request.POST.ticket_price|default:'' }}" />
+              value="{% if event %}{{ request.POST.ticket_price|default:event.ticket_price }}{% else %}{{ request.POST.ticket_price|default:'' }}{% endif %}" />
           </div>
         </div>
       </div>
@@ -184,7 +188,7 @@
             <span class="ep-icon ep-icon--people"></span>
             <input type="number" name="capacity" class="ep-input"
               placeholder="e.g. 100" min="1"
-              value="{{ request.POST.capacity|default:'' }}" />
+              value="{% if event %}{{ request.POST.capacity|default:event.capacity }}{% else %}{{ request.POST.capacity|default:'' }}{% endif %}" />
           </div>
         </div>
         <div class="ep-field">
@@ -192,10 +196,10 @@
           <div class="ep-role-toggle">
             <input type="radio" name="is_premium_only" id="vis_all" value="false"
               {% if not request.POST.is_premium_only or request.POST.is_premium_only == 'false' %}checked{% endif %} />
-            <label for="vis_all">👥 Everyone</label>
+            <label for="vis_all">Everyone</label>
             <input type="radio" name="is_premium_only" id="vis_prem" value="true"
               {% if request.POST.is_premium_only == 'true' %}checked{% endif %} />
-            <label for="vis_prem">⭐ Premium</label>
+            <label for="vis_prem">Premium Only</label>
           </div>
         </div>
       </div>
@@ -204,7 +208,7 @@
     <div class="ep-create-actions">
       <button type="submit" name="action" value="draft" class="ep-btn ep-btn--outline">Save as Draft</button>
       <button type="submit" name="action" value="publish" class="ep-btn ep-btn--primary">
-        Publish Event
+        {% if event %}Save Changes{% else %}Publish Event{% endif %}
         <span class="ep-icon ep-icon--arrow-right ep-icon--lg" style="filter:brightness(10);"></span>
       </button>
     </div>
