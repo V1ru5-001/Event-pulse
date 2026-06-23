@@ -57,6 +57,23 @@ def logout_view(request):
     messages.info(request, f'You have been signed out. See you on campus, {name}!')
     return redirect('accounts:login')
 
-@login_required
 def edit_profile_view(request):
-    return redirect('accounts:profile', username=request.user.username)
+    if request.method == 'POST':
+        u = request.user
+        u.first_name = request.POST.get('first_name', '')
+        u.last_name  = request.POST.get('last_name', '')
+        u.username   = request.POST.get('username', u.username)
+        u.university = request.POST.get('university', '')
+        u.course     = request.POST.get('course', '')
+        u.year       = request.POST.get('year') or None
+        u.role       = request.POST.get('role', u.role)
+        u.gender     = request.POST.get('gender', u.gender)
+        u.bio        = request.POST.get('bio', '')
+        if 'profile_picture' in request.FILES:
+            u.profile_picture = request.FILES['profile_picture']
+        u.save()
+        return redirect('accounts:profile', username=u.username)
+
+    return render(request, 'accounts/edit_profile.html', {
+        'gender_choices': User.Gender.choices,  # your TextChoices
+    })
