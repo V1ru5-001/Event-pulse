@@ -59,7 +59,7 @@
         </div>
       </div>
 
-      <!-- University + Course -->
+      <!-- University + Department -->
       <div class="ep-edit-grid-2">
         <div class="ep-field">
           <label class="ep-label" for="id_university">University</label>
@@ -67,45 +67,38 @@
                  value="{{ user.university }}" placeholder="e.g. UNIZIK">
         </div>
         <div class="ep-field">
-          <label class="ep-label" for="id_course">Course</label>
-          <input class="ep-input" type="text" name="course" id="id_course"
-                 value="{{ user.course }}" placeholder="e.g. Computer Science">
+          <label class="ep-label" for="id_department">Department</label>
+          <input class="ep-input" type="text" name="department" id="id_department"
+                 value="{{ user.department }}" placeholder="e.g. Computer Science">
         </div>
       </div>
 
       <!-- Year + Role -->
       <div class="ep-edit-grid-2">
         <div class="ep-field">
-          <label class="ep-label" for="id_year">Year / Level</label>
-          <select class="ep-input ep-select" name="year" id="id_year">
-            <option value="">Select level</option>
-            {% for lvl in "12345"|make_list %}
-              <option value="{{ lvl }}00" {% if user.year|stringformat:"s" == lvl|add:"00" %}selected{% endif %}>{{ lvl }}00 Level</option>
+          <label class="ep-label" for="id_year_of_study">Year of study</label>
+          <select class="ep-input ep-select" name="year_of_study" id="id_year_of_study">
+            <option value="">Select year</option>
+            {% for val, label in year_choices %}
+              <option value="{{ val }}" {% if user.year_of_study == val %}selected{% endif %}>{{ label }}</option>
             {% endfor %}
           </select>
         </div>
         <div class="ep-field">
           <label class="ep-label" for="id_role">Role</label>
           <select class="ep-input ep-select" name="role" id="id_role">
-            <option value="student" {% if user.role == 'student' %}selected{% endif %}>Student</option>
-            <option value="society" {% if user.role == 'society' %}selected{% endif %}>Society</option>
-            <option value="staff" {% if user.role == 'staff' %}selected{% endif %}>Staff</option>
+            {% for val, label in role_choices %}
+              <option value="{{ val }}" {% if user.role == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
           </select>
         </div>
       </div>
 
-      <!-- Gender (four-way radio) -->
+      <!-- Phone -->
       <div class="ep-field">
-        <label class="ep-label">Gender</label>
-        <div class="ep-radio-row">
-          {% for val, label in gender_choices %}
-            <label class="ep-radio-pill">
-              <input type="radio" name="gender" value="{{ val }}"
-                     {% if user.gender == val %}checked{% endif %}>
-              <span>{{ label }}</span>
-            </label>
-          {% endfor %}
-        </div>
+        <label class="ep-label" for="id_phone_number">Phone number</label>
+        <input class="ep-input" type="tel" name="phone_number" id="id_phone_number"
+               value="{{ user.phone_number }}" placeholder="Optional">
       </div>
 
       <!-- Bio -->
@@ -127,7 +120,7 @@
 </div>
 
 <style>
-.ep-edit-page{max-width:680px;margin:0 auto;padding:2rem 1rem 4rem;}
+.ep-edit-page{position:relative;z-index:2;max-width:680px;margin:0 auto;padding:7rem 1rem 4rem;}
 .ep-edit-card{background:var(--card,#161A2E);border:1px solid rgba(255,255,255,.06);border-radius:20px;padding:2rem;}
 .ep-edit-head{margin-bottom:1.75rem;}
 .ep-edit-title{font-size:1.6rem;font-weight:700;margin:0 0 .25rem;color:var(--text,#fff);}
@@ -161,14 +154,6 @@
 
 .ep-edit-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
 @media(max-width:520px){.ep-edit-grid-2{grid-template-columns:1fr;}}
-
-.ep-radio-row{display:flex;flex-wrap:wrap;gap:.55rem;}
-.ep-radio-pill{position:relative;cursor:pointer;}
-.ep-radio-pill input{position:absolute;opacity:0;pointer-events:none;}
-.ep-radio-pill span{display:inline-block;padding:.55rem 1.1rem;border-radius:999px;
-  border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);
-  color:var(--muted,#CBD5E1);font-size:.85rem;font-weight:600;transition:all .15s;}
-.ep-radio-pill input:checked + span{background:rgba(75,107,241,.18);border-color:#4B6BF1;color:#fff;}
 
 .ep-edit-hint{font-size:.74rem;color:var(--muted2,#94A3B8);}
 

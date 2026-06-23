@@ -57,23 +57,32 @@ def logout_view(request):
     messages.info(request, f'You have been signed out. See you on campus, {name}!')
     return redirect('accounts:login')
 
+@login_required
 def edit_profile_view(request):
+    u = request.user
     if request.method == 'POST':
-        u = request.user
-        u.first_name = request.POST.get('first_name', '')
-        u.last_name  = request.POST.get('last_name', '')
-        u.username   = request.POST.get('username', u.username)
-        u.university = request.POST.get('university', '')
-        u.course     = request.POST.get('course', '')
-        u.year       = request.POST.get('year') or None
-        u.role       = request.POST.get('role', u.role)
-        u.gender     = request.POST.get('gender', u.gender)
-        u.bio        = request.POST.get('bio', '')
+        u.first_name    = request.POST.get('first_name', '').strip()
+        u.last_name     = request.POST.get('last_name', '').strip()
+        u.username      = request.POST.get('username', u.username).strip()
+        u.university    = request.POST.get('university', '').strip()
+        u.department    = request.POST.get('department', '').strip()
+        u.year_of_study = request.POST.get('year_of_study', '')
+        u.bio           = request.POST.get('bio', '').strip()
+        u.phone_number  = request.POST.get('phone_number', '').strip()
+
+        # Guard against privilege escalation — never let a form set 'admin'
+        submitted_role = request.POST.get('role', u.role)
+        if submitted_role in {'student', 'society', 'staff'}:
+            u.role = submitted_role
+
         if 'profile_picture' in request.FILES:
             u.profile_picture = request.FILES['profile_picture']
+
         u.save()
+        messages.success(request, 'Profile updated.')
         return redirect('accounts:profile', username=u.username)
 
     return render(request, 'accounts/edit_profile.html', {
-        'gender_choices': User.Gender.choices,  # your TextChoices
+        'year_choices': User.YearOfStudy.choices,
+        'role_choices': [c for c in User.Role.choices if c[0] != 'admin'],
     })
