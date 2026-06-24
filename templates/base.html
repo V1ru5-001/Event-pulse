@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@700;800&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet" />
   {% load static %}
-  <link rel="stylesheet" href="{% static 'css/main.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/main.css' %}?v=3" />
   {% block extra_head %}{% endblock %}
 </head>
 <body>
@@ -80,7 +80,13 @@
         </a>
 
         <div class="ep-nav__user-menu" id="userMenu">
-          <div class="ep-nav__avatar" id="avatarBtn">{{ user.username|first|upper }}</div>
+          <div class="ep-nav__avatar" id="avatarBtn">
+            {% if user.profile_picture %}
+              <img src="{{ user.profile_picture.url }}" alt="{{ user.username }}">
+            {% else %}
+              {{ user.username|first|upper }}
+            {% endif %}
+          </div>
           <div class="ep-nav__dropdown" id="userDropdown">
             <span class="ep-nav__dropdown-name">{{ user.username }}</span>
             <a href="{% url 'accounts:profile' user.username %}" class="ep-nav__dropdown-item">

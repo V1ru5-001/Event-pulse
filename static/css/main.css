@@ -121,13 +121,24 @@ button { cursor: pointer; border: none; background: none; }
 }
 .ep-nav__user-menu { position: relative; }
 .ep-nav__avatar {
+  position: relative;
   width: 38px; height: 38px;
+  min-width: 38px;
+  flex-shrink: 0;
   border-radius: 50%;
+  overflow: hidden;                 /* clips the photo to a clean circle */
   background: linear-gradient(135deg, var(--primary), var(--secondary));
   display: flex; align-items: center; justify-content: center;
   font-weight: 700; font-size: 0.9rem;
   cursor: pointer;
   transition: box-shadow 0.2s;
+  isolation: isolate;
+}
+.ep-nav__avatar img {
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  object-fit: cover;                /* fills the circle, never squashed */
+  display: block;
 }
 .ep-nav__avatar--premium { box-shadow: 0 0 0 2px var(--primary), 0 0 14px rgba(75,107,241,0.5); animation: premiumPulse 2.5s ease-in-out infinite; }
 @keyframes premiumPulse {
@@ -1968,3 +1979,29 @@ button { cursor: pointer; border: none; background: none; }
   scrollbar-width: thin;
   scrollbar-color: #4B6BF1 transparent;
 }
+
+/* Nav avatar — orbiting light on hover */
+.ep-nav__avatar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .3s ease;
+  background: conic-gradient(from 0deg,
+    transparent 0turn,
+    transparent 0.70turn,
+    rgba(75,107,241,0.40) 0.83turn,
+    rgba(124,58,237,0.90) 0.93turn,
+    #ffffff 0.98turn,
+    transparent 1turn);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3px));
+          mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3px));
+  animation: ep-avatar-orbit 1.3s linear infinite;
+  animation-play-state: paused;
+}
+.ep-nav__avatar:hover::before { opacity: 1; animation-play-state: running; }
+.ep-nav__avatar:hover { box-shadow: 0 0 14px rgba(124,58,237,0.55); }
+@keyframes ep-avatar-orbit { to { transform: rotate(360deg); } }
