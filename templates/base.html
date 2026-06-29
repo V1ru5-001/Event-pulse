@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@700;800&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet" />
   {% load static %}
-  <link rel="stylesheet" href="{% static 'css/main.css' %}?v=3" />
+  <link rel="stylesheet" href="{% static 'css/main.css' %}?v=5" />
   {% block extra_head %}{% endblock %}
 </head>
 <body>
@@ -87,11 +87,21 @@
               {{ user.username|first|upper }}
             {% endif %}
           </div>
+          {% if unread_messages_count %}
+            <span class="ep-nav__avatar-badge">{% if unread_messages_count > 9 %}9+{% else %}{{ unread_messages_count }}{% endif %}</span>
+          {% endif %}
           <div class="ep-nav__dropdown" id="userDropdown">
             <span class="ep-nav__dropdown-name">{{ user.username }}</span>
             <a href="{% url 'accounts:profile' user.username %}" class="ep-nav__dropdown-item">
               <span class="ep-icon ep-icon--user ep-icon--purple"></span>
               My Profile
+            </a>
+            <a href="{% url 'social:inbox' %}" class="ep-nav__dropdown-item">
+              <span class="ep-icon ep-icon--chat ep-icon--purple"></span>
+              Messages
+              {% if unread_messages_count %}
+                <span class="ep-nav__dropdown-badge">{% if unread_messages_count > 9 %}9+{% else %}{{ unread_messages_count }}{% endif %}</span>
+              {% endif %}
             </a>
             <a href="{% url 'events:create' %}" class="ep-nav__dropdown-item">
               <span class="ep-icon ep-icon--plus ep-icon--purple"></span>

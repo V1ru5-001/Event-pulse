@@ -68,6 +68,14 @@
           <span class="ep-profile-stat__num">{{ rsvp_count }}</span>
           <span class="ep-profile-stat__label">RSVPs</span>
         </div>
+        <a href="{% url 'social:follow_list' profile_user.username 'followers' %}" class="ep-profile-stat ep-profile-stat--link">
+          <span class="ep-profile-stat__num" id="followerCount">{{ profile_user.followers_count }}</span>
+          <span class="ep-profile-stat__label">Followers</span>
+        </a>
+        <a href="{% url 'social:follow_list' profile_user.username 'following' %}" class="ep-profile-stat ep-profile-stat--link">
+          <span class="ep-profile-stat__num">{{ profile_user.following_count }}</span>
+          <span class="ep-profile-stat__label">Following</span>
+        </a>
       </div>
 
       {% if is_own_profile %}
@@ -75,6 +83,21 @@
           <span class="ep-icon ep-icon--edit ep-icon--purple"></span>
           Edit Profile
         </a>
+      {% elif user.is_authenticated %}
+        <div class="ep-profile-actions">
+          <button
+            id="followBtn"
+            class="ep-btn ep-btn--sm {% if viewer_is_following %}ep-btn--following{% else %}ep-btn--primary{% endif %}"
+            data-username="{{ profile_user.username }}"
+            data-following="{% if viewer_is_following %}1{% else %}0{% endif %}">
+            <span class="ep-icon {% if viewer_is_following %}ep-icon--check{% else %}ep-icon--plus{% endif %}"></span>
+            <span class="ep-followbtn-label">{% if viewer_is_following %}Following{% else %}Follow{% endif %}</span>
+          </button>
+          <a href="{% url 'social:start_conversation' profile_user.username %}" class="ep-btn ep-btn--outline ep-btn--sm">
+            <span class="ep-icon ep-icon--chat ep-icon--purple"></span>
+            Message
+          </a>
+        </div>
       {% endif %}
 
     </div>
@@ -252,5 +275,52 @@ document.querySelectorAll('.ep-profile-tab').forEach(function(tab) {
     if (target) target.style.display = '';
   });
 });
+
+// ── Follow / Unfollow ──────────────────────
+(function () {
+  var btn = document.getElementById('followBtn');
+  if (!btn) return;
+
+  function csrf() {
+    var m = document.cookie.match(/csrftoken=([^;]+)/);
+    return m ? m[1] : '';
+  }
+
+  btn.addEventListener('click', async function () {
+    var username = btn.dataset.username;
+    btn.disabled = true;
+    try {
+      var res = await fetch('/social/follow/' + username + '/', {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': csrf() }
+      });
+      if (!res.ok) throw new Error('request failed');
+      var data = await res.json();
+
+      var label = btn.querySelector('.ep-followbtn-label');
+      var icon  = btn.querySelector('.ep-icon');
+      var counter = document.getElementById('followerCount');
+
+      if (data.followed) {
+        btn.classList.remove('ep-btn--primary');
+        btn.classList.add('ep-btn--following');
+        if (label) label.textContent = 'Following';
+        if (icon) { icon.classList.remove('ep-icon--plus'); icon.classList.add('ep-icon--check'); }
+      } else {
+        btn.classList.remove('ep-btn--following');
+        btn.classList.add('ep-btn--primary');
+        if (label) label.textContent = 'Follow';
+        if (icon) { icon.classList.remove('ep-icon--check'); icon.classList.add('ep-icon--plus'); }
+      }
+      if (counter && typeof data.followers_count !== 'undefined') {
+        counter.textContent = data.followers_count;
+      }
+    } catch (e) {
+      /* leave button state unchanged on error */
+    } finally {
+      btn.disabled = false;
+    }
+  });
+})();
 </script>
 {% endblock %}

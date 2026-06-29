@@ -2005,3 +2005,395 @@ button { cursor: pointer; border: none; background: none; }
 .ep-nav__avatar:hover::before { opacity: 1; animation-play-state: running; }
 .ep-nav__avatar:hover { box-shadow: 0 0 14px rgba(124,58,237,0.55); }
 @keyframes ep-avatar-orbit { to { transform: rotate(360deg); } }
+/* ════════════════════════════════════════════════════════════
+   SOCIAL: follow + chat   (added v4)
+   ════════════════════════════════════════════════════════════ */
+
+/* ── New icons ──────────────────────────── */
+.ep-icon--chat {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' viewBox='0 0 24 24' stroke='%234B6BF1' stroke-width='2'%3E%3Cpath d='M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z'/%3E%3C/svg%3E");
+}
+.ep-icon--send {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' viewBox='0 0 24 24' stroke='%23ffffff' stroke-width='2'%3E%3Cline x1='22' y1='2' x2='11' y2='13'/%3E%3Cpolygon points='22 2 15 22 11 13 2 9 22 2'/%3E%3C/svg%3E");
+}
+.ep-icon--check {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' viewBox='0 0 24 24' stroke='%234B6BF1' stroke-width='2.5'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+}
+.ep-icon--arrow-left {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' viewBox='0 0 24 24' stroke='%234B6BF1' stroke-width='2'%3E%3Cpolyline points='15 18 9 12 15 6'/%3E%3C/svg%3E");
+}
+
+/* ── Profile: follow/message buttons ────── */
+.ep-profile-actions {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+.ep-profile-stat--link {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+.ep-profile-stat--link:hover { transform: translateY(-2px); opacity: 0.85; }
+
+.ep-btn--following {
+  background: rgba(75, 107, 241, 0.12);
+  border: 1px solid rgba(75, 107, 241, 0.4);
+  color: #4B6BF1;
+}
+.ep-btn--following:hover {
+  background: rgba(255, 77, 109, 0.12);
+  border-color: rgba(255, 77, 109, 0.45);
+  color: #FF4D6D;
+}
+
+/* ── Chat: shared shell ─────────────────── */
+.ep-chat-page {
+  position: relative;
+  z-index: 2;
+  padding: 6.5rem 1rem 3rem;
+  min-height: 100vh;
+}
+.ep-chat-container {
+  max-width: 720px;
+  margin: 0 auto;
+  background: rgba(17, 19, 34, 0.72);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+/* ── Inbox ──────────────────────────────── */
+.ep-inbox__header,
+.ep-convo__header {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1.1rem 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+.ep-inbox__title {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0;
+  color: #fff;
+}
+.ep-thread-list,
+.ep-people-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.ep-thread {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.95rem 1.25rem;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background 0.15s ease;
+}
+.ep-thread:hover { background: rgba(75, 107, 241, 0.08); }
+.ep-thread--unread { background: rgba(75, 107, 241, 0.06); }
+.ep-thread__avatar,
+.ep-convo__avatar,
+.ep-person__avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #4B6BF1, #7C3AED);
+  color: #fff;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+.ep-thread__avatar img,
+.ep-convo__avatar img,
+.ep-person__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ep-thread__body { flex: 1; min-width: 0; }
+.ep-thread__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+.ep-thread__name {
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ep-thread__time {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.4);
+  flex-shrink: 0;
+}
+.ep-thread__preview {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.55);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 0.15rem;
+}
+.ep-thread--unread .ep-thread__preview { color: rgba(255, 255, 255, 0.85); font-weight: 500; }
+.ep-thread__you { color: rgba(255, 255, 255, 0.4); }
+.ep-thread__badge {
+  background: #4B6BF1;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  flex-shrink: 0;
+}
+
+/* ── Conversation thread ────────────────── */
+.ep-convo { display: flex; flex-direction: column; height: calc(100vh - 9.5rem); }
+.ep-convo__back {
+  display: inline-flex;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  transition: background 0.15s ease;
+}
+.ep-convo__back:hover { background: rgba(75, 107, 241, 0.12); }
+.ep-convo__peer {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  text-decoration: none;
+}
+.ep-convo__avatar { width: 40px; height: 40px; font-size: 1rem; }
+.ep-convo__peer-info { display: flex; flex-direction: column; }
+.ep-convo__peer-name { font-weight: 600; color: #fff; line-height: 1.2; }
+.ep-convo__peer-handle { font-size: 0.78rem; color: rgba(255, 255, 255, 0.45); }
+
+.ep-convo__messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.ep-msg { display: flex; flex-direction: column; max-width: 75%; }
+.ep-msg--mine { align-self: flex-end; align-items: flex-end; }
+.ep-msg--theirs { align-self: flex-start; align-items: flex-start; }
+.ep-msg__bubble {
+  padding: 0.6rem 0.9rem;
+  border-radius: 16px;
+  font-size: 0.92rem;
+  line-height: 1.4;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+.ep-msg--mine .ep-msg__bubble {
+  background: linear-gradient(135deg, #4B6BF1, #7C3AED);
+  color: #fff;
+  border-bottom-right-radius: 5px;
+}
+.ep-msg--theirs .ep-msg__bubble {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f1f1f5;
+  border-bottom-left-radius: 5px;
+}
+.ep-msg__time {
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.35);
+  margin-top: 0.2rem;
+  padding: 0 0.3rem;
+}
+
+.ep-convo__compose {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.6rem;
+  padding: 0.85rem 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+.ep-convo__input {
+  flex: 1;
+  resize: none;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 0.65rem 0.9rem;
+  color: #fff;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.92rem;
+  line-height: 1.4;
+  max-height: 120px;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+.ep-convo__input:focus { border-color: rgba(75, 107, 241, 0.5); }
+.ep-convo__input::placeholder { color: rgba(255, 255, 255, 0.35); }
+.ep-convo__send {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4B6BF1, #7C3AED);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.ep-convo__send:hover {
+  transform: scale(1.06);
+  box-shadow: 0 4px 16px rgba(75, 107, 241, 0.4);
+}
+.ep-convo__send .ep-icon { width: 18px; height: 18px; opacity: 1; }
+
+/* ── People list (followers/following) ──── */
+.ep-person {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.9rem 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.ep-person__main {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  text-decoration: none;
+  flex: 1;
+  min-width: 0;
+}
+.ep-person__info { display: flex; flex-direction: column; min-width: 0; }
+.ep-person__name {
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ep-person__handle { font-size: 0.8rem; color: rgba(255, 255, 255, 0.45); }
+
+/* ── Empty states ───────────────────────── */
+.ep-chat-empty {
+  text-align: center;
+  padding: 4rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+.ep-chat-empty .ep-icon { width: 42px; height: 42px; opacity: 0.5; }
+.ep-chat-empty p { color: rgba(255, 255, 255, 0.7); font-size: 1.05rem; margin: 0; }
+.ep-chat-empty__hint { color: rgba(255, 255, 255, 0.4); font-size: 0.85rem; }
+
+@media (max-width: 600px) {
+  .ep-chat-page { padding: 5.5rem 0 0; }
+  .ep-chat-container { border-radius: 0; border-left: none; border-right: none; max-width: 100%; }
+  .ep-convo { height: calc(100vh - 5.5rem); }
+  .ep-msg { max-width: 85%; }
+}
+
+/* ════════════════════════════════════════════════════════════
+   FIX: input field icons + placeholder overlap  (v5)
+   Stronger rules — work regardless of cache/override quirks
+   ════════════════════════════════════════════════════════════ */
+
+/* Icon inside a field: pin it left, out of text flow */
+.ep-field__input-wrap { position: relative; }
+.ep-field__input-wrap > .ep-icon,
+.ep-field__input-wrap > svg {
+  position: absolute !important;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Any .ep-input that sits in an icon wrap MUST clear the icon.
+   Force the left padding so the placeholder never slides under it. */
+.ep-field__input-wrap > .ep-input,
+.ep-field__input-wrap > input.ep-input,
+.ep-field__input-wrap > input {
+  padding-left: 2.75rem !important;
+}
+
+/* Escape hatch: fields explicitly marked no-icon stay flush-left */
+.ep-field__input-wrap > .ep-input--no-icon {
+  padding-left: 1.1rem !important;
+}
+
+/* ════════════════════════════════════════════════════════════
+   Unread message badges  (v5)
+   ════════════════════════════════════════════════════════════ */
+
+/* Red count badge floating over the navbar avatar.
+   Sits OUTSIDE .ep-nav__avatar (which has overflow:hidden) so it isn't clipped;
+   anchored to .ep-nav__user-menu (position:relative). */
+.ep-nav__avatar-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: #FF4D6D;
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  box-shadow: 0 0 0 2px var(--bg, #0B0E1A);
+  pointer-events: none;
+  z-index: 5;
+  animation: ep-badge-pop 0.25s ease;
+}
+
+@keyframes ep-badge-pop {
+  0%   { transform: scale(0); }
+  70%  { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+/* Count pill on the "Messages" dropdown row */
+.ep-nav__dropdown-item { position: relative; }
+.ep-nav__dropdown-badge {
+  margin-left: auto;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: #FF4D6D;
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}

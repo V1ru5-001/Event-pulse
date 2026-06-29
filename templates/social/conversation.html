@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ other.username }} — Messages{% endblock %}
+
+{% block content %}
+<div class="ep-chat-page">
+  <div class="ep-chat-container ep-convo"
+       data-convo-id="{{ conversation.pk }}"
+       data-fetch-url="{% url 'social:fetch_messages' conversation.pk %}"
+       data-send-url="{% url 'social:send_message' conversation.pk %}">
+
+    <header class="ep-convo__header">
+      <a href="{% url 'social:inbox' %}" class="ep-convo__back" aria-label="Back to inbox">
+        <span class="ep-icon ep-icon--arrow-left ep-icon--purple"></span>
+      </a>
+      <a href="{% url 'accounts:profile' other.username %}" class="ep-convo__peer">
+        <div class="ep-convo__avatar">
+          {% if other.profile_picture %}
+            <img src="{{ other.profile_picture.url }}" alt="{{ other.username }}">
+          {% else %}
+            <span>{{ other.username|first|upper }}</span>
+          {% endif %}
+        </div>
+        <div class="ep-convo__peer-info">
+          <span class="ep-convo__peer-name">{{ other.get_full_name|default:other.username }}</span>
+          <span class="ep-convo__peer-handle">@{{ other.username }}</span>
+        </div>
+      </a>
+    </header>
+
+    <div class="ep-convo__messages" id="messageWindow">
+      {% for m in messages_list %}
+        <div class="ep-msg {% if m.sender == user %}ep-msg--mine{% else %}ep-msg--theirs{% endif %}"
+             data-id="{{ m.id }}">
+          <div class="ep-msg__bubble">{{ m.body|linebreaksbr }}</div>
+          <span class="ep-msg__time">{{ m.created_at|date:"H:i" }}</span>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="ep-convo__compose">
+      <textarea id="msgInput" class="ep-convo__input" rows="1"
+                placeholder="Type a message…" maxlength="2000"></textarea>
+      <button id="msgSend" class="ep-convo__send" aria-label="Send">
+        <span class="ep-icon ep-icon--send"></span>
+      </button>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  const root      = document.querySelector('.ep-convo');
+  if (!root) return;
+  const fetchUrl  = root.dataset.fetchUrl;
+  const sendUrl   = root.dataset.sendUrl;
+  const win       = document.getElementById('messageWindow');
+  const input     = document.getElementById('msgInput');
+  const sendBtn   = document.getElementById('msgSend');
+
+  function csrf() {
+    const m = document.cookie.match(/csrftoken=([^;]+)/);
+    return m ? m[1] : '';
+  }
+
+  function lastId() {
+    const nodes = win.querySelectorAll('.ep-msg');
+    if (!nodes.length) return 0;
+    return parseInt(nodes[nodes.length - 1].dataset.id || '0', 10);
+  }
+
+  function scrollDown() { win.scrollTop = win.scrollHeight; }
+
+  function addMessage(m) {
+    if (win.querySelector('.ep-msg[data-id="' + m.id + '"]')) return; // dedupe
+    const wrap = document.createElement('div');
+    wrap.className = 'ep-msg ' + (m.mine ? 'ep-msg--mine' : 'ep-msg--theirs');
+    wrap.dataset.id = m.id;
+    const bubble = document.createElement('div');
+    bubble.className = 'ep-msg__bubble';
+    bubble.textContent = m.body;
+    const time = document.createElement('span');
+    time.className = 'ep-msg__time';
+    time.textContent = m.created;
+    wrap.appendChild(bubble);
+    wrap.appendChild(time);
+    win.appendChild(wrap);
+  }
+
+  async function poll() {
+    try {
+      const res = await fetch(fetchUrl + '?after=' + lastId(), {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.messages && data.messages.length) {
+        const nearBottom = win.scrollHeight - win.scrollTop - win.clientHeight < 120;
+        data.messages.forEach(addMessage);
+        if (nearBottom) scrollDown();
+      }
+    } catch (e) { /* network hiccup; next tick retries */ }
+  }
+
+  async function send() {
+    const body = input.value.trim();
+    if (!body) return;
+    input.value = '';
+    autoGrow();
+    const fd = new FormData();
+    fd.append('body', body);
+    try {
+      const res = await fetch(sendUrl, {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': csrf() },
+        body: fd
+      });
+      if (res.ok) {
+        const m = await res.json();
+        addMessage(m);
+        scrollDown();
+      }
+    } catch (e) {
+      input.value = body; // restore on failure
+    }
+  }
+
+  function autoGrow() {
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+  }
+
+  sendBtn.addEventListener('click', send);
+  input.addEventListener('input', autoGrow);
+  input.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      send();
+    }
+  });
+
+  scrollDown();
+  setInterval(poll, 3000);
+})();
+</script>
+{% endblock %}

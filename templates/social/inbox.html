@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Messages — EventPulse{% endblock %}
+
+{% block content %}
+<div class="ep-chat-page">
+  <div class="ep-chat-container ep-inbox">
+
+    <header class="ep-inbox__header">
+      <h1 class="ep-inbox__title">
+        <span class="ep-icon ep-icon--chat ep-icon--purple"></span>
+        Messages
+      </h1>
+    </header>
+
+    {% if threads %}
+      <ul class="ep-thread-list">
+        {% for t in threads %}
+        <li>
+          <a href="{% url 'social:conversation' t.conversation.pk %}"
+             class="ep-thread {% if t.unread %}ep-thread--unread{% endif %}">
+            <div class="ep-thread__avatar">
+              {% if t.other.profile_picture %}
+                <img src="{{ t.other.profile_picture.url }}" alt="{{ t.other.username }}">
+              {% else %}
+                <span>{{ t.other.username|first|upper }}</span>
+              {% endif %}
+            </div>
+            <div class="ep-thread__body">
+              <div class="ep-thread__top">
+                <span class="ep-thread__name">{{ t.other.get_full_name|default:t.other.username }}</span>
+                {% if t.last_message %}
+                  <span class="ep-thread__time">{{ t.last_message.created_at|date:"M j" }}</span>
+                {% endif %}
+              </div>
+              <div class="ep-thread__preview">
+                {% if t.last_message %}
+                  {% if t.last_message.sender == user %}<span class="ep-thread__you">You:</span> {% endif %}
+                  {{ t.last_message.body|truncatechars:48 }}
+                {% else %}
+                  <em>No messages yet</em>
+                {% endif %}
+              </div>
+            </div>
+            {% if t.unread %}
+              <span class="ep-thread__badge">{{ t.unread }}</span>
+            {% endif %}
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="ep-chat-empty">
+        <span class="ep-icon ep-icon--chat ep-icon--purple"></span>
+        <p>No conversations yet.</p>
+        <span class="ep-chat-empty__hint">Visit someone's profile and tap Message to start chatting.</span>
+      </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

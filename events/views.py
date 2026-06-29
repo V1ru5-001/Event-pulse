@@ -224,6 +224,12 @@ def profile_view(request, username):
         status=RSVP.Status.APPROVED
     ).count()
 
+    viewer_is_following = (
+        request.user.is_authenticated
+        and not is_own
+        and request.user.is_following(profile_user)
+    )
+
     return render(request, 'accounts/profile.html', {
         'profile_user':    profile_user,
         'posted_events':   posted_events,
@@ -231,6 +237,7 @@ def profile_view(request, username):
         'attending_events':attending_events,
         'rsvp_count':      rsvp_count,
         'is_own_profile':  is_own,
+        'viewer_is_following': viewer_is_following,
     })
 @login_required(login_url='accounts:login')
 def rsvp_view(request, slug):

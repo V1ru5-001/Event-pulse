@@ -79,3 +79,17 @@ class User(AbstractUser):
         if not self.year_of_study:
             return ''
         return dict(self.YearOfStudy.choices).get(self.year_of_study, '')
+
+    # ── Social: follows ───────────────────
+    @property
+    def followers_count(self):
+        return self.follower_set.count()
+
+    @property
+    def following_count(self):
+        return self.following_set.count()
+
+    def is_following(self, other):
+        if not other or other.pk == self.pk:
+            return False
+        return self.following_set.filter(following=other).exists()

@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ list_title }} — {{ profile_user.username }}{% endblock %}
+
+{% block content %}
+<div class="ep-chat-page">
+  <div class="ep-chat-container ep-follow-list">
+
+    <header class="ep-inbox__header">
+      <a href="{% url 'accounts:profile' profile_user.username %}" class="ep-convo__back" aria-label="Back to profile">
+        <span class="ep-icon ep-icon--arrow-left ep-icon--purple"></span>
+      </a>
+      <h1 class="ep-inbox__title">{{ list_title }} · @{{ profile_user.username }}</h1>
+    </header>
+
+    {% if people %}
+      <ul class="ep-people-list">
+        {% for person in people %}
+        <li class="ep-person">
+          <a href="{% url 'accounts:profile' person.username %}" class="ep-person__main">
+            <div class="ep-person__avatar">
+              {% if person.profile_picture %}
+                <img src="{{ person.profile_picture.url }}" alt="{{ person.username }}">
+              {% else %}
+                <span>{{ person.username|first|upper }}</span>
+              {% endif %}
+            </div>
+            <div class="ep-person__info">
+              <span class="ep-person__name">{{ person.get_full_name|default:person.username }}</span>
+              <span class="ep-person__handle">@{{ person.username }}</span>
+            </div>
+          </a>
+          {% if user.is_authenticated and person != user %}
+            <a href="{% url 'social:start_conversation' person.username %}" class="ep-btn ep-btn--outline ep-btn--sm">
+              <span class="ep-icon ep-icon--chat ep-icon--purple"></span>
+            </a>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="ep-chat-empty">
+        <span class="ep-icon ep-icon--user ep-icon--purple"></span>
+        <p>
+          {% if mode == 'followers' %}No followers yet.{% else %}Not following anyone yet.{% endif %}
+        </p>
+      </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
