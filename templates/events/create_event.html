@@ -209,7 +209,7 @@
       <button type="submit" name="action" value="draft" class="ep-btn ep-btn--outline">Save as Draft</button>
       <button type="submit" name="action" value="publish" class="ep-btn ep-btn--primary">
         {% if event %}Save Changes{% else %}Publish Event{% endif %}
-        <span class="ep-icon ep-icon--arrow-right ep-icon--lg" style="filter:brightness(10);"></span>
+        <span class="ep-icon ep-icon--arrow-right ep-icon--lg" style="color:#1A0E02;"></span>
       </button>
     </div>
 
@@ -240,11 +240,11 @@ fileInput.addEventListener('change', function() {
   if (fileInput.files && fileInput.files[0]) showPreview(fileInput.files[0]);
 });
 zone.addEventListener('dragover', function(e) {
-  e.preventDefault(); zone.style.borderColor='var(--primary)'; zone.style.background='rgba(75,107,241,0.06)';
+  e.preventDefault(); zone.classList.add('is-drag');
 });
-zone.addEventListener('dragleave', function() { zone.style.borderColor=''; zone.style.background=''; });
+zone.addEventListener('dragleave', function() { zone.classList.remove('is-drag'); });
 zone.addEventListener('drop', function(e) {
-  e.preventDefault(); zone.style.borderColor=''; zone.style.background='';
+  e.preventDefault(); zone.classList.remove('is-drag');
   var file = e.dataTransfer.files[0];
   if (file) { var dt=new DataTransfer(); dt.items.add(file); fileInput.files=dt.files; showPreview(file); }
 });

@@ -4,6 +4,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 
 from .forms import RegisterForm
 
@@ -85,4 +86,29 @@ def edit_profile_view(request):
     return render(request, 'accounts/edit_profile.html', {
         'year_choices': User.YearOfStudy.choices,
         'role_choices': [c for c in User.Role.choices if c[0] != 'admin'],
+    })
+
+@login_required(login_url='accounts:login')
+def search_people(request):
+    """People search — find users by name or username."""
+    User = get_user_model()
+    query = request.GET.get('q', '').strip()
+
+    people = User.objects.none()
+    if query:
+        people = User.objects.filter(
+            Q(username__icontains=query) |
+            Q(first_name__icontains=query) |
+            Q(last_name__icontains=query)
+        ).exclude(pk=request.user.pk).order_by('username')[:50]
+
+    # Which of these the current user already follows (for button state)
+    following_ids = set(
+        request.user.following_set.values_list('following_id', flat=True)
+    )
+
+    return render(request, 'accounts/search_people.html', {
+        'query':         query,
+        'people':        people,
+        'following_ids': following_ids,
     })

@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if query %}"{{ query }}" — People{% else %}Search People{% endif %} — EventPulse{% endblock %}
+
+{% block content %}
+<div class="ep-chat-page">
+  <div class="ep-chat-container ep-search-results">
+
+    <header class="ep-inbox__header">
+      <h1 class="ep-inbox__title">
+        <span class="ep-icon ep-icon--user ep-icon--purple"></span>
+        {% if query %}People matching "{{ query }}"{% else %}Search People{% endif %}
+      </h1>
+    </header>
+
+    {% if not query %}
+      <div class="ep-chat-empty">
+        <span class="ep-icon ep-icon--search ep-icon--purple"></span>
+        <p>Search for people by name or username.</p>
+        <span class="ep-chat-empty__hint">Use the search bar above and pick the “People” tab.</span>
+      </div>
+    {% elif people %}
+      <ul class="ep-people-list">
+        {% for person in people %}
+        <li class="ep-person">
+          <a href="{% url 'accounts:profile' person.username %}" class="ep-person__main">
+            <div class="ep-person__avatar">
+              {% if person.profile_picture %}
+                <img src="{{ person.profile_picture.url }}" alt="{{ person.username }}">
+              {% else %}
+                <span>{{ person.username|first|upper }}</span>
+              {% endif %}
+            </div>
+            <div class="ep-person__info">
+              <span class="ep-person__name">{{ person.get_full_name|default:person.username }}</span>
+              <span class="ep-person__handle">@{{ person.username }}</span>
+            </div>
+          </a>
+          <div class="ep-person__actions">
+            <a href="{% url 'social:start_conversation' person.username %}"
+               class="ep-btn ep-btn--outline ep-btn--sm" aria-label="Message {{ person.username }}">
+              <span class="ep-icon ep-icon--chat ep-icon--purple"></span>
+            </a>
+            <a href="{% url 'accounts:profile' person.username %}"
+               class="ep-btn ep-btn--sm {% if person.id in following_ids %}ep-btn--following{% else %}ep-btn--primary{% endif %}">
+              {% if person.id in following_ids %}Following{% else %}Follow{% endif %}
+            </a>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="ep-chat-empty">
+        <span class="ep-icon ep-icon--user ep-icon--purple"></span>
+        <p>No people found for "{{ query }}".</p>
+        <span class="ep-chat-empty__hint">Try a different name or username.</span>
+      </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

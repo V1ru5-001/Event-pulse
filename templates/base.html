@@ -6,64 +6,45 @@
   <title>{% block title %}Event Pulse{% endblock %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@700;800&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   {% load static %}
-  <link rel="stylesheet" href="{% static 'css/main.css' %}?v=6" />
+  <link rel="stylesheet" href="{% static 'css/main.css' %}?v=9" />
   {% block extra_head %}{% endblock %}
 </head>
 <body>
 
   <div id="ep-preloader">
-    <canvas id="pl-stars"></canvas>
-    <div class="pl-logo">
-      <svg class="pl-icon" viewBox="0 0 56 56" fill="none">
-        <circle cx="28" cy="28" r="27" fill="rgba(75,107,241,0.12)" stroke="rgba(75,107,241,0.25)" stroke-width="1"/>
-        <path d="M28 10L31.8 20.6H43L34 27.4L37.2 38L28 31.6L18.8 38L22 27.4L13 20.6H24.2L28 10Z" fill="url(#plGrad)"/>
-        <defs>
-          <linearGradient id="plGrad" x1="13" y1="10" x2="43" y2="38" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#4B6BF1"/>
-            <stop offset="0.5" stop-color="#7C3AED"/>
-            <stop offset="1" stop-color="#EC4899"/>
-          </linearGradient>
-        </defs>
-      </svg>
-      <div class="pl-name">EventPulse</div>
-      <div class="pl-tagline">Your campus · Your events</div>
-    </div>
+    <div class="pl-name">EVENT<b>PULSE</b></div>
+    <div class="pl-tagline">Your campus · Your events</div>
     <div class="pl-bar-wrap">
       <div class="pl-bar" id="plBar"></div>
     </div>
-    <div class="pl-dots">
-      <div class="pl-dot"></div>
-      <div class="pl-dot"></div>
-      <div class="pl-dot"></div>
-    </div>
     <div class="pl-status" id="plStatus">Loading events…</div>
   </div>
-
-<canvas id="aurora-canvas"></canvas>
-{% block aurora %}{% endblock %}
 
 {% block navbar %}
 <nav class="ep-nav" id="epNav">
   <div class="ep-nav__inner">
 
     <a href="{% if user.is_authenticated %}{% url 'events:home' %}{% else %}{% url 'events:landing' %}{% endif %}" class="ep-nav__logo">
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-        <path d="M11 2L13.5 8H20L14.5 12.5L16.5 19L11 15L5.5 19L7.5 12.5L2 8H8.5L11 2Z" fill="url(#nG)"/>
-        <defs>
-          <linearGradient id="nG" x1="2" y1="2" x2="20" y2="19" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#4B6BF1"/><stop offset="1" stop-color="#7C3AED"/>
-          </linearGradient>
-        </defs>
-      </svg>
-      <span>Event Pulse</span>
+      <span>EVENT<b>PULSE</b></span>
     </a>
 
-    <div class="ep-nav__search">
-      <span class="ep-icon ep-icon--search"></span>
-      <input type="text" placeholder="Search events, societies…" />
-    </div>
+    <form class="ep-nav__search-form" id="navSearchForm" method="get"
+          action="{% url 'events:home' %}"
+          data-events-url="{% url 'events:home' %}"
+          data-people-url="{% url 'accounts:search_people' %}">
+      <div class="ep-nav__search">
+        <span class="ep-icon ep-icon--search"></span>
+        <input type="text" name="q" id="navSearchInput"
+               placeholder="Search events…"
+               value="{{ request.GET.q|default:'' }}" autocomplete="off" />
+        <div class="ep-search-scope" role="tablist" aria-label="Search scope">
+          <button type="button" class="ep-search-scope__btn is-active" data-scope="events">Events</button>
+          <button type="button" class="ep-search-scope__btn" data-scope="people">People</button>
+        </div>
+      </div>
+    </form>
 
     <div class="ep-nav__actions">
 
@@ -73,6 +54,18 @@
       </span>
 
       {% if user.is_authenticated %}
+
+        {# Campus calendar — wire to {% comment %}{% url 'events:calendar' %}{% endcomment %} once Group 5 ships #}
+        <a href="#" class="ep-nav__iconbtn" title="Campus calendar">
+          <span class="ep-icon ep-icon--calendar"></span>
+        </a>
+
+        <a href="{% url 'social:inbox' %}" class="ep-nav__iconbtn" title="Messages">
+          <span class="ep-icon ep-icon--chat"></span>
+          {% if unread_messages_count %}
+            <span class="ep-nav__iconbtn-badge">{% if unread_messages_count > 9 %}9+{% else %}{{ unread_messages_count }}{% endif %}</span>
+          {% endif %}
+        </a>
 
         <a href="{% url 'events:create' %}" class="ep-btn ep-btn--create ep-btn--sm">
           <span class="ep-icon ep-icon--plus"></span>
@@ -87,9 +80,6 @@
               {{ user.username|first|upper }}
             {% endif %}
           </div>
-          {% if unread_messages_count %}
-            <span class="ep-nav__avatar-badge">{% if unread_messages_count > 9 %}9+{% else %}{{ unread_messages_count }}{% endif %}</span>
-          {% endif %}
           <div class="ep-nav__dropdown" id="userDropdown">
             <span class="ep-nav__dropdown-name">{{ user.username }}</span>
             <a href="{% url 'accounts:profile' user.username %}" class="ep-nav__dropdown-item">
@@ -107,13 +97,13 @@
               <span class="ep-icon ep-icon--plus ep-icon--purple"></span>
               Post an Event
             </a>
-            <a href="{% url 'accounts:logout' %}" class="ep-nav__dropdown-item ep-nav__dropdown-item--danger">
-              <span class="ep-icon ep-icon--logout ep-icon--coral"></span>
-              Sign Out
-            </a>
             <a href="{% url 'payments:pricing' %}" class="ep-nav__dropdown-item">
               <span class="ep-icon ep-icon--star ep-icon--purple"></span>
               Upgrade Plan
+            </a>
+            <a href="{% url 'accounts:logout' %}" class="ep-nav__dropdown-item ep-nav__dropdown-item--danger">
+              <span class="ep-icon ep-icon--logout ep-icon--coral"></span>
+              Sign Out
             </a>
           </div>
         </div>
@@ -135,7 +125,7 @@
   {% for message in messages %}
   <div class="ep-message ep-message--{{ message.tags }}">
     {{ message }}
-    <button onclick="this.parentElement.remove()" class="ep-message__close">✕</button>
+    <button onclick="this.parentElement.remove()" class="ep-message__close">&times;</button>
   </div>
   {% endfor %}
 </div>
@@ -143,10 +133,42 @@
 
 {% block content %}{% endblock %}
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 {% load static %}
-<script src="{% static 'js/pulse_bg.js' %}"></script>
-<script src="{% static 'js/main.js' %}"></script>
+<script src="{% static 'js/main.js' %}?v=9"></script>
+<script>
+// ── Navbar search scope toggle (Events / People) ──
+(function () {
+  var form = document.getElementById('navSearchForm');
+  if (!form) return;
+  var input = document.getElementById('navSearchInput');
+  var btns  = form.querySelectorAll('.ep-search-scope__btn');
+  var eventsUrl = form.dataset.eventsUrl;
+  var peopleUrl = form.dataset.peopleUrl;
+
+  function setScope(scope) {
+    btns.forEach(function (b) { b.classList.toggle('is-active', b.dataset.scope === scope); });
+    if (scope === 'people') {
+      form.action = peopleUrl;
+      input.placeholder = 'Search people…';
+    } else {
+      form.action = eventsUrl;
+      input.placeholder = 'Search events…';
+    }
+  }
+
+  btns.forEach(function (b) {
+    b.addEventListener('click', function () {
+      setScope(b.dataset.scope);
+      input.focus();
+    });
+  });
+
+  // If we're on the people-search page, default the toggle to People
+  if (window.location.pathname.indexOf('/accounts/search') === 0) {
+    setScope('people');
+  }
+})();
+</script>
 {% block extra_js %}{% endblock %}
 </body>
 </html>

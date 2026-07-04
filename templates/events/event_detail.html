@@ -10,15 +10,22 @@
     {% if event.cover_image %}
       <div class="detail-hero__img" style="background-image:url('{{ event.cover_image.url }}')"></div>
     {% else %}
-      <div class="detail-hero__img detail-hero__img--placeholder">
-        <span class="ep-cat-icon ep-cat-icon--{{ event.category.slug|default:'academic' }}" style="width:72px;height:72px;opacity:.6;"></span>
+      <div class="detail-hero__img detail-hero__img--placeholder ep-flyerbg--{{ event.category.slug|default:'academic' }}">
+        <span class="ep-cat-icon ep-cat-icon--{{ event.category.slug|default:'academic' }}" style="width:72px;height:72px;background-color:rgba(242,234,217,0.5);"></span>
       </div>
     {% endif %}
     <div class="detail-hero__overlay" style="pointer-events:none;"></div>
 
+    <div class="detail-datestub">
+      <div class="ep-datestub">
+        <div class="ep-datestub__d">{{ event.start_datetime|date:"d" }}</div>
+        <div class="ep-datestub__m">{{ event.start_datetime|date:"M" }}</div>
+      </div>
+    </div>
+
     <div class="detail-hero__nav">
       <a href="{% url 'events:home' %}" class="detail-hero__back">
-        <span class="ep-icon ep-icon--back" style="filter:brightness(10);opacity:1;"></span>
+        <span class="ep-icon ep-icon--back"></span>
         Back
       </a>
       <div class="detail-hero__nav-right">
@@ -29,15 +36,14 @@
           <form method="POST" action="{% url 'events:delete' event.slug %}" style="display:inline;margin:0;"
             onsubmit="return confirm('Delete this event? This cannot be undone.')">
             {% csrf_token %}
-            <button type="submit"
-              style="display:inline-flex;align-items:center;gap:.4rem;padding:.4rem .85rem;border-radius:8px;font-size:.82rem;font-weight:600;font-family:var(--font-body);cursor:pointer;background:rgba(255,77,109,.22);border:1.5px solid rgba(255,77,109,.6);color:#FF4D6D;margin-right:.5rem;">
-              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#FF4D6D" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+            <button type="submit" class="ep-btn ep-btn--sm ep-btn--danger" style="margin-right:.5rem;display:inline-flex;align-items:center;gap:.4rem;">
+              <span class="ep-icon ep-icon--trash ep-icon--sm ep-icon--coral"></span>
               Delete
             </button>
           </form>
         {% endif %}
         <button class="detail-hero__share" style="position:relative;z-index:10;" onclick="navigator.clipboard.writeText(window.location.href).then(()=>alert('Link copied!'))">
-          <span class="ep-icon ep-icon--share" style="filter:brightness(10);opacity:1;"></span>
+          <span class="ep-icon ep-icon--share"></span>
           Share
         </button>
       </div>
@@ -56,13 +62,9 @@
         {% if is_ended %}
           <span class="ep-badge ep-badge--sold">Ended</span>
         {% elif is_live %}
-          <span class="ep-badge ep-badge--live">
-            <span class="ep-live-dot"></span> Live Now
-          </span>
+          <span class="ep-badge ep-badge--live">Live Now</span>
         {% elif is_coming_soon %}
-          <span class="ep-badge ep-badge--soon">
-            <span class="ep-soon-dot"></span> Coming Soon
-          </span>
+          <span class="ep-badge ep-badge--soon">Coming Soon</span>
         {% endif %}
 
         {% if event.is_free %}
@@ -72,7 +74,7 @@
         {% endif %}
         {% if event.is_premium_only %}
           <span class="ep-badge ep-badge--prem">
-            <span class="ep-icon ep-icon--lock" style="width:12px;height:12px;filter:brightness(3);"></span>
+            <span class="ep-icon ep-icon--lock" style="width:12px;height:12px;"></span>
             Premium Only
           </span>
         {% endif %}
@@ -82,7 +84,6 @@
       <!-- ── LIVE BANNER ── -->
       {% if is_live %}
       <div class="detail-live-banner">
-        <span class="ep-live-dot ep-live-dot--lg"></span>
         <span>This event is happening <strong>right now</strong> on campus</span>
         {% if event.location_name %}<span class="detail-live-venue">{{ event.location_name }}</span>{% endif %}
       </div>
@@ -218,11 +219,11 @@
           {% elif is_coming_soon %}
             {% if user_rsvp %}
               {% if user_rsvp.status == 'approved' %}
-                <button class="ep-btn ep-btn--full" disabled style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#6EE7B7;cursor:default;">You're going!</button>
+                <button class="ep-btn ep-btn--full ep-btn--state ep-btn--state-going" disabled>You're going!</button>
               {% elif user_rsvp.status == 'pending' %}
-                <button class="ep-btn ep-btn--full" disabled style="background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);color:#FDE68A;cursor:default;">Request pending</button>
+                <button class="ep-btn ep-btn--full ep-btn--state ep-btn--state-pending" disabled>Request pending</button>
               {% elif user_rsvp.status == 'waitlist' %}
-                <button class="ep-btn ep-btn--full" disabled style="background:rgba(75,107,241,0.15);border:1px solid rgba(75,107,241,0.3);color:#A5B4FC;cursor:default;">On waitlist</button>
+                <button class="ep-btn ep-btn--full ep-btn--state ep-btn--state-waitlist" disabled>On waitlist</button>
               {% endif %}
             {% elif event.is_full %}
               <form method="POST" action="{% url 'events:rsvp' event.slug %}">
@@ -246,9 +247,9 @@
 
           {% elif is_live %}
             {% if user_rsvp and user_rsvp.status == 'approved' %}
-              <button class="ep-btn ep-btn--full ep-btn--live" disabled>You're checked in — Live Now</button>
+              <button class="ep-btn ep-btn--full ep-btn--state ep-btn--state-going" disabled>You're checked in — Live Now</button>
             {% elif user_rsvp %}
-              <button class="ep-btn ep-btn--full" disabled style="background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);color:#FDE68A;cursor:default;">Request pending</button>
+              <button class="ep-btn ep-btn--full ep-btn--state ep-btn--state-pending" disabled>Request pending</button>
             {% elif event.is_full %}
               <form method="POST" action="{% url 'events:rsvp' event.slug %}">
                 {% csrf_token %}
