@@ -160,3 +160,46 @@ def fetch_messages(request, pk):
     } for m in new_msgs]
 
     return JsonResponse({'messages': data})
+@login_required(login_url='accounts:login')
+def notifications_view(request):
+    notifs = (
+        request.user.notifications
+        .select_related('actor', 'event', 'event__category')
+        [:50]
+    )
+    return render(request, 'social/notifications.html', {
+        'notifs': notifs,
+    })
+
+
+@login_required(login_url='accounts:login')
+def notification_open(request, pk):
+    """Mark one notification read, then jump to its event."""
+    n = get_object_or_404(Notification, pk=pk, recipient=request.user)
+    if not n.is_read:
+        n.is_read = True
+        n.save(update_fields=['is_read'])
+    if n.event_id:
+        return redirect('events:detail', slug=n.event.slug)
+    return redirect('social:notifications')
+
+
+@login_required(login_url='accounts:login')
+def notifications_read_all(request):
+    if request.method == 'POST':
+        request.user.notifications.filter(is_read=False).update(is_read=True)
+    return redirect('social:notifications')
+
+
+@login_required(login_url='accounts:login')
+def notifications_unread_count(request):
+    from django.http import JsonResponse
+    qs = request.user.notifications.filter(is_read=False)
+    count = qs.count()
+    latest = ''
+    if count:
+        n = qs.select_related('actor', 'event').first()
+        if n and n.event_id:
+            latest = f'{n.actor.username} posted "{n.event.title}"'
+    return JsonResponse({'count': count, 'latest': latest})
+

@@ -4243,3 +4243,160 @@ button { cursor: pointer; border: none; background: none; }
   font-size: 0.9rem;
 }
 .ep-convo__hello b { color: var(--text); }
+
+
+/* ═══════════════════════════════════════════════════════════
+   GROUP 5 — CAMPUS CALENDAR
+   ═══════════════════════════════════════════════════════════ */
+
+.ep-calpage { max-width: 1180px; margin: 0 auto; padding: 6.5rem 1.5rem 4rem; }
+
+.ep-cal-head {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 1rem; margin-bottom: 1.25rem; flex-wrap: wrap;
+}
+.ep-cal-head__label {
+  font-family: var(--font-mono);
+  font-size: 11px; letter-spacing: 0.15em;
+  text-transform: uppercase; color: var(--primary);
+  margin: 0 0 0.3rem;
+}
+.ep-cal-head__title {
+  font-family: var(--font-display);
+  font-variation-settings: 'wdth' 120;
+  font-weight: 900;
+  font-size: clamp(1.7rem, 4vw, 2.4rem);
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  margin: 0;
+  color: var(--text);
+}
+.ep-cal-head__title span { color: var(--primary); }
+.ep-cal-nav { display: flex; align-items: center; gap: 8px; }
+.ep-cal-nav__btn {
+  width: 38px; height: 38px;
+  display: grid; place-items: center;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  text-decoration: none;
+  transition: border-color 0.15s, color 0.15s;
+}
+.ep-cal-nav__btn:hover { border-color: var(--primary); color: var(--primary); }
+.ep-cal-nav__today {
+  font-family: var(--font-mono);
+  font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--primary);
+  border: 1px solid rgba(255,122,26,0.4);
+  border-radius: 9px;
+  padding: 9px 12px;
+  text-decoration: none;
+}
+.ep-cal-nav__today:hover { background: rgba(255,122,26,0.08); }
+
+.ep-cal-weekdays {
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.ep-cal-weekdays span {
+  font-family: var(--font-mono);
+  font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--muted2);
+  text-align: center;
+  padding: 4px 0;
+}
+
+.ep-cal-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+.ep-cal-cell {
+  position: relative;
+  min-height: 108px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px;
+  display: flex; flex-direction: column; gap: 6px;
+  overflow: hidden;
+}
+.ep-cal-cell--pad { background: transparent; border-color: transparent; min-height: 108px; }
+.ep-cal-cell--today { border-color: var(--primary); }
+.ep-cal-cell--today .ep-cal-cell__num {
+  background: var(--primary); color: #1A0E02;
+}
+.ep-cal-cell__num {
+  font-family: var(--font-mono);
+  font-size: 11.5px; font-weight: 600;
+  color: var(--muted);
+  width: 22px; height: 22px;
+  display: grid; place-items: center;
+  border-radius: 6px;
+  flex: none;
+}
+.ep-cal-cell__events { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+
+.ep-cal-chip {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 10.5px;
+  line-height: 1.2;
+  padding: 3px 6px;
+  border-radius: 5px;
+  background: var(--card2);
+  border-left: 3px solid var(--primary);
+  color: var(--text);
+  text-decoration: none;
+  min-width: 0;
+}
+.ep-cal-chip:hover { background: rgba(255,122,26,0.1); }
+.ep-cal-chip__time {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--primary);
+  flex: none;
+}
+.ep-cal-chip__title {
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  min-width: 0;
+}
+/* category accent on the chip bar */
+.ep-cal-chip--music         { border-left-color: #FF7A1A; }
+.ep-cal-chip--social        { border-left-color: #FF4D6D; }
+.ep-cal-chip--sports        { border-left-color: #2FBF8F; }
+.ep-cal-chip--career        { border-left-color: #E0B23C; }
+.ep-cal-chip--arts          { border-left-color: #D9536F; }
+.ep-cal-chip--academic      { border-left-color: #3FA7D6; }
+.ep-cal-chip--international { border-left-color: #58B368; }
+
+.ep-cal-more {
+  font-family: var(--font-mono);
+  font-size: 9px; letter-spacing: 0.06em;
+  color: var(--muted2);
+  padding-left: 6px;
+}
+.ep-cal-cell__dots { display: none; gap: 3px; margin-top: auto; }
+.ep-cal-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--primary); }
+
+.ep-cal-agenda { margin-top: 2.5rem; }
+.ep-cal-agenda__title {
+  font-family: var(--font-display);
+  font-variation-settings: 'wdth' 118;
+  font-weight: 850;
+  font-size: 1.2rem;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+.ep-cal-agenda .ep-socialfeed { max-width: 720px; margin: 0; }
+
+/* ── mobile: grid becomes dots-only, agenda is the main surface ── */
+@media (max-width: 760px) {
+  .ep-calpage { padding: 5.5rem 1rem 3rem; }
+  .ep-cal-cell, .ep-cal-cell--pad { min-height: 52px; padding: 5px; }
+  .ep-cal-cell__events { display: none; }
+  .ep-cal-cell__dots { display: flex; flex-wrap: wrap; }
+  .ep-cal-cell__num { width: 20px; height: 20px; font-size: 10.5px; }
+  .ep-cal-grid, .ep-cal-weekdays { gap: 4px; }
+}

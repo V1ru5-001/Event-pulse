@@ -7,6 +7,7 @@ urlpatterns = [
     path('',                                views.landing_view,      name='landing'),
     path('home/',                           views.home_view,         name='home'),
     path('events/create/',                  views.create_event_view, name='create'),
+    path('calendar/', views.calendar_view, name='calendar'),
     path('events/<slug:slug>/',             views.event_detail_view, name='detail'),
     path('events/<slug:slug>/edit/',        views.create_event_view, name='edit'),
     path('events/<slug:slug>/delete/',      views.delete_event_view, name='delete'),

@@ -4,6 +4,8 @@ from django.contrib import messages
 from django.utils.text import slugify
 from django.utils import timezone
 from django.db.models import Q
+import calendar as pycal
+from datetime import date
 
 from .models import Event, Category, RSVP
 
@@ -130,6 +132,7 @@ def create_event_view(request, slug=None):
                 event.cover_image = request.FILES['cover_image']
             event.save()
             messages.success(request, f'"{event.title}" has been updated!')
+            _notify_followers_new_event(event)
         else:
             # ── CREATE new event ──────────────
             event = Event(
@@ -152,6 +155,7 @@ def create_event_view(request, slug=None):
                 event.cover_image = request.FILES['cover_image']
             event.save()
             messages.success(request, f'"{event.title}" is now live!')
+            _notify_followers_new_event(event)
 
         if action == 'publish':
             return redirect('events:detail', slug=event.slug)
@@ -297,3 +301,120 @@ def manage_rsvps_view(request, slug):
         'event': event,
         'rsvps': rsvps,
     })
+# ═══════════════════════════════════════════════════════════
+# ADD TO: events/views.py
+#
+# 1. Add these two imports at the TOP of the file with the others:
+#      import calendar as pycal
+#      from datetime import date
+#    (timezone is already imported)
+#
+# 2. Paste the view below anywhere after home_view.
+#
+# 3. ADD TO events/urls.py, inside urlpatterns (before any
+#    slug-catching patterns like <slug:slug>/):
+#      path('calendar/', views.calendar_view, name='calendar'),
+# ═══════════════════════════════════════════════════════════
+
+@login_required(login_url='accounts:login')
+def calendar_view(request):
+    """Campus Calendar — month grid of all published events."""
+    today = timezone.localdate()
+
+    try:
+        year = int(request.GET.get('year', today.year))
+        month = int(request.GET.get('month', today.month))
+        date(year, month, 1)  # validates the pair
+    except (ValueError, TypeError):
+        year, month = today.year, today.month
+
+    # clamp to a sane window so ?year=99999 can't run wild
+    if year < today.year - 1 or year > today.year + 2:
+        year, month = today.year, today.month
+
+    prev_y, prev_m = (year - 1, 12) if month == 1 else (year, month - 1)
+    next_y, next_m = (year + 1, 1) if month == 12 else (year, month + 1)
+
+    events = (
+        Event.objects
+        .filter(
+            status=Event.Status.PUBLISHED,
+            start_datetime__year=year,
+            start_datetime__month=month,
+        )
+        .select_related('category', 'organiser')
+        .order_by('start_datetime')
+    )
+
+    events_by_day = {}
+    for e in events:
+        d = timezone.localtime(e.start_datetime).day
+        events_by_day.setdefault(d, []).append(e)
+
+    cal = pycal.Calendar(firstweekday=0)  # weeks start Monday
+    weeks = []
+    for week in cal.monthdayscalendar(year, month):
+        row = []
+        for d in week:
+            row.append({
+                'day': d,  # 0 = padding cell outside this month
+                'events': events_by_day.get(d, []),
+                'is_today': (
+                    d == today.day and month == today.month and year == today.year
+                ),
+            })
+        weeks.append(row)
+
+    return render(request, 'events/calendar.html', {
+        'weeks':        weeks,
+        'year':         year,
+        'month':        month,
+        'month_name':   date(year, month, 1).strftime('%B'),
+        'prev_y':       prev_y, 'prev_m': prev_m,
+        'next_y':       next_y, 'next_m': next_m,
+        'is_current_month': (year == today.year and month == today.month),
+        'month_events': events,
+    })
+def _notify_followers_new_event(event):
+    """Create one notification per follower of the organiser.
+    Safe to call multiple times: fires once per event ever
+    (so editing a published event never re-notifies)."""
+    from social.models import Notification
+
+    if event.status != Event.Status.PUBLISHED:
+        return
+    if Notification.objects.filter(
+        event=event, kind=Notification.Kind.NEW_EVENT
+    ).exists():
+        return
+
+    follower_ids = event.organiser.follower_set.values_list(
+        'follower_id', flat=True
+    )
+    Notification.objects.bulk_create(
+        [
+            Notification(
+                recipient_id=uid,
+                actor=event.organiser,
+                event=event,
+                kind=Notification.Kind.NEW_EVENT,
+            )
+            for uid in follower_ids
+        ],
+        batch_size=500,
+    )
+
+
+# ─────────────────────────────────────────────
+# 2b) STILL IN events/views.py — call the helper.
+#     In create_event_view there are two `event.save()` calls
+#     (UPDATE branch and CREATE branch). Add this line
+#     IMMEDIATELY AFTER EACH of the two saves:
+#
+#         event.save()
+#         _notify_followers_new_event(event)   # ← add this
+#
+#     The helper no-ops for drafts and dedupes for edits, so a
+#     draft that gets published later notifies exactly once, at
+#     publish time.
+# ─────────────────────────────────────────────

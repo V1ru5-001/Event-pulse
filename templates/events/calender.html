@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Campus Calendar · {{ month_name }} {{ year }} — EventPulse{% endblock %}
+
+{% block content %}
+<div class="ep-calpage">
+
+  <div class="ep-cal-head">
+    <div>
+      <p class="ep-cal-head__label">Campus Calendar</p>
+      <h1 class="ep-cal-head__title">{{ month_name }} <span>{{ year }}</span></h1>
+    </div>
+    <div class="ep-cal-nav">
+      <a href="{% url 'events:calendar' %}?year={{ prev_y }}&month={{ prev_m }}" class="ep-cal-nav__btn" aria-label="Previous month">
+        <span class="ep-icon ep-icon--back"></span>
+      </a>
+      {% if not is_current_month %}
+      <a href="{% url 'events:calendar' %}" class="ep-cal-nav__today">Today</a>
+      {% endif %}
+      <a href="{% url 'events:calendar' %}?year={{ next_y }}&month={{ next_m }}" class="ep-cal-nav__btn" aria-label="Next month">
+        <span class="ep-icon ep-icon--arrow-right"></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="ep-cal-weekdays">
+    <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+  </div>
+
+  <div class="ep-cal-grid">
+    {% for week in weeks %}
+      {% for cell in week %}
+        {% if cell.day == 0 %}
+          <div class="ep-cal-cell ep-cal-cell--pad"></div>
+        {% else %}
+          <div class="ep-cal-cell {% if cell.is_today %}ep-cal-cell--today{% endif %} {% if cell.events %}ep-cal-cell--busy{% endif %}">
+            <span class="ep-cal-cell__num">{{ cell.day }}</span>
+            <div class="ep-cal-cell__events">
+              {% for e in cell.events|slice:":3" %}
+                <a href="{% url 'events:detail' e.slug %}" class="ep-cal-chip ep-cal-chip--{{ e.category.slug|default:'academic' }}" title="{{ e.title }}">
+                  <span class="ep-cal-chip__time">{{ e.start_datetime|date:"H:i" }}</span>
+                  <span class="ep-cal-chip__title">{{ e.title }}</span>
+                </a>
+              {% endfor %}
+              {% if cell.events|length > 3 %}
+                <span class="ep-cal-more">+{{ cell.events|length|add:"-3" }} more</span>
+              {% endif %}
+            </div>
+            <div class="ep-cal-cell__dots">
+              {% for e in cell.events|slice:":4" %}<span class="ep-cal-dot"></span>{% endfor %}
+            </div>
+          </div>
+        {% endif %}
+      {% endfor %}
+    {% endfor %}
+  </div>
+
+  <div class="ep-cal-agenda">
+    <h2 class="ep-cal-agenda__title">This month</h2>
+    {% if month_events %}
+      <div class="ep-socialfeed">
+        {% for event in month_events %}
+        <article class="ep-card ep-card--social" data-cat="{{ event.category.slug|default:'all' }}"
+          onclick="window.location.href='{% url "events:detail" event.slug %}'">
+          <div class="ep-feed-item__thumb {% if not event.cover_image %}ep-flyerbg--{{ event.category.slug|default:'academic' }}{% endif %}">
+            {% if event.cover_image %}
+              <img src="{{ event.cover_image.url }}" alt="{{ event.title }}" loading="lazy">
+            {% endif %}
+            <div class="ep-feed-item__date">
+              <b>{{ event.start_datetime|date:"d" }}</b>
+              <span>{{ event.start_datetime|date:"M" }}</span>
+            </div>
+          </div>
+          <div class="ep-feed-item__body">
+            <h3 class="ep-feed-item__title">{{ event.title }}</h3>
+            <div class="ep-feed-item__meta">
+              <span>{{ event.start_datetime|date:"D · H:i" }}</span>
+              <span>{{ event.location_name|truncatechars:28 }}</span>
+              {% if event.category %}<span>{{ event.category.name }}</span>{% endif %}
+            </div>
+            <div class="ep-feed-item__foot">
+              {% if event.is_past %}
+                <span class="ep-feed-item__price ep-feed-item__price--ended">Ended</span>
+              {% elif event.is_free %}
+                <span class="ep-feed-item__price ep-feed-item__price--free">Free</span>
+              {% else %}
+                <span class="ep-feed-item__price">₦{{ event.ticket_price }}</span>
+              {% endif %}
+              <span class="ep-feed-item__organiser">
+                <span class="ep-card__organiser-av">{{ event.organiser.username|first|upper }}</span>
+                {{ event.organiser.username }}
+              </span>
+            </div>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="ep-empty">
+        <div class="ep-empty-icon ep-empty-icon--events"></div>
+        <h3>Nothing in {{ month_name }} yet</h3>
+        <p>Events posted for this month will land here.</p>
+        <a href="{% url 'events:create' %}" class="ep-btn ep-btn--primary" style="margin-top:1rem">Post an Event</a>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
