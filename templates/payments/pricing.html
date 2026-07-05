@@ -1,16 +1,15 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Upgrade Plan — EventPulse{% endblock %}
+{% block title %}Go Premium — EventPulse{% endblock %}
 
 {% block content %}
 <div class="pay-page">
 
   <div class="pay-header">
-    <div class="pay-header__inner">
-      <div class="pay-header__badge">Upgrade Your Account</div>
-      <h1 class="pay-header__title">Choose Your Plan</h1>
-      <p class="pay-header__sub">Unlock more features and get the most out of EventPulse.</p>
+    <div class="pay-header__inner" style="text-align:center;">
+      <h1 class="pay-header__title">Go Premium</h1>
+      <p class="pay-header__sub">Free gets you in the door. Premium gets you the whole night.</p>
     </div>
   </div>
 
@@ -19,74 +18,85 @@
     <!-- FREE -->
     <div class="pay-plan" id="plan-free" data-plan="free" data-price="0">
       <div class="pay-plan__header">
-        <div class="ep-plan-icon ep-plan-icon--free"></div>
         <h2 class="pay-plan__name">Free</h2>
         <div class="pay-plan__price">
           <span class="pay-plan__amount">₦0</span>
           <span class="pay-plan__period">/ forever</span>
         </div>
-        <p class="pay-plan__tagline">Get started with the basics</p>
+        <p class="pay-plan__tagline">Start browsing your campus</p>
       </div>
       <ul class="pay-plan__features">
-        <li class="pay-plan__feat pay-plan__feat--yes">Browse all public events</li>
-        <li class="pay-plan__feat pay-plan__feat--yes">RSVP to free events</li>
-        <li class="pay-plan__feat pay-plan__feat--yes">View event details</li>
-        <li class="pay-plan__feat pay-plan__feat--no">Post events</li>
-        <li class="pay-plan__feat pay-plan__feat--no">Attend paid events</li>
-        <li class="pay-plan__feat pay-plan__feat--no">Premium-only events</li>
-        <li class="pay-plan__feat pay-plan__feat--no">Priority RSVP</li>
-        <li class="pay-plan__feat pay-plan__feat--no">Ad-free experience</li>
+        <li class="pay-plan__feat pay-plan__feat--yes">3 events per day</li>
+        <li class="pay-plan__feat pay-plan__feat--yes">Basic search</li>
+        <li class="pay-plan__feat pay-plan__feat--yes">Follow friends &amp; organisers</li>
+        <li class="pay-plan__feat pay-plan__feat--yes">Supported by ads</li>
       </ul>
       <button class="ep-btn ep-btn--outline pay-plan__btn pay-select-btn" data-plan="free">Current Plan</button>
     </div>
 
-    <!-- STUDENT PLUS -->
+    <!-- STUDENT PREMIUM -->
     <div class="pay-plan pay-plan--popular" id="plan-student" data-plan="student" data-price="1500">
       <div class="pay-plan__popular-badge">Most Popular</div>
       <div class="pay-plan__header">
-        <div class="ep-plan-icon ep-plan-icon--student"></div>
-        <h2 class="pay-plan__name">Student Plus</h2>
+        <h2 class="pay-plan__name">Student Premium</h2>
         <div class="pay-plan__price">
           <span class="pay-plan__amount">₦1,500</span>
           <span class="pay-plan__period">/ month</span>
         </div>
-        <p class="pay-plan__tagline">For active students who do it all</p>
+        <p class="pay-plan__tagline">For students who do it all</p>
       </div>
       <ul class="pay-plan__features">
-        <li class="pay-plan__feat pay-plan__feat--yes">Everything in Free</li>
-        <li class="pay-plan__feat pay-plan__feat--yes">Post up to 5 events/month</li>
-        <li class="pay-plan__feat pay-plan__feat--yes">RSVP to paid events</li>
-        <li class="pay-plan__feat pay-plan__feat--yes">QR code attendance</li>
-        <li class="pay-plan__feat pay-plan__feat--yes">Ad-free experience</li>
-        <li class="pay-plan__feat pay-plan__feat--no">Premium-only events</li>
-        <li class="pay-plan__feat pay-plan__feat--no">Featured event listing</li>
-        <li class="pay-plan__feat pay-plan__feat--no">Attendee CSV export</li>
+        <li class="pay-plan__feat pay-plan__feat--yes">Unlimited browsing, ad-free</li>
+        <li class="pay-plan__feat pay-plan__feat--yes">For You feed</li>
+        <li class="pay-plan__feat pay-plan__feat--yes">Who's Going</li>
+        <li class="pay-plan__feat pay-plan__feat--yes">Squad Sync</li>
+        <li class="pay-plan__feat pay-plan__feat--yes">Campus Calendar</li>
+        <li class="pay-plan__feat pay-plan__feat--yes">Conflict Detector</li>
+        <li class="pay-plan__feat pay-plan__feat--yes">AI Assistant</li>
       </ul>
-      <button class="ep-btn ep-btn--primary pay-plan__btn pay-select-btn" data-plan="student">Choose Student Plus</button>
+      <button class="ep-btn ep-btn--primary pay-plan__btn pay-select-btn" data-plan="student">Choose Student Premium</button>
     </div>
 
-    <!-- ORGANISER PRO -->
-    <div class="pay-plan" id="plan-organiser" data-plan="organiser" data-price="4500">
+    <!-- ORGANISER PREMIUM -->
+    <div class="pay-plan" id="plan-organiser" data-plan="organiser" data-price="3500">
       <div class="pay-plan__header">
-        <div class="ep-plan-icon ep-plan-icon--organiser"></div>
-        <h2 class="pay-plan__name">Organiser Pro</h2>
+        <h2 class="pay-plan__name">Organiser Premium</h2>
+        <div class="pay-plan__price">
+          <span class="pay-plan__amount">₦3,500</span>
+          <span class="pay-plan__period">/ month</span>
+        </div>
+        <p class="pay-plan__tagline">For societies &amp; serious hosts</p>
+      </div>
+      <ul class="pay-plan__features">
+        <li class="pay-plan__feat pay-plan__feat--yes">AI Event Creation</li>
+        <li class="pay-plan__feat pay-plan__feat--yes">Featured placement</li>
+        <li class="pay-plan__feat pay-plan__feat--yes">Verified badge</li>
+        <li class="pay-plan__feat pay-plan__feat--yes">Custom profile</li>
+        <li class="pay-plan__feat pay-plan__feat--yes">RSVP &amp; attendee list</li>
+        <li class="pay-plan__feat pay-plan__feat--yes">Waitlist</li>
+        <li class="pay-plan__feat pay-plan__feat--yes">Ghost Mode, ad-free</li>
+      </ul>
+      <button class="ep-btn ep-btn--outline pay-plan__btn pay-select-btn" data-plan="organiser">Choose Organiser Premium</button>
+    </div>
+
+    <!-- PULSE BUNDLE -->
+    <div class="pay-plan pay-plan--bundle" id="plan-bundle" data-plan="bundle" data-price="4500">
+      <div class="pay-plan__popular-badge">Best Value</div>
+      <div class="pay-plan__header">
+        <h2 class="pay-plan__name">Pulse Bundle</h2>
         <div class="pay-plan__price">
           <span class="pay-plan__amount">₦4,500</span>
           <span class="pay-plan__period">/ month</span>
         </div>
-        <p class="pay-plan__tagline">For societies and serious organisers</p>
+        <p class="pay-plan__tagline">Everything, both sides — save ₦500</p>
       </div>
       <ul class="pay-plan__features">
-        <li class="pay-plan__feat pay-plan__feat--yes">Everything in Student Plus</li>
-        <li class="pay-plan__feat pay-plan__feat--yes">Unlimited event posting</li>
-        <li class="pay-plan__feat pay-plan__feat--yes">Access premium-only events</li>
-        <li class="pay-plan__feat pay-plan__feat--yes">Featured event listing (1 pinned)</li>
-        <li class="pay-plan__feat pay-plan__feat--yes">Attendee list CSV export</li>
-        <li class="pay-plan__feat pay-plan__feat--yes">Priority RSVP approval</li>
-        <li class="pay-plan__feat pay-plan__feat--yes">Analytics dashboard</li>
-        <li class="pay-plan__feat pay-plan__feat--yes">Dedicated support</li>
+        <li class="pay-plan__feat pay-plan__feat--yes">Everything in Student Premium</li>
+        <li class="pay-plan__feat pay-plan__feat--yes">Everything in Organiser Premium</li>
+        <li class="pay-plan__feat pay-plan__feat--yes">One subscription, both sides</li>
+        <li class="pay-plan__feat pay-plan__feat--yes">Save ₦500 every month</li>
       </ul>
-      <button class="ep-btn ep-btn--outline pay-plan__btn pay-select-btn" data-plan="organiser">Choose Organiser Pro</button>
+      <button class="ep-btn ep-btn--primary pay-plan__btn pay-select-btn" data-plan="bundle">Get the Bundle</button>
     </div>
 
   </div>
@@ -94,15 +104,15 @@
   <div class="pay-form-wrap" id="payFormWrap" style="display:none;">
     <div class="pay-form-card">
       <div class="pay-form-header">
-        <button class="pay-form-back" id="payFormBack">
-          <span class="ep-icon ep-icon--back ep-icon--purple"></span>
+        <button class="pay-form-back" id="payFormBack" type="button" aria-label="Back to plans">
+          <span class="ep-icon ep-icon--back"></span>
         </button>
         <div>
           <h2 class="pay-form-title">Complete Payment</h2>
-          <p class="pay-form-sub" id="payFormSub">Student Plus — ₦1,500/month</p>
+          <p class="pay-form-sub" id="payFormSub">Student Premium — ₦1,500/month</p>
         </div>
         <div class="pay-form-secure">
-          <span class="ep-icon ep-icon--secure" style="width:14px;height:14px;"></span>
+          <span class="ep-icon ep-icon--secure ep-icon--sm"></span>
           Secure
         </div>
       </div>
@@ -114,7 +124,7 @@
 
         <div class="pay-summary" id="paySummary">
           <div class="pay-summary__row">
-            <span id="summaryPlan">Student Plus</span>
+            <span id="summaryPlan">Student Premium</span>
             <span id="summaryPrice">₦1,500</span>
           </div>
           <div class="pay-summary__row pay-summary__row--total">
@@ -183,15 +193,13 @@
         <label class="ep-checkbox">
           <input type="checkbox" name="save_card" />
           <span class="ep-checkbox__box">
-            <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-              <path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+            <span class="ep-icon ep-icon--check ep-icon--sm" style="color:#1A0E02;"></span>
           </span>
           <span>Save card for future payments</span>
         </label>
 
         <button type="submit" class="ep-btn ep-btn--primary ep-btn--full pay-submit-btn" id="paySubmitBtn">
-          <span class="ep-icon ep-icon--lock" style="filter:brightness(10);opacity:1;"></span>
+          <span class="ep-icon ep-icon--lock ep-icon--sm"></span>
           Pay <span id="btnAmount">₦1,500</span>
         </button>
 
@@ -221,12 +229,14 @@
 {% block extra_js %}
 <script>
 var plans = {
-  free:      { name:'Free',          price:0,    display:'₦0/forever'   },
-  student:   { name:'Student Plus',  price:1500, display:'₦1,500/month' },
-  organiser: { name:'Organiser Pro', price:4500, display:'₦4,500/month' }
+  free:      { name:'Free',              price:0,    display:'₦0/forever'   },
+  student:   { name:'Student Premium',   price:1500, display:'₦1,500/month' },
+  organiser: { name:'Organiser Premium', price:3500, display:'₦3,500/month' },
+  bundle:    { name:'Pulse Bundle',      price:4500, display:'₦4,500/month' }
 };
-document.querySelectorAll('.pay-select-btn').forEach(function(btn) {
-  btn.addEventListener('click', function() {
+
+document.querySelectorAll('.pay-select-btn').forEach(function (btn) {
+  btn.addEventListener('click', function () {
     var plan = btn.dataset.plan;
     if (plan === 'free') return;
     var p = plans[plan];
@@ -238,26 +248,28 @@ document.querySelectorAll('.pay-select-btn').forEach(function(btn) {
     document.getElementById('summaryTotal').textContent = '₦' + p.price.toLocaleString();
     document.getElementById('btnAmount').textContent    = '₦' + p.price.toLocaleString();
     document.getElementById('payFormWrap').style.display = 'block';
-    document.getElementById('payFormWrap').scrollIntoView({ behavior:'smooth', block:'start' });
-    document.querySelectorAll('.pay-plan').forEach(function(c) { c.classList.remove('pay-plan--selected'); });
+    document.getElementById('payFormWrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.querySelectorAll('.pay-plan').forEach(function (c) { c.classList.remove('pay-plan--selected'); });
     document.getElementById('plan-' + plan).classList.add('pay-plan--selected');
   });
 });
-document.getElementById('payFormBack').addEventListener('click', function() {
+
+document.getElementById('payFormBack').addEventListener('click', function () {
   document.getElementById('payFormWrap').style.display = 'none';
-  document.querySelectorAll('.pay-plan').forEach(function(c) { c.classList.remove('pay-plan--selected'); });
+  document.querySelectorAll('.pay-plan').forEach(function (c) { c.classList.remove('pay-plan--selected'); });
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
-document.getElementById('cardNumber').addEventListener('input', function() {
+
+document.getElementById('cardNumber').addEventListener('input', function () {
   var v = this.value.replace(/\D/g,'').substring(0,16);
   this.value = v.replace(/(.{4})/g,'$1 ').trim();
 });
-document.getElementById('cardExpiry').addEventListener('input', function() {
+document.getElementById('cardExpiry').addEventListener('input', function () {
   var v = this.value.replace(/\D/g,'').substring(0,4);
   if (v.length >= 2) v = v.substring(0,2) + ' / ' + v.substring(2);
   this.value = v;
 });
-document.getElementById('cardCvv').addEventListener('input', function() {
+document.getElementById('cardCvv').addEventListener('input', function () {
   this.value = this.value.replace(/\D/g,'').substring(0,4);
 });
 </script>

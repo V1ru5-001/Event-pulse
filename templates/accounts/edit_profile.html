@@ -15,7 +15,6 @@
     <form method="POST" enctype="multipart/form-data" class="ep-edit-form" novalidate>
       {% csrf_token %}
 
-      <!-- Avatar -->
       <div class="ep-edit-avatar-row">
         <div class="ep-edit-avatar" id="avatarPreviewWrap">
           {% if user.profile_picture %}
@@ -35,7 +34,6 @@
         </div>
       </div>
 
-      <!-- Name -->
       <div class="ep-edit-grid-2">
         <div class="ep-field">
           <label class="ep-label" for="id_first_name">First name</label>
@@ -49,7 +47,6 @@
         </div>
       </div>
 
-      <!-- Username -->
       <div class="ep-field">
         <label class="ep-label" for="id_username">Username</label>
         <div class="ep-input-prefix">
@@ -59,7 +56,6 @@
         </div>
       </div>
 
-      <!-- University + Department -->
       <div class="ep-edit-grid-2">
         <div class="ep-field">
           <label class="ep-label" for="id_university">University</label>
@@ -73,7 +69,6 @@
         </div>
       </div>
 
-      <!-- Year + Role -->
       <div class="ep-edit-grid-2">
         <div class="ep-field">
           <label class="ep-label" for="id_year_of_study">Year of study</label>
@@ -94,14 +89,12 @@
         </div>
       </div>
 
-      <!-- Phone -->
       <div class="ep-field">
         <label class="ep-label" for="id_phone_number">Phone number</label>
         <input class="ep-input" type="tel" name="phone_number" id="id_phone_number"
                value="{{ user.phone_number }}" placeholder="Optional">
       </div>
 
-      <!-- Bio -->
       <div class="ep-field">
         <label class="ep-label" for="id_bio">Bio</label>
         <textarea class="ep-input ep-textarea" name="bio" id="id_bio" rows="4"
@@ -109,7 +102,6 @@
         <span class="ep-edit-hint" id="bioCount">0 / 300</span>
       </div>
 
-      <!-- Actions -->
       <div class="ep-edit-actions">
         <a href="{% url 'accounts:profile' user.username %}" class="ep-btn ep-btn--ghost">Cancel</a>
         <button type="submit" class="ep-btn ep-btn--primary">Save Changes</button>
@@ -118,48 +110,6 @@
     </form>
   </div>
 </div>
-
-<style>
-.ep-edit-page{position:relative;z-index:2;max-width:680px;margin:0 auto;padding:7rem 1rem 4rem;}
-.ep-edit-card{background:var(--card,#161A2E);border:1px solid rgba(255,255,255,.06);border-radius:20px;padding:2rem;}
-.ep-edit-head{margin-bottom:1.75rem;}
-.ep-edit-title{font-size:1.6rem;font-weight:700;margin:0 0 .25rem;color:var(--text,#fff);}
-.ep-edit-sub{color:var(--muted2,#94A3B8);font-size:.9rem;margin:0;}
-
-.ep-edit-form{display:flex;flex-direction:column;gap:1.4rem;}
-
-.ep-edit-avatar-row{display:flex;align-items:center;gap:1.25rem;}
-.ep-edit-avatar{width:92px;height:92px;border-radius:50%;overflow:hidden;flex-shrink:0;
-  background:linear-gradient(135deg,#4B6BF1,#6E54F1);display:flex;align-items:center;justify-content:center;
-  font-size:2rem;font-weight:700;color:#fff;border:3px solid rgba(75,107,241,.4);}
-.ep-edit-avatar img{width:100%;height:100%;object-fit:cover;}
-.ep-edit-avatar-actions{display:flex;flex-direction:column;gap:.5rem;align-items:flex-start;}
-
-.ep-field{display:flex;flex-direction:column;gap:.45rem;}
-.ep-label{font-size:.82rem;font-weight:600;color:var(--muted,#CBD5E1);}
-.ep-input{width:100%;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1);
-  border-radius:12px;padding:.7rem .9rem;color:var(--text,#fff);font-size:.92rem;
-  transition:border-color .15s,box-shadow .15s;font-family:inherit;}
-.ep-input:focus{outline:none;border-color:#4B6BF1;box-shadow:0 0 0 3px rgba(75,107,241,.18);}
-.ep-textarea{resize:vertical;min-height:90px;}
-.ep-select{appearance:none;cursor:pointer;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%234B6BF1' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
-  background-repeat:no-repeat;background-position:right .9rem center;padding-right:2.4rem;}
-
-.ep-input-prefix{display:flex;align-items:center;background:rgba(255,255,255,.03);
-  border:1px solid rgba(255,255,255,.1);border-radius:12px;overflow:hidden;}
-.ep-input-prefix:focus-within{border-color:#4B6BF1;box-shadow:0 0 0 3px rgba(75,107,241,.18);}
-.ep-input-prefix span{padding:0 .25rem 0 .9rem;color:var(--muted2,#94A3B8);font-weight:600;}
-.ep-input-prefix .ep-input{border:none;box-shadow:none;background:transparent;padding-left:.25rem;}
-
-.ep-edit-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
-@media(max-width:520px){.ep-edit-grid-2{grid-template-columns:1fr;}}
-
-.ep-edit-hint{font-size:.74rem;color:var(--muted2,#94A3B8);}
-
-.ep-edit-actions{display:flex;justify-content:flex-end;gap:.75rem;margin-top:.5rem;
-  padding-top:1.4rem;border-top:1px solid rgba(255,255,255,.06);}
-</style>
 {% endblock %}
 
 {% block extra_js %}

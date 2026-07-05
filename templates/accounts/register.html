@@ -1,7 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block title %}Create Account — EventPulse{% endblock %}
-{% block aurora %}<canvas id="aurora-canvas"></canvas>{% endblock %}
 {% block navbar %}{% endblock %}
 
 {% block content %}
@@ -12,21 +11,20 @@
       <div class="ep-auth__splash-img"></div>
       <div class="ep-auth__splash-overlay"></div>
       <div class="ep-auth__splash-content">
-        <p class="ep-auth__splash-quote">"Your campus.<br>Your events.<br>Your community."</p>
+        <p class="ep-auth__splash-quote">Your campus.<br>Your events.<br>Your community.</p>
         <p class="ep-auth__splash-sub">Find lectures, socials, sports days, career fairs and parties at your university.</p>
       </div>
     </div>
 
     <div class="ep-auth__form-side" style="justify-content:flex-start;overflow-y:auto;max-height:90vh;">
 
+      <div class="ep-auth__ticket-top">
+        <span>Admit One</span>
+        <span>EP-{% now "y" %}</span>
+      </div>
+
       <div class="ep-auth__logo">
-        <svg width="20" height="20" viewBox="0 0 22 22" fill="none">
-          <path d="M11 2L13.5 8H20L14.5 12.5L16.5 19L11 15L5.5 19L7.5 12.5L2 8H8.5L11 2Z" fill="url(#lr)"/>
-          <defs><linearGradient id="lr" x1="2" y1="2" x2="20" y2="19" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#4B6BF1"/><stop offset="1" stop-color="#7C3AED"/>
-          </linearGradient></defs>
-        </svg>
-        <span>EventPulse</span>
+        <span>Event<b>Pulse</b></span>
       </div>
 
       <h1 class="ep-auth__title">Create Account</h1>
@@ -40,7 +38,6 @@
 
       <form method="POST" class="ep-form">
         {% csrf_token %}
-
 
         <div class="ep-field">
           <label class="ep-field__label">Full Name</label>
@@ -68,7 +65,7 @@
             <span class="ep-icon ep-icon--mail"></span>
             <input type="email" name="{{ form.email.html_name }}" id="{{ form.email.id_for_label }}"
               class="ep-input {% if form.email.errors %}ep-input--error{% endif %}"
-              placeholder="yourname@university.ac.uk" value="{{ form.email.value|default:'' }}" autocomplete="email" />
+              placeholder="yourname@university.edu.ng" value="{{ form.email.value|default:'' }}" autocomplete="email" />
           </div>
           {% if form.email.errors %}<span class="ep-field__error">{{ form.email.errors.0 }}</span>{% endif %}
         </div>
@@ -78,7 +75,7 @@
           <div class="ep-field__input-wrap">
             <span class="ep-icon ep-icon--home"></span>
             <input type="text" name="university" class="ep-input"
-              placeholder="e.g. University of Lagos" value="{{ request.POST.university|default:'' }}" />
+              placeholder="e.g. UNIZIK" value="{{ request.POST.university|default:'' }}" />
           </div>
         </div>
 
@@ -166,7 +163,7 @@
           <input type="checkbox" name="terms" required />
           <span class="ep-checkbox__box">
             <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-              <path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M2 6l3 3 5-5" stroke="#1A0E02" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </span>
           <span>I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></span>

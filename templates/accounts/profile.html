@@ -21,7 +21,9 @@
         <h1 class="ep-profile-name">
           {{ profile_user.get_full_name|default:profile_user.username }}
           {% if profile_user.is_verified_organiser %}
-            <span class="ep-profile-verified" title="Verified Organiser">✓</span>
+            <span class="ep-profile-verified" title="Verified Organiser">
+              <span class="ep-icon ep-icon--check"></span>
+            </span>
           {% endif %}
         </h1>
         <p class="ep-profile-username">@{{ profile_user.username }}</p>
@@ -124,7 +126,7 @@
       {% for event in posted_events %}
       <article class="ep-card" data-cat="{{ event.category.slug|default:'all' }}"
         onclick="window.location.href='{% url 'events:detail' event.slug %}'">
-        <div class="ep-card__img">
+        <div class="ep-card__img {% if not event.cover_image %}ep-flyerbg--{{ event.category.slug|default:'academic' }}{% endif %}">
           {% if event.cover_image %}
             <img src="{{ event.cover_image.url }}" alt="{{ event.title }}" loading="lazy">
           {% else %}
@@ -132,20 +134,25 @@
               <span class="ep-cat-icon ep-cat-icon--{{ event.category.slug|default:'academic' }}" style="width:48px;height:48px;"></span>
             </div>
           {% endif %}
-          <div class="ep-card__img-overlay"></div>
-          <div class="ep-card__badges">
-            <span class="ep-badge ep-badge--cat">
-              <span class="ep-cat-icon ep-cat-icon--{{ event.category.slug|default:'academic' }}"></span>
-              {% if event.category %}{{ event.category.name }}{% else %}Event{% endif %}
-            </span>
-            <div class="ep-card__badges-right">
-              {% if event.status == 'draft' %}
-                <span class="ep-badge" style="background:rgba(100,116,139,0.25);border:1px solid rgba(100,116,139,0.4);color:#94A3B8;">Draft</span>
-              {% endif %}
-            </div>
+
+          <div class="ep-datestub">
+            <div class="ep-datestub__d">{{ event.start_datetime|date:"d" }}</div>
+            <div class="ep-datestub__m">{{ event.start_datetime|date:"M" }}</div>
           </div>
-          <div class="ep-card__view-pill">View Event →</div>
+
+          {% if event.status == 'draft' %}
+            <span class="ep-pricechip" style="background:var(--card2);color:var(--muted);">Draft</span>
+          {% elif event.is_past %}
+            <span class="ep-pricechip" style="background:var(--card2);color:var(--muted);">Ended</span>
+          {% elif event.is_free %}
+            <span class="ep-pricechip ep-pricechip--free">Free</span>
+          {% else %}
+            <span class="ep-pricechip">₦{{ event.ticket_price }}</span>
+          {% endif %}
         </div>
+
+        <div class="ep-perf"></div>
+
         <div class="ep-card__body">
           <h3 class="ep-card__title">{{ event.title }}</h3>
           <div class="ep-card__meta">
@@ -188,7 +195,7 @@
     <div class="ep-grid ep-profile-grid">
       {% for rsvp in attending_events %}
       <article class="ep-card" onclick="window.location.href='{% url 'events:detail' rsvp.event.slug %}'">
-        <div class="ep-card__img">
+        <div class="ep-card__img {% if not rsvp.event.cover_image %}ep-flyerbg--{{ rsvp.event.category.slug|default:'academic' }}{% endif %}">
           {% if rsvp.event.cover_image %}
             <img src="{{ rsvp.event.cover_image.url }}" alt="{{ rsvp.event.title }}" loading="lazy">
           {% else %}
@@ -196,15 +203,17 @@
               <span class="ep-cat-icon ep-cat-icon--{{ rsvp.event.category.slug|default:'academic' }}" style="width:48px;height:48px;"></span>
             </div>
           {% endif %}
-          <div class="ep-card__img-overlay"></div>
-          <div class="ep-card__badges">
-            <span class="ep-badge" style="background:rgba(16,185,129,0.2);border:1px solid rgba(16,185,129,0.4);color:#6EE7B7;">
-              {% if rsvp.status == 'approved' %}Approved
-              {% elif rsvp.status == 'pending' %}Pending
-              {% else %}{{ rsvp.status|capfirst }}{% endif %}
-            </span>
+          <div class="ep-datestub">
+            <div class="ep-datestub__d">{{ rsvp.event.start_datetime|date:"d" }}</div>
+            <div class="ep-datestub__m">{{ rsvp.event.start_datetime|date:"M" }}</div>
           </div>
+          <span class="ep-pricechip ep-status-chip--{{ rsvp.status }}" style="position:absolute;top:12px;right:12px;">
+            {% if rsvp.status == 'approved' %}Approved
+            {% elif rsvp.status == 'pending' %}Pending
+            {% else %}{{ rsvp.status|capfirst }}{% endif %}
+          </span>
         </div>
+        <div class="ep-perf"></div>
         <div class="ep-card__body">
           <h3 class="ep-card__title">{{ rsvp.event.title }}</h3>
           <div class="ep-card__meta">
@@ -230,7 +239,7 @@
     <div class="ep-grid ep-profile-grid">
       {% for event in draft_events %}
       <article class="ep-card" onclick="window.location.href='{% url 'events:detail' event.slug %}'">
-        <div class="ep-card__img">
+        <div class="ep-card__img {% if not event.cover_image %}ep-flyerbg--{{ event.category.slug|default:'academic' }}{% endif %}">
           {% if event.cover_image %}
             <img src="{{ event.cover_image.url }}" alt="{{ event.title }}" loading="lazy">
           {% else %}
@@ -238,15 +247,13 @@
               <span class="ep-empty-icon ep-empty-icon--draft" style="width:48px;height:48px;border-radius:12px;"></span>
             </div>
           {% endif %}
-          <div class="ep-card__img-overlay"></div>
-          <div class="ep-card__badges">
-            <span class="ep-badge" style="background:rgba(100,116,139,0.25);border:1px solid rgba(100,116,139,0.4);color:#94A3B8;">Draft</span>
-          </div>
+          <span class="ep-pricechip" style="background:var(--card2);color:var(--muted);">Draft</span>
         </div>
+        <div class="ep-perf"></div>
         <div class="ep-card__body">
           <h3 class="ep-card__title">{{ event.title }}</h3>
           <div class="ep-card__footer">
-            <span style="font-size:.75rem;color:var(--muted2);">Last edited {{ event.updated_at|date:"d M Y" }}</span>
+            <span style="font-size:.75rem;color:var(--muted2);font-family:var(--font-mono);">Last edited {{ event.updated_at|date:"d M Y" }}</span>
             <a href="{% url 'events:edit' event.slug %}" class="ep-btn ep-btn--primary ep-btn--sm" onclick="event.stopPropagation()">Publish</a>
           </div>
         </div>

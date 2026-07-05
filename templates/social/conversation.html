@@ -36,6 +36,11 @@
           <div class="ep-msg__bubble">{{ m.body|linebreaksbr }}</div>
           <span class="ep-msg__time">{{ m.created_at|date:"H:i" }}</span>
         </div>
+      {% empty %}
+        <div class="ep-convo__hello">
+          <p>This is the start of your conversation with <b>@{{ other.username }}</b>.</p>
+          <p>Say hi — maybe about an event you're both going to.</p>
+        </div>
       {% endfor %}
     </div>
 
@@ -75,8 +80,14 @@
 
   function scrollDown() { win.scrollTop = win.scrollHeight; }
 
+  function clearHello() {
+    const hello = win.querySelector('.ep-convo__hello');
+    if (hello) hello.remove();
+  }
+
   function addMessage(m) {
     if (win.querySelector('.ep-msg[data-id="' + m.id + '"]')) return; // dedupe
+    clearHello();
     const wrap = document.createElement('div');
     wrap.className = 'ep-msg ' + (m.mine ? 'ep-msg--mine' : 'ep-msg--theirs');
     wrap.dataset.id = m.id;
