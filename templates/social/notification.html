@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Notifications — EventPulse{% endblock %}
+
+{% block content %}
+<div class="ep-chat-page">
+  <div class="ep-chat-container ep-notifs">
+
+    <header class="ep-inbox__header">
+      <h1 class="ep-inbox__title">
+        <span class="ep-icon ep-icon--bell ep-icon--purple"></span>
+        Notifications
+      </h1>
+      {% if notifs %}
+      <form method="POST" action="{% url 'social:notifications_read_all' %}" class="ep-notifs__readall">
+        {% csrf_token %}
+        <button type="submit" class="ep-btn ep-btn--ghost ep-btn--sm">Mark all read</button>
+      </form>
+      {% endif %}
+    </header>
+
+    {% if notifs %}
+      <ul class="ep-notif-list">
+        {% for n in notifs %}
+        <li>
+          <a href="{% url 'social:notification_open' n.pk %}" class="ep-notif {% if not n.is_read %}ep-notif--unread{% endif %}">
+            <div class="ep-notif__avatar">
+              {% if n.actor.profile_picture %}
+                <img src="{{ n.actor.profile_picture.url }}" alt="{{ n.actor.username }}">
+              {% else %}
+                <span>{{ n.actor.username|first|upper }}</span>
+              {% endif %}
+            </div>
+            <div class="ep-notif__body">
+              <p class="ep-notif__text">
+                <b>{{ n.actor.username }}</b> posted
+                {% if n.event %}<b>{{ n.event.title|truncatechars:48 }}</b>{% else %}an event{% endif %}
+              </p>
+              {% if n.event %}
+              <p class="ep-notif__meta">
+                {{ n.event.start_datetime|date:"D, d M · H:i" }} · {{ n.event.location_name|truncatechars:26 }}
+                {% if n.event.category %} · {{ n.event.category.name }}{% endif %}
+              </p>
+              {% endif %}
+              <span class="ep-notif__time">{{ n.created_at|timesince }} ago</span>
+            </div>
+            {% if n.event %}
+            <div class="ep-notif__date">
+              <b>{{ n.event.start_datetime|date:"d" }}</b>
+              <span>{{ n.event.start_datetime|date:"M" }}</span>
+            </div>
+            {% endif %}
+            {% if not n.is_read %}<span class="ep-notif__dot"></span>{% endif %}
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="ep-chat-empty">
+        <span class="ep-icon ep-icon--bell ep-icon--purple"></span>
+        <p>No notifications yet.</p>
+        <span class="ep-chat-empty__hint">Follow organisers and friends — when they post an event, you'll see it here first.</span>
+      </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

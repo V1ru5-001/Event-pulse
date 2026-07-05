@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   {% load static %}
-  <link rel="stylesheet" href="{% static 'css/main.css' %}?v=13" />
+  <link rel="stylesheet" href="{% static 'css/main.css' %}?v=16" />
   {% block extra_head %}{% endblock %}
 </head>
 <body>
@@ -55,9 +55,13 @@
 
       {% if user.is_authenticated %}
 
-        {# Campus calendar — wire to {% comment %}{% url 'events:calendar' %}{% endcomment %} once Group 5 ships #}
-        <a href="#" class="ep-nav__iconbtn" title="Campus calendar">
+        <a href="{% url 'events:calendar' %}" class="ep-nav__iconbtn" title="Campus calendar">
           <span class="ep-icon ep-icon--calendar"></span>
+        </a>
+
+        <a href="{% url 'social:notifications' %}" class="ep-nav__iconbtn" title="Notifications" id="notifBell">
+          <span class="ep-icon ep-icon--bell"></span>
+          <span class="ep-nav__iconbtn-badge" id="notifBadge" style="display:none;"></span>
         </a>
 
         <a href="{% url 'social:inbox' %}" class="ep-nav__iconbtn" title="Messages">
@@ -134,7 +138,7 @@
 {% block content %}{% endblock %}
 
 {% load static %}
-<script src="{% static 'js/main.js' %}?v=13"></script>
+<script src="{% static 'js/main.js' %}?v=16"></script>
 <script>
 // ── Navbar search scope toggle (Events / People) ──
 (function () {
@@ -170,5 +174,48 @@
 })();
 </script>
 {% block extra_js %}{% endblock %}
+
+{% if user.is_authenticated %}
+<div class="ep-toast" id="epToast" role="status" aria-live="polite">
+  <span class="ep-icon ep-icon--bell"></span>
+  <span id="epToastText"></span>
+</div>
+<script>
+(function () {
+  var badge = document.getElementById('notifBadge');
+  var toast = document.getElementById('epToast');
+  var toastText = document.getElementById('epToastText');
+  if (!badge) return;
+  var url = "{% url 'social:notifications_unread_count' %}";
+  var notifUrl = "{% url 'social:notifications' %}";
+  var last = null, toastTimer = null;
+
+  function showToast(msg) {
+    toastText.textContent = msg;
+    toast.classList.add('is-show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toast.classList.remove('is-show'); }, 5000);
+  }
+  toast.addEventListener('click', function () { window.location.href = notifUrl; });
+
+  async function tick() {
+    try {
+      var res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+      if (!res.ok) return;
+      var data = await res.json();
+      var n = data.count || 0;
+      badge.textContent = n > 9 ? '9+' : n;
+      badge.style.display = n > 0 ? '' : 'none';
+      if (last !== null && n > last) {
+        showToast(data.latest || 'New event from someone you follow');
+      }
+      last = n;
+    } catch (e) { /* retry next tick */ }
+  }
+  tick();
+  setInterval(tick, 30000);
+})();
+</script>
+{% endif %}
 </body>
 </html>
