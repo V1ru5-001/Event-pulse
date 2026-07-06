@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   {% load static %}
-  <link rel="stylesheet" href="{% static 'css/main.css' %}?v=16" />
+  <link rel="stylesheet" href="{% static 'css/main.css' %}?v=17" />
   {% block extra_head %}{% endblock %}
 </head>
 <body>
@@ -119,9 +119,72 @@
 
       {% endif %}
 
+      <button class="ep-nav__menubtn" id="mobileMenuBtn" type="button" aria-label="Open menu" aria-expanded="false">
+        <span class="ep-menudots"><i></i><i></i><i></i></span>
+      </button>
+
     </div>
   </div>
 </nav>
+
+<div class="ep-mobilemenu" id="mobileMenu" aria-hidden="true">
+  <div class="ep-mobilemenu__head">
+    <span class="ep-mobilemenu__logo">EVENT<b>PULSE</b></span>
+    <button class="ep-mobilemenu__close" id="mobileMenuClose" type="button" aria-label="Close menu">&times;</button>
+  </div>
+
+  <form class="ep-mobilemenu__search" method="get"
+        action="{% url 'events:home' %}"
+        data-events-url="{% url 'events:home' %}"
+        data-people-url="{% url 'accounts:search_people' %}"
+        id="mobileSearchForm">
+    <div class="ep-nav__search">
+      <span class="ep-icon ep-icon--search"></span>
+      <input type="text" name="q" placeholder="Search events…"
+             value="{{ request.GET.q|default:'' }}" autocomplete="off" />
+      <div class="ep-search-scope" role="tablist" aria-label="Search scope">
+        <button type="button" class="ep-search-scope__btn is-active" data-scope="events">Events</button>
+        <button type="button" class="ep-search-scope__btn" data-scope="people">People</button>
+      </div>
+    </div>
+  </form>
+
+  <nav class="ep-mobilemenu__links">
+    {% if user.is_authenticated %}
+      <a href="{% url 'events:home' %}" class="ep-mobilemenu__link">
+        <span class="ep-icon ep-icon--search"></span> Browse Events
+      </a>
+      <a href="{% url 'events:calendar' %}" class="ep-mobilemenu__link">
+        <span class="ep-icon ep-icon--calendar"></span> Campus Calendar
+      </a>
+      <a href="{% url 'social:notifications' %}" class="ep-mobilemenu__link">
+        <span class="ep-icon ep-icon--bell"></span> Notifications
+        <span class="ep-mobilemenu__badge" id="mobileNotifBadge" style="display:none;"></span>
+      </a>
+      <a href="{% url 'social:inbox' %}" class="ep-mobilemenu__link">
+        <span class="ep-icon ep-icon--chat"></span> Messages
+        {% if unread_messages_count %}
+          <span class="ep-mobilemenu__badge">{% if unread_messages_count > 9 %}9+{% else %}{{ unread_messages_count }}{% endif %}</span>
+        {% endif %}
+      </a>
+      <a href="{% url 'accounts:profile' user.username %}" class="ep-mobilemenu__link">
+        <span class="ep-icon ep-icon--user"></span> My Profile
+      </a>
+      <a href="{% url 'payments:pricing' %}" class="ep-mobilemenu__link">
+        <span class="ep-icon ep-icon--star"></span> Upgrade Plan
+      </a>
+      <a href="{% url 'events:create' %}" class="ep-btn ep-btn--primary ep-btn--full ep-mobilemenu__cta">
+        <span class="ep-icon ep-icon--plus"></span> Post Event
+      </a>
+      <a href="{% url 'accounts:logout' %}" class="ep-mobilemenu__link ep-mobilemenu__link--danger">
+        <span class="ep-icon ep-icon--logout ep-icon--coral"></span> Sign Out
+      </a>
+    {% else %}
+      <a href="{% url 'accounts:login' %}" class="ep-btn ep-btn--outline ep-btn--full ep-mobilemenu__cta">Sign In</a>
+      <a href="{% url 'accounts:register' %}" class="ep-btn ep-btn--primary ep-btn--full ep-mobilemenu__cta">Register</a>
+    {% endif %}
+  </nav>
+</div>
 {% endblock %}
 
 {% if messages %}
@@ -138,7 +201,7 @@
 {% block content %}{% endblock %}
 
 {% load static %}
-<script src="{% static 'js/main.js' %}?v=16"></script>
+<script src="{% static 'js/main.js' %}?v=17"></script>
 <script>
 // ── Navbar search scope toggle (Events / People) ──
 (function () {
@@ -217,5 +280,56 @@
 })();
 </script>
 {% endif %}
+
+<script>
+(function () {
+  var btn   = document.getElementById('mobileMenuBtn');
+  var menu  = document.getElementById('mobileMenu');
+  var close = document.getElementById('mobileMenuClose');
+  if (!btn || !menu) return;
+
+  function open()  {
+    menu.classList.add('is-open');
+    menu.setAttribute('aria-hidden', 'false');
+    btn.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
+  }
+  function shut() {
+    menu.classList.remove('is-open');
+    menu.setAttribute('aria-hidden', 'true');
+    btn.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+  }
+
+  btn.addEventListener('click', open);
+  close.addEventListener('click', shut);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') shut(); });
+  menu.querySelectorAll('a').forEach(function (a) { a.addEventListener('click', shut); });
+
+  // keep the mobile notif badge in sync with the nav one
+  var src = document.getElementById('notifBadge');
+  var dst = document.getElementById('mobileNotifBadge');
+  if (src && dst) {
+    new MutationObserver(function () {
+      dst.textContent = src.textContent;
+      dst.style.display = src.style.display;
+    }).observe(src, { childList: true, attributes: true, attributeFilter: ['style'] });
+  }
+
+  // scope toggle for the overlay search (mirror of navSearchForm behaviour)
+  var form = document.getElementById('mobileSearchForm');
+  if (form) {
+    var input = form.querySelector('input[name="q"]');
+    form.querySelectorAll('.ep-search-scope__btn').forEach(function (b) {
+      b.addEventListener('click', function () {
+        form.querySelectorAll('.ep-search-scope__btn').forEach(function (x) { x.classList.remove('is-active'); });
+        b.classList.add('is-active');
+        form.action = (b.dataset.scope === 'people') ? form.dataset.peopleUrl : form.dataset.eventsUrl;
+        input.placeholder = (b.dataset.scope === 'people') ? 'Search people…' : 'Search events…';
+      });
+    });
+  }
+})();
+</script>
 </body>
 </html>

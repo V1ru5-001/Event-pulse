@@ -6,7 +6,7 @@ from django.http import JsonResponse, HttpResponseBadRequest
 from django.views.decorators.http import require_POST
 from django.db.models import Q, Max
 
-from .models import Follow, Conversation, Message
+from .models import Follow, Conversation, Message, Notification
 
 User = get_user_model()
 

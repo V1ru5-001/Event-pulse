@@ -4516,3 +4516,121 @@ button { cursor: pointer; border: none; background: none; }
 @media (prefers-reduced-motion: reduce) {
   .ep-toast { transition: opacity 0.2s; transform: none; }
 }
+
+
+/* ═══════════════════════════════════════════════════════════
+   MOBILE MENU — kebab button + full-screen translucent overlay
+   ═══════════════════════════════════════════════════════════ */
+
+.ep-nav__menubtn {
+  display: none;
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  cursor: pointer;
+  place-items: center;
+  flex: none;
+}
+.ep-nav__menubtn:hover { border-color: var(--primary); }
+.ep-menudots { display: flex; flex-direction: column; gap: 4px; }
+.ep-menudots i {
+  width: 4.5px; height: 4.5px;
+  border-radius: 50%;
+  background: var(--text);
+  display: block;
+}
+.ep-nav__menubtn:hover .ep-menudots i { background: var(--primary); }
+
+.ep-mobilemenu {
+  position: fixed; inset: 0;
+  z-index: 1000;
+  background: rgba(22,19,15,0.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  display: flex;
+  flex-direction: column;
+  padding: 18px 20px 28px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease;
+  overflow-y: auto;
+}
+.ep-mobilemenu.is-open { opacity: 1; pointer-events: auto; }
+
+.ep-mobilemenu__head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px;
+}
+.ep-mobilemenu__logo {
+  font-family: var(--font-display);
+  font-variation-settings: 'wdth' 125;
+  font-weight: 900;
+  font-size: 1.1rem;
+  letter-spacing: 0.04em;
+  color: var(--text);
+}
+.ep-mobilemenu__logo b { color: var(--primary); font-weight: inherit; }
+.ep-mobilemenu__close {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+.ep-mobilemenu__close:hover { border-color: var(--coral); color: var(--coral); }
+
+.ep-mobilemenu__search { margin-bottom: 10px; }
+.ep-mobilemenu__search .ep-nav__search { max-width: none; }
+
+.ep-mobilemenu__links {
+  display: flex; flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+}
+.ep-mobilemenu__link {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 12px;
+  border-radius: 12px;
+  color: var(--text);
+  text-decoration: none;
+  font-size: 1rem;
+  font-weight: 500;
+  border-bottom: 1px solid rgba(242,234,217,0.06);
+}
+.ep-mobilemenu__link .ep-icon { width: 19px; height: 19px; color: var(--primary); }
+.ep-mobilemenu__link:hover, .ep-mobilemenu__link:active { background: rgba(255,122,26,0.08); }
+.ep-mobilemenu__link--danger { color: var(--coral); border-bottom: none; margin-top: 6px; }
+.ep-mobilemenu__link--danger .ep-icon { color: var(--coral); }
+.ep-mobilemenu__badge {
+  margin-left: auto;
+  min-width: 21px; height: 21px;
+  padding: 0 6px;
+  border-radius: 11px;
+  background: var(--primary);
+  color: #1A0E02;
+  font-family: var(--font-mono);
+  font-size: 11px; font-weight: 700;
+  display: grid; place-items: center;
+}
+.ep-mobilemenu__cta { margin: 14px 0 4px; justify-content: center; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ep-mobilemenu { transition: none; }
+}
+
+/* ── the breakpoint: collapse the packed nav ── */
+@media (max-width: 860px) {
+  .ep-nav__menubtn { display: grid; }
+  .ep-nav__search-form,
+  .ep-nav__location,
+  .ep-nav__iconbtn,
+  .ep-nav__actions .ep-btn--create,
+  .ep-nav__actions > .ep-btn--outline,
+  .ep-nav__actions > .ep-btn--primary { display: none !important; }
+  /* keep the avatar so users still have 1-tap profile access */
+  .ep-nav__inner { gap: 12px; }
+}
