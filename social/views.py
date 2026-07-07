@@ -180,6 +180,9 @@ def notification_open(request, pk):
         n.is_read = True
         n.save(update_fields=['is_read'])
     if n.event_id:
+        # RSVP requests go to the organiser's manage page; everything else to the event
+        if n.kind == Notification.Kind.RSVP_REQUEST:
+            return redirect('events:manage_rsvps', slug=n.event.slug)
         return redirect('events:detail', slug=n.event.slug)
     return redirect('social:notifications')
 
@@ -199,7 +202,11 @@ def notifications_unread_count(request):
     latest = ''
     if count:
         n = qs.select_related('actor', 'event').first()
-        if n and n.event_id:
-            latest = f'{n.actor.username} posted "{n.event.title}"'
+        if n:
+            if n.kind == Notification.Kind.RSVP_REQUEST:
+                latest = f'{n.actor.username} asked to join "{n.event.title}"'
+            elif n.kind == Notification.Kind.RSVP_APPROVED:
+                latest = f'Your request to join "{n.event.title}" was approved'
+            elif n.event_id:
+                latest = f'{n.actor.username} posted "{n.event.title}"'
     return JsonResponse({'count': count, 'latest': latest})
-

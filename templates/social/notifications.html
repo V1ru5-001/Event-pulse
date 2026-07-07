@@ -34,9 +34,20 @@
             </div>
             <div class="ep-notif__body">
               <p class="ep-notif__text">
-                <b>{{ n.actor.username }}</b> posted
-                {% if n.event %}<b>{{ n.event.title|truncatechars:48 }}</b>{% else %}an event{% endif %}
+                {% if n.kind == 'rsvp_request' %}
+                  <b>{{ n.actor.username }}</b> asked to join
+                  {% if n.event %}<b>{{ n.event.title|truncatechars:40 }}</b>{% else %}your event{% endif %}
+                {% elif n.kind == 'rsvp_approved' %}
+                  <b>{{ n.actor.username }}</b> approved your request to join
+                  {% if n.event %}<b>{{ n.event.title|truncatechars:40 }}</b>{% else %}the event{% endif %}
+                {% else %}
+                  <b>{{ n.actor.username }}</b> posted
+                  {% if n.event %}<b>{{ n.event.title|truncatechars:48 }}</b>{% else %}an event{% endif %}
+                {% endif %}
               </p>
+              {% if n.kind == 'rsvp_request' and n.note %}
+              <p class="ep-notif__meta" style="font-style:italic;">"{{ n.note }}"</p>
+              {% endif %}
               {% if n.event %}
               <p class="ep-notif__meta">
                 {{ n.event.start_datetime|date:"D, d M · H:i" }} · {{ n.event.location_name|truncatechars:26 }}

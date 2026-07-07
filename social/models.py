@@ -114,7 +114,9 @@ class Notification(models.Model):
     without a schema change."""
 
     class Kind(models.TextChoices):
-        NEW_EVENT = 'new_event', 'New event from someone you follow'
+        NEW_EVENT     = 'new_event',     'New event from someone you follow'
+        RSVP_REQUEST  = 'rsvp_request',  'Someone requested to join your event'
+        RSVP_APPROVED = 'rsvp_approved', 'Your request to join was approved'
 
     recipient = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -137,6 +139,7 @@ class Notification(models.Model):
         related_name='notifications',
         null=True, blank=True,
     )
+    note = models.CharField(max_length=500, blank=True, default='')
     is_read    = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 

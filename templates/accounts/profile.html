@@ -116,7 +116,7 @@
       </button>
       {% if is_own_profile %}
         <button class="ep-profile-tab" data-tab="attending">
-          Attending <span class="ep-profile-tab__count">{{ attending_events.count }}</span>
+          Guests <span class="ep-profile-tab__count">{{ accepted_guests.count }}</span>
         </button>
         <button class="ep-profile-tab" data-tab="drafts">
           Drafts <span class="ep-profile-tab__count">{{ draft_events.count }}</span>
@@ -197,43 +197,30 @@
   {% if is_own_profile %}
   <div class="ep-profile-content" id="tab-attending" style="display:none">
     <div class="ep-grid ep-profile-grid">
-      {% for rsvp in attending_events %}
-      <article class="ep-card" onclick="window.location.href='{% url 'events:detail' rsvp.event.slug %}'">
-        <div class="ep-card__img {% if not rsvp.event.cover_image %}ep-flyerbg--{{ rsvp.event.category.slug|default:'academic' }}{% endif %}">
-          {% if rsvp.event.cover_image %}
-            <img src="{{ rsvp.event.cover_image.url }}" alt="{{ rsvp.event.title }}" loading="lazy">
-          {% else %}
-            <div class="ep-card__placeholder">
-              <span class="ep-cat-icon ep-cat-icon--{{ rsvp.event.category.slug|default:'academic' }}" style="width:48px;height:48px;"></span>
-            </div>
-          {% endif %}
-          <div class="ep-datestub">
-            <div class="ep-datestub__d">{{ rsvp.event.start_datetime|date:"d" }}</div>
-            <div class="ep-datestub__m">{{ rsvp.event.start_datetime|date:"M" }}</div>
+      {% for rsvp in accepted_guests %}
+      <article class="ep-card" onclick="window.location.href='{% url 'accounts:profile' rsvp.user.username %}'">
+        <div class="ep-card__body" style="display:flex;align-items:center;gap:1rem;padding:1.25rem;">
+          <div class="ep-card__organiser-av" style="width:48px;height:48px;font-size:1.1rem;flex-shrink:0;">
+            {% if rsvp.user.profile_picture %}
+              <img src="{{ rsvp.user.profile_picture.url }}" alt="{{ rsvp.user.username }}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">
+            {% else %}{{ rsvp.user.username|first|upper }}{% endif %}
           </div>
-          <span class="ep-pricechip ep-status-chip--{{ rsvp.status }}" style="position:absolute;top:12px;right:12px;">
-            {% if rsvp.status == 'approved' %}Approved
-            {% elif rsvp.status == 'pending' %}Pending
-            {% else %}{{ rsvp.status|capfirst }}{% endif %}
-          </span>
-        </div>
-        <div class="ep-perf"></div>
-        <div class="ep-card__body">
-          <h3 class="ep-card__title">{{ rsvp.event.title }}</h3>
-          <div class="ep-card__meta">
-            <div class="ep-card__meta-row">
-              <span class="ep-meta-icon ep-meta-icon--calendar"></span>
-              {{ rsvp.event.start_datetime|date:"D, d M Y · H:i" }}
+          <div style="flex:1;min-width:0;">
+            <h3 class="ep-card__title" style="margin:0 0 .15rem;">{{ rsvp.user.get_full_name|default:rsvp.user.username }}</h3>
+            <div style="font-size:.78rem;color:var(--muted);">@{{ rsvp.user.username }}</div>
+            <div class="ep-card__meta-row" style="margin-top:.5rem;">
+              <span class="ep-meta-icon ep-meta-icon--ticket"></span>
+              Joining {{ rsvp.event.title|truncatechars:32 }}
             </div>
           </div>
+          <span class="ep-status-chip ep-status-chip--approved" style="flex-shrink:0;">Approved</span>
         </div>
       </article>
       {% empty %}
       <div class="ep-empty" style="grid-column:1/-1">
-        <div class="ep-empty-icon ep-empty-icon--ticket"></div>
-        <h3>No events yet</h3>
-        <p>Browse events and request to attend.</p>
-        <a href="{% url 'events:home' %}" class="ep-btn ep-btn--primary" style="margin-top:1rem">Browse Events</a>
+        <div class="ep-empty-icon ep-empty-icon--people"></div>
+        <h3>No guests yet</h3>
+        <p>When you approve people for your events, they'll show up here.</p>
       </div>
       {% endfor %}
     </div>

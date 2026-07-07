@@ -192,11 +192,22 @@ def event_detail_view(request, slug):
     if request.user.is_authenticated:
         user_rsvp = RSVP.objects.filter(event=event, user=request.user).first()
 
-    return render(request, 'events/event_detail.html', {
-        'event':     event,
-        'user_rsvp': user_rsvp,
-    })
+    # ── event status flags (drives the RSVP button) ──
+    now = timezone.now()
+    start = event.start_datetime
+    end   = event.end_datetime or start
 
+    is_ended       = end < now
+    is_live        = start <= now <= end
+    is_coming_soon = start > now
+
+    return render(request, 'events/event_detail.html', {
+        'event':          event,
+        'user_rsvp':      user_rsvp,
+        'is_ended':       is_ended,
+        'is_live':        is_live,
+        'is_coming_soon': is_coming_soon,
+    })
 
 def profile_view(request, username):
     from django.contrib.auth import get_user_model
@@ -211,7 +222,14 @@ def profile_view(request, username):
     ).order_by('-created_at')
 
     draft_events = Event.objects.none()
-    attending_events = RSVP.objects.none()
+    accepted_guests = (
+        RSVP.objects.filter(
+            event__organiser=profile_user,
+            status=RSVP.Status.APPROVED,
+        )
+        .select_related('user', 'event')
+        .order_by('-joined_at')
+    )
 
     if is_own:
         draft_events = Event.objects.filter(
@@ -238,7 +256,7 @@ def profile_view(request, username):
         'profile_user':    profile_user,
         'posted_events':   posted_events,
         'draft_events':    draft_events,
-        'attending_events':attending_events,
+        'accepted_guests': accepted_guests,
         'rsvp_count':      rsvp_count,
         'is_own_profile':  is_own,
         'viewer_is_following': viewer_is_following,
@@ -273,6 +291,16 @@ def rsvp_view(request, slug):
         status = status,
         note   = note,
     )
+
+    from social.models import Notification
+    Notification.objects.create(
+        recipient = event.organiser,
+        actor     = request.user,
+        event     = event,
+        kind      = Notification.Kind.RSVP_REQUEST,
+        note      = note,
+    )
+
     messages.success(request, msg)
     return redirect('events:detail', slug=slug)
 @login_required(login_url='accounts:login')
@@ -288,6 +316,13 @@ def manage_rsvps_view(request, slug):
             if action == 'approve':
                 rsvp.status = RSVP.Status.APPROVED
                 rsvp.save()
+                from social.models import Notification
+                Notification.objects.create(
+                    recipient = rsvp.user,
+                    actor     = request.user,
+                    event     = event,
+                    kind      = Notification.Kind.RSVP_APPROVED,
+                )
                 messages.success(request, f'{rsvp.user.username} has been approved.')
             elif action == 'reject':
                 rsvp.status = RSVP.Status.REJECTED
@@ -300,6 +335,7 @@ def manage_rsvps_view(request, slug):
     return render(request, 'events/manage_rsvps.html', {
         'event': event,
         'rsvps': rsvps,
+         'approved_count': rsvps.filter(status=RSVP.Status.APPROVED).count(),
     })
 # ═══════════════════════════════════════════════════════════
 # ADD TO: events/views.py
