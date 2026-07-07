@@ -4634,3 +4634,8 @@ button { cursor: pointer; border: none; background: none; }
   /* keep the avatar so users still have 1-tap profile access */
   .ep-nav__inner { gap: 12px; }
 }
+#ep-preloader.hidden {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}

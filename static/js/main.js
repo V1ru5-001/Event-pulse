@@ -150,6 +150,8 @@ document.querySelectorAll('.ep-message').forEach((msg) => {
     const wait = Math.max(0, MIN_SHOW - (Date.now() - shownAt));
     setTimeout(function () {
       pl.classList.add('hidden');
+      pl.style.pointerEvents = 'none';
+      pl.style.display = 'none';
       setTimeout(function () { pl.style.display = 'none'; }, 500);
     }, wait + 250);
   }

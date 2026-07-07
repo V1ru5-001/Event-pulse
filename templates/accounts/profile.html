@@ -78,6 +78,10 @@
           <span class="ep-profile-stat__num">{{ profile_user.following_count }}</span>
           <span class="ep-profile-stat__label">Following</span>
         </a>
+        <!-- <a href="{% url 'social:follow_list' profile_user.username 'following' %}" class="ep-profile-stat ep-profile-stat--link">
+          <span class="ep-profile-stat__num">{{ profile_user.following_count|add:posted_events.count }}</span>
+          <span class="ep-profile-stat__label">Following</span>
+        </a> -->
       </div>
 
       {% if is_own_profile %}
