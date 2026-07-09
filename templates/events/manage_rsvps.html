@@ -1,46 +1,44 @@
 {% extends 'base.html' %}
 {% block title %}Manage RSVPs — {{ event.title }}{% endblock %}
 {% block content %}
-<div style="max-width:860px;margin:0 auto;padding:7rem 2rem 4rem;position:relative;z-index:2;">
+<div class="ep-manage-page">
 
-  <a href="{% url 'events:detail' event.slug %}" class="ep-create-back" style="display:inline-flex;align-items:center;gap:.5rem;margin-bottom:1.5rem;">
-    <span class="ep-icon ep-icon--back ep-icon--purple"></span>
+  <a href="{% url 'events:detail' event.slug %}" class="ep-create-back ep-manage-back">
+    <span class="ep-icon ep-icon--back ep-icon--accent"></span>
     Back to Event
   </a>
 
-  <h1 style="font-family:var(--font-display);font-variation-settings:'wdth' 118;font-size:1.6rem;font-weight:850;text-transform:uppercase;letter-spacing:.01em;margin-bottom:.35rem;">
-    Manage RSVPs
-  </h1>
-  <p style="color:var(--muted);margin-bottom:2rem;">{{ event.title }}</p>
+  <h1 class="ep-manage-title">Manage RSVPs</h1>
+  <p class="ep-manage-subtitle">{{ event.title }}</p>
 
-  <div style="display:flex;gap:1rem;margin-bottom:2rem;flex-wrap:wrap;">
-    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem 1.5rem;text-align:center;">
-      <div style="font-family:var(--font-display);font-size:1.75rem;font-weight:800;color:var(--primary);">{{ rsvps.count }}</div>
-      <div style="font-size:.78rem;color:var(--muted);">Total Requests</div>
+  <div class="ep-manage-stats">
+    <div class="ep-manage-stat">
+      <div class="ep-manage-stat__num">{{ rsvps.count }}</div>
+      <div class="ep-manage-stat__label">Total Requests</div>
     </div>
-    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem 1.5rem;text-align:center;">
-      <div style="font-family:var(--font-display);font-size:1.75rem;font-weight:800;color:var(--green);">{{ approved_count }}</div>
-      <div style="font-size:.78rem;color:var(--muted);">Approved</div>
+    <div class="ep-manage-stat">
+      <div class="ep-manage-stat__num ep-manage-stat__num--green">{{ approved_count }}</div>
+      <div class="ep-manage-stat__label">Approved</div>
     </div>
   </div>
 
-  <div style="display:flex;flex-direction:column;gap:.75rem;">
+  <div class="ep-manage-list">
     {% for rsvp in rsvps %}
-    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.1rem 1.25rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+    <div class="ep-manage-row">
 
       <div class="ep-manage-av">
         {{ rsvp.user.username|first|upper }}
       </div>
 
-      <div style="flex:1;min-width:150px;">
-        <div style="font-weight:600;font-size:.9rem;">{{ rsvp.user.get_full_name|default:rsvp.user.username }}</div>
-        <div style="font-size:.78rem;color:var(--muted);">@{{ rsvp.user.username }}</div>
+      <div class="ep-manage-row__info">
+        <div class="ep-manage-row__name">{{ rsvp.user.get_full_name|default:rsvp.user.username }}</div>
+        <div class="ep-manage-row__handle">@{{ rsvp.user.username }}</div>
         {% if rsvp.note %}
-          <div style="font-size:.78rem;color:var(--muted2);margin-top:.25rem;font-style:italic;">"{{ rsvp.note }}"</div>
+          <div class="ep-manage-row__note">"{{ rsvp.note }}"</div>
         {% endif %}
       </div>
 
-      <div style="font-size:.75rem;color:var(--muted);font-family:var(--font-mono);">
+      <div class="ep-manage-row__date">
         {{ rsvp.joined_at|date:"d M Y · H:i" }}
       </div>
 
@@ -57,7 +55,7 @@
       </div>
 
       {% if rsvp.status == 'pending' or rsvp.status == 'waitlist' %}
-      <div style="display:flex;gap:.5rem;">
+      <div class="ep-manage-row__actions">
         <form method="POST">
           {% csrf_token %}
           <input type="hidden" name="rsvp_id" value="{{ rsvp.pk }}" />
@@ -68,15 +66,15 @@
           {% csrf_token %}
           <input type="hidden" name="rsvp_id" value="{{ rsvp.pk }}" />
           <input type="hidden" name="action" value="reject" />
-          <button type="submit" class="ep-btn ep-btn--outline ep-btn--sm" style="color:var(--coral);border-color:var(--coral);">Reject</button>
+          <button type="submit" class="ep-btn ep-btn--outline ep-btn--sm ep-btn--reject">Reject</button>
         </form>
       </div>
       {% endif %}
 
     </div>
     {% empty %}
-    <div style="text-align:center;padding:4rem;color:var(--muted);">
-      <div class="ep-empty-icon ep-empty-icon--inbox" style="margin:0 auto 1rem;"></div>
+    <div class="ep-manage-empty">
+      <div class="ep-empty-icon ep-empty-icon--inbox"></div>
       <p>No RSVP requests yet.</p>
     </div>
     {% endfor %}

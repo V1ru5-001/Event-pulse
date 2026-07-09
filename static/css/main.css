@@ -1148,7 +1148,7 @@ button { cursor: pointer; border: none; background: none; }
   vertical-align: middle;
 }
 /* colour variants — class names kept for template compatibility */
-.ep-icon--purple { color: var(--primary); }
+.ep-icon--accent { color: var(--primary); }
 .ep-icon--coral  { color: var(--coral); }
 .ep-icon--green  { color: var(--green); }
 .ep-icon--muted  { color: var(--muted2); }
@@ -4639,3 +4639,39 @@ button { cursor: pointer; border: none; background: none; }
   pointer-events: none !important;
   visibility: hidden !important;
 }
+/* ═══════════════════════════════════════════
+   MANAGE RSVPS — extracted from inline styles
+   ═══════════════════════════════════════════ */
+.ep-manage-page { max-width: 860px; margin: 0 auto; padding: 7rem 2rem 4rem; position: relative; z-index: 2; }
+.ep-manage-back { display: inline-flex; align-items: center; gap: .5rem; margin-bottom: 1.5rem; }
+.ep-manage-title {
+  font-family: var(--font-display);
+  font-variation-settings: 'wdth' 118;
+  font-size: 1.6rem; font-weight: 850;
+  text-transform: uppercase; letter-spacing: .01em;
+  margin-bottom: .35rem;
+}
+.ep-manage-subtitle { color: var(--muted); margin-bottom: 2rem; }
+.ep-manage-stats { display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; }
+.ep-manage-stat {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 1rem 1.5rem; text-align: center;
+}
+.ep-manage-stat__num { font-family: var(--font-display); font-size: 1.75rem; font-weight: 800; color: var(--primary); }
+.ep-manage-stat__num--green { color: var(--green); }
+.ep-manage-stat__label { font-size: .78rem; color: var(--muted); }
+.ep-manage-list { display: flex; flex-direction: column; gap: .75rem; }
+.ep-manage-row {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 1.1rem 1.25rem;
+  display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+}
+.ep-manage-row__info { flex: 1; min-width: 150px; }
+.ep-manage-row__name { font-weight: 600; font-size: .9rem; }
+.ep-manage-row__handle { font-size: .78rem; color: var(--muted); }
+.ep-manage-row__note { font-size: .78rem; color: var(--muted2); margin-top: .25rem; font-style: italic; }
+.ep-manage-row__date { font-size: .75rem; color: var(--muted); font-family: var(--font-mono); }
+.ep-manage-row__actions { display: flex; gap: .5rem; }
+.ep-btn--reject { color: var(--coral); border-color: var(--coral); }
+.ep-manage-empty { text-align: center; padding: 4rem; color: var(--muted); }
+.ep-manage-empty .ep-empty-icon { margin: 0 auto 1rem; }

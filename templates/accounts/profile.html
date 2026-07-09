@@ -31,13 +31,13 @@
         <div class="ep-profile-meta">
           {% if profile_user.university %}
             <span class="ep-profile-meta-item">
-              <span class="ep-icon ep-icon--home ep-icon--purple"></span>
+              <span class="ep-icon ep-icon--home ep-icon--accent"></span>
               {{ profile_user.university }}
             </span>
           {% endif %}
           {% if profile_user.course %}
             <span class="ep-profile-meta-item">
-              <span class="ep-icon ep-icon--book ep-icon--purple"></span>
+              <span class="ep-icon ep-icon--book ep-icon--accent"></span>
               {{ profile_user.course }}
             </span>
           {% endif %}
@@ -48,7 +48,7 @@
             </span>
           {% endif %}
           <span class="ep-profile-meta-item ep-profile-role ep-profile-role--{{ profile_user.role }}">
-            <span class="ep-icon ep-icon--user ep-icon--purple"></span>
+            <span class="ep-icon ep-icon--user ep-icon--accent"></span>
             {% if profile_user.role == 'student' %}Student
             {% elif profile_user.role == 'society' %}Society
             {% elif profile_user.role == 'staff' %}Staff
@@ -86,7 +86,7 @@
 
       {% if is_own_profile %}
         <a href="{% url 'accounts:edit_profile' %}" class="ep-btn ep-btn--outline ep-btn--sm ep-profile-edit-btn">
-          <span class="ep-icon ep-icon--edit ep-icon--purple"></span>
+          <span class="ep-icon ep-icon--edit ep-icon--accent"></span>
           Edit Profile
         </a>
       {% elif user.is_authenticated %}
@@ -100,7 +100,7 @@
             <span class="ep-followbtn-label">{% if viewer_is_following %}Following{% else %}Follow{% endif %}</span>
           </button>
           <a href="{% url 'social:start_conversation' profile_user.username %}" class="ep-btn ep-btn--outline ep-btn--sm">
-            <span class="ep-icon ep-icon--chat ep-icon--purple"></span>
+            <span class="ep-icon ep-icon--chat ep-icon--accent"></span>
             Message
           </a>
         </div>

@@ -23,17 +23,17 @@
     </div>
     <div class="land-hero__stats">
       <div class="land-stat">
-        <span class="land-stat__num" data-target="1200">0</span>
+        <span class="land-stat__num" data-target="{{ stats.students|default:0 }}">0</span>
         <span class="land-stat__label">Students</span>
       </div>
       <div class="land-stat__divider"></div>
       <div class="land-stat">
-        <span class="land-stat__num" data-target="340">0</span>
+        <span class="land-stat__num" data-target="{{ stats.events|default:0 }}">0</span>
         <span class="land-stat__label">Events Posted</span>
       </div>
       <div class="land-stat__divider"></div>
       <div class="land-stat">
-        <span class="land-stat__num" data-target="48">0</span>
+        <span class="land-stat__num" data-target="{{ stats.societies|default:0 }}">0</span>
         <span class="land-stat__label">Societies</span>
       </div>
     </div>
@@ -212,7 +212,7 @@ document.querySelectorAll('.land-stat__num').forEach(function (el) {
     var pct = Math.min((ts - t0) / dur, 1);
     el.textContent = Math.floor(pct * target).toLocaleString();
     if (pct < 1) requestAnimationFrame(tick);
-    else el.textContent = target.toLocaleString() + '+';
+    else el.textContent = target.toLocaleString() + (target >= 100 ? '+' : '');
   }
   var obs = new IntersectionObserver(function (entries) {
     if (entries[0].isIntersecting) { requestAnimationFrame(tick); obs.disconnect(); }

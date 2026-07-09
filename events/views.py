@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils.text import slugify
 from django.utils import timezone
-from django.db.models import Q
+from django.db.models import Q, Count
 import calendar as pycal
 from datetime import date
 
@@ -17,9 +17,19 @@ def landing_view(request):
 
     events = Event.objects.filter(
         status=Event.Status.PUBLISHED
-    ).select_related('organiser', 'category').order_by('-is_featured', '-created_at')[:6]
+    ).select_related('organiser', 'category').annotate(
+        approved_count=Count('rsvps', filter=Q(rsvps__status=RSVP.Status.APPROVED))
+    ).order_by('-is_featured', '-created_at')[:6]
 
-    return render(request, 'events/landing.html', {'events': events})
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    stats = {
+        'students':  User.objects.filter(role='student').count(),
+        'events':    Event.objects.filter(status=Event.Status.PUBLISHED).count(),
+        'societies': User.objects.filter(role='society').count(),
+    }
+
+    return render(request, 'events/landing.html', {'events': events, 'stats': stats})
 
 
 @login_required(login_url='accounts:login')
@@ -31,7 +41,9 @@ def home_view(request):
 
     events = Event.objects.filter(
         status=Event.Status.PUBLISHED
-    ).select_related('organiser', 'category').order_by('-is_featured', '-created_at')
+    ).select_related('organiser', 'category').annotate(
+        approved_count=Count('rsvps', filter=Q(rsvps__status=RSVP.Status.APPROVED))
+    ).order_by('-is_featured', '-created_at')
 
     # ── Search — title matched first ──────────
     if query:

@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   {% load static %}
-  <link rel="stylesheet" href="{% static 'css/main.css' %}?v=17" />
+  <link rel="stylesheet" href="{% static 'css/main.css' %}?v=18" />
   {% block extra_head %}{% endblock %}
 </head>
 <body>
@@ -87,22 +87,22 @@
           <div class="ep-nav__dropdown" id="userDropdown">
             <span class="ep-nav__dropdown-name">{{ user.username }}</span>
             <a href="{% url 'accounts:profile' user.username %}" class="ep-nav__dropdown-item">
-              <span class="ep-icon ep-icon--user ep-icon--purple"></span>
+              <span class="ep-icon ep-icon--user ep-icon--accent"></span>
               My Profile
             </a>
             <a href="{% url 'social:inbox' %}" class="ep-nav__dropdown-item">
-              <span class="ep-icon ep-icon--chat ep-icon--purple"></span>
+              <span class="ep-icon ep-icon--chat ep-icon--accent"></span>
               Messages
               {% if unread_messages_count %}
                 <span class="ep-nav__dropdown-badge">{% if unread_messages_count > 9 %}9+{% else %}{{ unread_messages_count }}{% endif %}</span>
               {% endif %}
             </a>
             <a href="{% url 'events:create' %}" class="ep-nav__dropdown-item">
-              <span class="ep-icon ep-icon--plus ep-icon--purple"></span>
+              <span class="ep-icon ep-icon--plus ep-icon--accent"></span>
               Post an Event
             </a>
             <a href="{% url 'payments:pricing' %}" class="ep-nav__dropdown-item">
-              <span class="ep-icon ep-icon--star ep-icon--purple"></span>
+              <span class="ep-icon ep-icon--star ep-icon--accent"></span>
               Upgrade Plan
             </a>
             <a href="{% url 'accounts:logout' %}" class="ep-nav__dropdown-item ep-nav__dropdown-item--danger">
@@ -201,7 +201,7 @@
 {% block content %}{% endblock %}
 
 {% load static %}
-<script src="{% static 'js/main.js' %}?v=17"></script>
+<script src="{% static 'js/main.js' %}?v=18"></script>
 <script>
 // ── Navbar search scope toggle (Events / People) ──
 (function () {
