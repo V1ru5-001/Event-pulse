@@ -7,13 +7,35 @@
 <div class="detail-page">
 
   <div class="detail-hero">
-    {% if event.cover_image %}
+    {% with gallery=event.gallery.all %}
+    {% if gallery %}
+      <div class="ep-gallery js-carousel" id="eventGallery">
+        {% for media in gallery %}
+        <div class="ep-gallery__slide js-car-slide {% if forloop.first %}is-active{% endif %}">
+          {% if media.media_type == 'video' %}
+            <video class="ep-gallery__media js-car-video js-car-tap" src="{{ media.file.url }}" muted autoplay loop playsinline preload="metadata"></video>
+          {% else %}
+            <img class="ep-gallery__media" src="{{ media.file.url }}" alt="{{ event.title }}" />
+          {% endif %}
+        </div>
+        {% endfor %}
+
+        {% if gallery|length > 1 %}
+        <div class="ep-gallery__dots">
+          {% for media in gallery %}
+          <button type="button" class="ep-gallery__dot js-car-dot {% if forloop.first %}is-active{% endif %}" aria-label="Slide {{ forloop.counter }}"></button>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+    {% elif event.cover_image %}
       <div class="detail-hero__img" style="background-image:url('{{ event.cover_image.url }}')"></div>
     {% else %}
       <div class="detail-hero__img detail-hero__img--placeholder ep-flyerbg--{{ event.category.slug|default:'academic' }}">
         <span class="ep-cat-icon ep-cat-icon--{{ event.category.slug|default:'academic' }}" style="width:72px;height:72px;background-color:rgba(242,234,217,0.5);"></span>
       </div>
     {% endif %}
+    {% endwith %}
     <div class="detail-hero__overlay" style="pointer-events:none;"></div>
 
     <div class="detail-datestub">

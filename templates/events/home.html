@@ -23,9 +23,9 @@
     <article class="ep-card ep-card--social" data-cat="{{ event.category.slug|default:'all' }}"
       onclick="window.location.href='{% url "events:detail" event.slug %}'">
 
-      <div class="ep-feed-item__thumb {% if not event.cover_image %}ep-flyerbg--{{ event.category.slug|default:'academic' }}{% endif %}">
-        {% if event.cover_image %}
-          <img src="{{ event.cover_image.url }}" alt="{{ event.title }}" loading="lazy">
+      <div class="ep-feed-item__thumb {% if not event.display_image_url %}ep-flyerbg--{{ event.category.slug|default:'academic' }}{% endif %}">
+        {% if event.display_image_url %}
+          <img src="{{ event.display_image_url }}" alt="{{ event.title }}" loading="lazy">
         {% endif %}
         <div class="ep-feed-item__date">
           <b>{{ event.start_datetime|date:"d" }}</b>
@@ -72,12 +72,22 @@
 
 {% with slides=featured_events|default:events|slice:":5" %}
 {% if slides %}
-<section class="ep-slideshow" id="epSlideshow">
+<section class="ep-slideshow js-carousel" id="epSlideshow">
   {% for event in slides %}
-  <a href="{% url 'events:detail' event.slug %}" class="ep-slide {% if forloop.first %}is-active{% endif %}"
-     {% if event.cover_image %}style="background-image:url('{{ event.cover_image.url }}')"{% endif %}
-     data-index="{{ forloop.counter0 }}">
-    {% if not event.cover_image %}<div class="ep-slide__bg-fallback ep-flyerbg--{{ event.category.slug|default:'academic' }}"></div>{% endif %}
+  {% with media=event.primary_media %}
+  <div class="ep-slide js-car-slide {% if forloop.first %}is-active{% endif %}">
+    {% if media and media.media_type == 'video' %}
+      <video class="ep-slide__media js-car-video" src="{{ media.file.url }}" muted autoplay loop playsinline preload="metadata"></video>
+      <div class="ep-slide__video-controls">
+      </div>
+    {% elif media %}
+      <div class="ep-slide__bg" style="background-image:url('{{ media.file.url }}')"></div>
+    {% elif event.cover_image %}
+      <div class="ep-slide__bg" style="background-image:url('{{ event.cover_image.url }}')"></div>
+    {% else %}
+      <div class="ep-slide__bg-fallback ep-flyerbg--{{ event.category.slug|default:'academic' }}"></div>
+    {% endif %}
+    <a href="{% url 'events:detail' event.slug %}" class="ep-slide__linkarea" aria-label="{{ event.title }}"></a>
     <div class="ep-slide__body">
       {% if event.category %}<div class="ep-slide__cat">{{ event.category.name }}</div>{% endif %}
       <div class="ep-slide__title">{{ event.title|truncatechars:64 }}</div>
@@ -88,19 +98,20 @@
       </div>
       <span class="ep-btn ep-btn--primary ep-btn--sm">View event →</span>
     </div>
-  </a>
+  </div>
+  {% endwith %}
   {% endfor %}
 
   {% if slides|length > 1 %}
-  <button class="ep-slideshow__arrow ep-slideshow__arrow--prev" id="slidePrev" type="button" aria-label="Previous">
+  <button class="ep-slideshow__arrow ep-slideshow__arrow--prev" type="button" data-car-action="prev" aria-label="Previous">
     <span class="ep-icon ep-icon--back"></span>
   </button>
-  <button class="ep-slideshow__arrow ep-slideshow__arrow--next" id="slideNext" type="button" aria-label="Next">
+  <button class="ep-slideshow__arrow ep-slideshow__arrow--next" type="button" data-car-action="next" aria-label="Next">
     <span class="ep-icon ep-icon--arrow-right"></span>
   </button>
   <div class="ep-slideshow__dots">
     {% for event in slides %}
-    <button type="button" class="ep-slideshow__dot {% if forloop.first %}is-active{% endif %}" data-index="{{ forloop.counter0 }}" aria-label="Slide {{ forloop.counter }}"></button>
+    <button type="button" class="ep-slideshow__dot js-car-dot {% if forloop.first %}is-active{% endif %}" aria-label="Slide {{ forloop.counter }}"></button>
     {% endfor %}
   </div>
   {% endif %}
@@ -134,9 +145,9 @@
     <article class="ep-card" data-cat="{{ event.category.slug|default:'all' }}"
       onclick="window.location.href='{% url "events:detail" event.slug %}'">
 
-      <div class="ep-card__img {% if not event.cover_image %}ep-flyerbg--{{ event.category.slug|default:'academic' }}{% endif %}">
-        {% if event.cover_image %}
-          <img src="{{ event.cover_image.url }}" alt="{{ event.title }}" loading="lazy">
+      <div class="ep-card__img {% if not event.display_image_url %}ep-flyerbg--{{ event.category.slug|default:'academic' }}{% endif %}">
+        {% if event.display_image_url %}
+          <img src="{{ event.display_image_url }}" alt="{{ event.title }}" loading="lazy">
         {% else %}
           <div class="ep-card__placeholder">
             <span class="ep-cat-icon ep-cat-icon--{{ event.category.slug|default:'academic' }}" style="width:48px;height:48px;"></span>
@@ -237,46 +248,4 @@
 
 {% endif %}
 
-{% endblock %}
-
-{% block extra_js %}
-<script>
-(function () {
-  var box = document.getElementById('epSlideshow');
-  if (!box) return;
-  var slides = box.querySelectorAll('.ep-slide');
-  var dots   = box.querySelectorAll('.ep-slideshow__dot');
-  if (slides.length < 2) return;
-
-  var cur = 0, timer = null;
-  function go(i) {
-    slides[cur].classList.remove('is-active');
-    if (dots[cur]) dots[cur].classList.remove('is-active');
-    cur = (i + slides.length) % slides.length;
-    slides[cur].classList.add('is-active');
-    if (dots[cur]) dots[cur].classList.add('is-active');
-  }
-  function start() { timer = setInterval(function () { go(cur + 1); }, 6000); }
-  function stop()  { if (timer) { clearInterval(timer); timer = null; } }
-  function restart() { stop(); start(); }
-
-  var prev = document.getElementById('slidePrev');
-  var next = document.getElementById('slideNext');
-  if (prev) prev.addEventListener('click', function (e) { e.preventDefault(); go(cur - 1); restart(); });
-  if (next) next.addEventListener('click', function (e) { e.preventDefault(); go(cur + 1); restart(); });
-  dots.forEach(function (d, i) { d.addEventListener('click', function () { go(i); restart(); }); });
-
-  var startX = 0;
-  box.addEventListener('touchstart', function (e) { startX = e.touches[0].clientX; stop(); }, { passive: true });
-  box.addEventListener('touchend', function (e) {
-    var dx = e.changedTouches[0].clientX - startX;
-    if (Math.abs(dx) > 50) go(cur + (dx < 0 ? 1 : -1));
-    start();
-  });
-  box.addEventListener('mouseenter', stop);
-  box.addEventListener('mouseleave', start);
-
-  start();
-})();
-</script>
 {% endblock %}

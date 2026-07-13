@@ -142,9 +142,9 @@
     <div class="land-preview__grid">
       {% for event in events %}
       <article class="ep-card ep-card--social land-preview__card" data-cat="{{ event.category.slug|default:'all' }}">
-        <div class="ep-feed-item__thumb {% if not event.cover_image %}ep-flyerbg--{{ event.category.slug|default:'academic' }}{% endif %}">
-          {% if event.cover_image %}
-            <img src="{{ event.cover_image.url }}" alt="{{ event.title }}" loading="lazy">
+        <div class="ep-feed-item__thumb {% if not event.display_image_url %}ep-flyerbg--{{ event.category.slug|default:'academic' }}{% endif %}">
+          {% if event.display_image_url %}
+            <img src="{{ event.display_image_url }}" alt="{{ event.title }}" loading="lazy">
           {% endif %}
           <div class="ep-feed-item__date">
             <b>{{ event.start_datetime|date:"d" }}</b>

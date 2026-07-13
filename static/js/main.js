@@ -109,6 +109,109 @@ document.querySelectorAll('.ep-message').forEach((msg) => {
   setTimeout(() => msg.remove(), 4400);
 });
 
+/* ── MEDIA CAROUSEL (home slideshow + event gallery) ─────── */
+(function () {
+  function setVideoState(slide, active) {
+    var video = slide.querySelector('.js-car-video');
+    if (!video) return;
+    if (active) {
+      // don't auto-resume a video the user manually tapped to pause
+      if (video.dataset.userPaused === '1') return;
+      video.play().catch(function () {});
+    } else {
+      video.pause();
+    }
+  }
+
+  function initCarousel(box) {
+    var slides = box.querySelectorAll('.js-car-slide');
+    var dots   = box.querySelectorAll('.js-car-dot');
+    if (!slides.length) return;
+
+    var cur = 0, timer = null;
+
+    function go(i) {
+      setVideoState(slides[cur], false);
+      slides[cur].classList.remove('is-active');
+      if (dots[cur]) dots[cur].classList.remove('is-active');
+      cur = (i + slides.length) % slides.length;
+      slides[cur].classList.add('is-active');
+      if (dots[cur]) dots[cur].classList.add('is-active');
+      setVideoState(slides[cur], true);
+    }
+    function start() { if (slides.length > 1) timer = setInterval(function () { go(cur + 1); }, 6000); }
+    function stop()  { if (timer) { clearInterval(timer); timer = null; } }
+    function restart() { stop(); start(); }
+
+    dots.forEach(function (d, i) { d.addEventListener('click', function () { go(i); restart(); }); });
+
+    // keyboard navigation: Left = previous slide, Right = next slide.
+    // ignore the keys while the user is typing in a field so forms still work.
+    if (slides.length > 1) {
+      document.addEventListener('keydown', function (e) {
+        if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+        var t = e.target;
+        if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
+        e.preventDefault();
+        go(cur + (e.key === 'ArrowRight' ? 1 : -1));
+        restart();
+      });
+    }
+
+    slides.forEach(function (slide) {
+      var video = slide.querySelector('.js-car-video');
+      if (!video) return;
+
+      // transparent play/pause indicator shown over the video when it's paused
+      var pauseHint = document.createElement('div');
+      pauseHint.className = 'ep-gallery__pausehint';
+      pauseHint.setAttribute('aria-hidden', 'true');
+      pauseHint.innerHTML = '<svg viewBox="0 0 24 24" width="34" height="34"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>';
+      slide.appendChild(pauseHint);
+      function syncHint() {
+        // only show the paused indicator once the video has actually begun
+        // playing at least once — avoids a flash before autoplay kicks in
+        var ready = video.dataset.hasPlayed === '1';
+        slide.classList.toggle('is-paused', ready && video.paused);
+      }
+      video.addEventListener('play', function () {
+        video.dataset.hasPlayed = '1';
+        syncHint();
+      });
+      video.addEventListener('pause', syncHint);
+      syncHint();
+
+      // tap the video to pause / play. we mark it as user-paused so the
+      // carousel's auto-resume (setVideoState) leaves it alone until tapped again.
+      video.addEventListener('click', function (e) {
+        e.preventDefault();
+        if (video.paused) {
+          video.dataset.userPaused = '0';
+          video.play().catch(function () {});
+        } else {
+          video.dataset.userPaused = '1';
+          video.pause();
+        }
+      });
+    });
+
+    var startX = 0;
+    box.addEventListener('touchstart', function (e) { startX = e.touches[0].clientX; stop(); }, { passive: true });
+    box.addEventListener('touchend', function (e) {
+      var dx = e.changedTouches[0].clientX - startX;
+      if (Math.abs(dx) > 50) go(cur + (dx < 0 ? 1 : -1));
+      start();
+    });
+    box.addEventListener('mouseenter', stop);
+    box.addEventListener('mouseleave', start);
+
+    setVideoState(slides[cur], true);
+    start();
+  }
+
+  document.querySelectorAll('.js-carousel').forEach(initCarousel);
+})();
+
 /* ── PRELOADER — wordmark + fill line, hardened ── */
 (function () {
   const pl       = document.getElementById('ep-preloader');

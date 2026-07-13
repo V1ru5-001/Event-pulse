@@ -92,21 +92,38 @@
     <div class="ep-create-card">
       <h2 class="ep-create-section-title">
         <span class="ep-create-section-num">2</span>
-        Cover Image
+        Photos &amp; Videos
       </h2>
-      <input type="file" name="cover_image" id="id_cover_image" accept="image/*" style="display:none;" />
+
+      {% if event and event.gallery.all %}
+      <div class="ep-gallery-existing">
+        {% for media in event.gallery.all %}
+        <label class="ep-gallery-existing__item">
+          {% if media.media_type == 'video' %}
+            <video src="{{ media.file.url }}" muted></video>
+            <span class="ep-gallery-existing__badge">Video</span>
+          {% else %}
+            <img src="{{ media.file.url }}" alt="" />
+          {% endif %}
+          <span class="ep-gallery-existing__remove">
+            <input type="checkbox" name="remove_gallery" value="{{ media.id }}" />
+            Remove
+          </span>
+        </label>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <input type="file" name="gallery" id="id_gallery" accept="image/*,video/*" multiple style="display:none;" />
       <div class="ep-upload-zone" id="uploadZone">
         <div id="uploadPlaceholder">
           <div class="ep-upload-zone__icon"></div>
           <div class="ep-upload-zone__text">
             <strong>Click to upload</strong> or drag and drop<br>
-            <span style="font-size:.78rem;color:var(--muted2);">PNG, JPG up to 5MB</span>
+            <span style="font-size:.78rem;color:var(--muted2);">Images up to 5MB, videos up to 50MB — add as many as you like</span>
           </div>
         </div>
-        <div id="uploadPreview" style="display:none;">
-          <img id="previewImg" src="" alt="Preview" style="width:100%;max-height:220px;object-fit:cover;border-radius:8px;" />
-          <p style="margin-top:.6rem;font-size:.78rem;color:var(--muted);text-align:center;">Click to change image</p>
-        </div>
+        <div id="uploadPreview" class="ep-upload-preview-grid" style="display:none;"></div>
       </div>
     </div>
 
@@ -219,35 +236,83 @@
 
 {% block extra_js %}
 <script>
-var zone        = document.getElementById('uploadZone');
-var fileInput   = document.getElementById('id_cover_image');
-var placeholder = document.getElementById('uploadPlaceholder');
-var preview     = document.getElementById('uploadPreview');
-var previewImg  = document.getElementById('previewImg');
+(function () {
+  var zone        = document.getElementById('uploadZone');
+  var fileInput   = document.getElementById('id_gallery');
+  var placeholder = document.getElementById('uploadPlaceholder');
+  var preview     = document.getElementById('uploadPreview');
+  var pending     = []; // File objects picked/dropped but not yet submitted
 
-function showPreview(file) {
-  if (!file || !file.type.startsWith('image/')) return;
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    previewImg.src = e.target.result;
+  function syncInput() {
+    var dt = new DataTransfer();
+    pending.forEach(function (f) { dt.items.add(f); });
+    fileInput.files = dt.files;
+  }
+
+  function render() {
+    preview.innerHTML = '';
+    if (!pending.length) {
+      placeholder.style.display = '';
+      preview.style.display = 'none';
+      return;
+    }
     placeholder.style.display = 'none';
-    preview.style.display = 'block';
-  };
-  reader.readAsDataURL(file);
-}
-zone.addEventListener('click', function() { fileInput.click(); });
-fileInput.addEventListener('change', function() {
-  if (fileInput.files && fileInput.files[0]) showPreview(fileInput.files[0]);
-});
-zone.addEventListener('dragover', function(e) {
-  e.preventDefault(); zone.classList.add('is-drag');
-});
-zone.addEventListener('dragleave', function() { zone.classList.remove('is-drag'); });
-zone.addEventListener('drop', function(e) {
-  e.preventDefault(); zone.classList.remove('is-drag');
-  var file = e.dataTransfer.files[0];
-  if (file) { var dt=new DataTransfer(); dt.items.add(file); fileInput.files=dt.files; showPreview(file); }
-});
+    preview.style.display = 'grid';
+    pending.forEach(function (file, i) {
+      var cell = document.createElement('div');
+      cell.className = 'ep-upload-preview-cell';
+
+      if (file.type.startsWith('video/')) {
+        var video = document.createElement('video');
+        video.src = URL.createObjectURL(file);
+        video.muted = true;
+        cell.appendChild(video);
+        var badge = document.createElement('span');
+        badge.className = 'ep-upload-preview-cell__badge';
+        badge.textContent = 'Video';
+        cell.appendChild(badge);
+      } else {
+        var img = document.createElement('img');
+        img.src = URL.createObjectURL(file);
+        cell.appendChild(img);
+      }
+
+      var remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'ep-upload-preview-cell__remove';
+      remove.setAttribute('aria-label', 'Remove');
+      remove.textContent = '×';
+      remove.addEventListener('click', function (e) {
+        e.preventDefault(); e.stopPropagation();
+        pending.splice(i, 1);
+        syncInput();
+        render();
+      });
+      cell.appendChild(remove);
+
+      preview.appendChild(cell);
+    });
+  }
+
+  function addFiles(fileList) {
+    Array.prototype.forEach.call(fileList, function (f) {
+      if (f.type.startsWith('image/') || f.type.startsWith('video/')) pending.push(f);
+    });
+    syncInput();
+    render();
+  }
+
+  zone.addEventListener('click', function () { fileInput.click(); });
+  fileInput.addEventListener('change', function () { addFiles(fileInput.files); });
+  zone.addEventListener('dragover', function (e) {
+    e.preventDefault(); zone.classList.add('is-drag');
+  });
+  zone.addEventListener('dragleave', function () { zone.classList.remove('is-drag'); });
+  zone.addEventListener('drop', function (e) {
+    e.preventDefault(); zone.classList.remove('is-drag');
+    addFiles(e.dataTransfer.files);
+  });
+})();
 
 var priceRadios = document.querySelectorAll('input[name="price_type"]');
 var priceField  = document.getElementById('priceField');

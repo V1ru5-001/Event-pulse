@@ -159,6 +159,47 @@ class Event(models.Model):
     def is_free(self):
         return self.price_type == self.PriceType.FREE or self.ticket_price == 0
 
+    @property
+    def primary_media(self):
+        """First gallery item (image or video) — used by the home slideshow."""
+        return self.gallery.first()
+
+    @property
+    def display_image_url(self):
+        """Best-effort static image URL for contexts that can't show video (grid/feed cards)."""
+        first_image = self.gallery.filter(media_type=EventMedia.MediaType.IMAGE).first()
+        if first_image:
+            return first_image.file.url
+        if self.cover_image:
+            return self.cover_image.url
+        return None
+
+
+def event_gallery_upload_path(instance, filename):
+    return f"events/gallery/{instance.event_id}/{filename}"
+
+
+class EventMedia(models.Model):
+    """A single photo or video in an event's gallery, shown as a slideshow on the event page."""
+
+    class MediaType(models.TextChoices):
+        IMAGE = "image", "Image"
+        VIDEO = "video", "Video"
+
+    event      = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="gallery")
+    media_type = models.CharField(max_length=10, choices=MediaType.choices)
+    file       = models.FileField(upload_to=event_gallery_upload_path)
+    order      = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name        = "Event Media"
+        verbose_name_plural = "Event Media"
+        ordering            = ["order", "id"]
+
+    def __str__(self):
+        return f"{self.event.title} — {self.get_media_type_display()} #{self.order}"
+
 
 class RSVP(models.Model):
 

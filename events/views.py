@@ -7,7 +7,10 @@ from django.db.models import Q, Count
 import calendar as pycal
 from datetime import date
 
-from .models import Event, Category, RSVP
+from django.core.exceptions import ValidationError
+
+from .models import Event, Category, RSVP, EventMedia
+from .validators import classify_and_validate_media
 
 
 def landing_view(request):
@@ -91,9 +94,19 @@ def create_event_view(request, slug=None):
         capacity     = request.POST.get('capacity', '') or None
         is_premium   = request.POST.get('is_premium_only', 'false') == 'true'
         action       = request.POST.get('action', 'publish')
+        gallery_files    = request.FILES.getlist('gallery')
+        remove_media_ids = request.POST.getlist('remove_gallery')
 
         if not title or not description or not location or not start_dt:
             messages.error(request, 'Please fill in all required fields.')
+            return render(request, 'events/create_event.html', {
+                'categories': categories, 'event': event
+            })
+
+        try:
+            classified_media = [(f, classify_and_validate_media(f)) for f in gallery_files]
+        except ValidationError as e:
+            messages.error(request, e.message)
             return render(request, 'events/create_event.html', {
                 'categories': categories, 'event': event
             })
@@ -140,8 +153,6 @@ def create_event_view(request, slug=None):
             event.capacity         = capacity
             event.is_premium_only  = is_premium
             event.status           = status
-            if 'cover_image' in request.FILES:
-                event.cover_image = request.FILES['cover_image']
             event.save()
             messages.success(request, f'"{event.title}" has been updated!')
             _notify_followers_new_event(event)
@@ -163,11 +174,25 @@ def create_event_view(request, slug=None):
             )
             if end_dt:
                 event.end_datetime = end_dt
-            if 'cover_image' in request.FILES:
-                event.cover_image = request.FILES['cover_image']
             event.save()
             messages.success(request, f'"{event.title}" is now live!')
             _notify_followers_new_event(event)
+
+        if remove_media_ids:
+            removed = event.gallery.filter(id__in=remove_media_ids)
+            for media in removed:
+                media.file.delete(save=False)
+            removed.delete()
+
+        if classified_media:
+            start_order = event.gallery.count()
+            for i, (uploaded_file, media_type) in enumerate(classified_media):
+                EventMedia.objects.create(
+                    event=event,
+                    media_type=media_type,
+                    file=uploaded_file,
+                    order=start_order + i,
+                )
 
         if action == 'publish':
             return redirect('events:detail', slug=event.slug)

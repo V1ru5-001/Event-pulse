@@ -1,7 +1,8 @@
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, re_path, include
 from django.conf import settings
-from django.conf.urls.static import static
+
+from .media_views import serve_media
 
 urlpatterns = [
     path('admin/',    admin.site.urls),
@@ -10,4 +11,9 @@ urlpatterns = [
     path('payments/', include('payments.urls')),
     path('dashboard/',include('dashboard.urls')),
     path('social/',   include('social.urls')),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
+
+if settings.DEBUG:
+    urlpatterns += [
+        re_path(r'^media/(?P<path>.*)$', serve_media),
+    ]
