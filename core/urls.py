@@ -13,7 +13,11 @@ urlpatterns = [
     path('social/',   include('social.urls')),
 ]
 
-if settings.DEBUG:
+# Serve local media whenever you're NOT using S3/R2/B2 (USE_S3=False).
+# On Vercel this only helps during local `runserver` — Vercel's disk is
+# ephemeral, so set USE_S3=True there. On a host with a persistent disk
+# (Render, a VPS, etc.) this keeps working in production too.
+if not getattr(settings, 'USE_S3', False):
     urlpatterns += [
         re_path(r'^media/(?P<path>.*)$', serve_media),
     ]

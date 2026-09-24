@@ -12,24 +12,35 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 from pathlib import Path
 import os
+import dj_database_url
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
-
+# ─────────────────────────────────────────────────────────
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure---!m=$5+358)q6!*&o%9g&xfkzke=w!a&%_vu@*j=umxm03k%@'
+# Set SECRET_KEY as an env var on Vercel. This fallback only fires
+# locally so `runserver` still works without a .env file.
+# ─────────────────────────────────────────────────────────
+SECRET_KEY = os.environ.get(
+    'SECRET_KEY',
+    'django-insecure-local-dev-only-CHANGE-ME'
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
-import os
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',') if os.environ.get('ALLOWED_HOSTS') else []
 ALLOWED_HOSTS += ['.vercel.app']  # keep this as a permanent fallback
+
+# Required so Django trusts POSTs (login/register/create-event/RSVP) coming
+# through Vercel's HTTPS proxy. Add your custom domain here too once you have one.
+CSRF_TRUSTED_ORIGINS = os.environ.get(
+    'CSRF_TRUSTED_ORIGINS',
+    'https://*.vercel.app'
+).split(',')
 
 
 # Application definition
@@ -50,6 +61,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # serves static files in production
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -79,15 +91,28 @@ TEMPLATES = [
 WSGI_APPLICATION = 'core.wsgi.application'
 
 
+# ─────────────────────────────────────────────────────────
 # Database
+# Set DATABASE_URL on Vercel (Neon / Supabase / Vercel Postgres all give
+# you this connection string). Falls back to local sqlite so `runserver`
+# and `manage.py test` still work with zero setup.
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# ─────────────────────────────────────────────────────────
+if os.environ.get('DATABASE_URL'):
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=os.environ.get('DATABASE_URL'),
+            conn_max_age=600,
+            ssl_require=True,
+        )
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
@@ -119,19 +144,71 @@ TIME_ZONE = 'Africa/Lagos'
 USE_I18N = True
 
 USE_TZ = True
-# Tell Django where templates live
-TEMPLATES[0]['DIRS'] = [BASE_DIR / 'templates']
+
 
 # Custom user model (if you added the accounts/models.py earlier)
 AUTH_USER_MODEL = 'accounts.User'
 
 
-# Static files (CSS, JavaScript, Images)
+# ─────────────────────────────────────────────────────────
+# Static files (CSS, JavaScript, Images) — served by WhiteNoise in production
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
-
+# ─────────────────────────────────────────────────────────
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# ─────────────────────────────────────────────────────────
+# Media files (user uploads — event galleries, profile pictures)
+#
+# Vercel's filesystem is read-only/ephemeral, so local storage ONLY
+# works for `runserver`. Set USE_S3=True + the AWS_* env vars below
+# (works with AWS S3, Cloudflare R2, Backblaze B2, or any S3-compatible
+# bucket) once you have a bucket — until then uploads made on the live
+# site will not persist or be servable.
+# ─────────────────────────────────────────────────────────
+USE_S3 = os.environ.get('USE_S3', 'False') == 'True'
+
+if USE_S3:
+    AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+    AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
+    AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME', 'us-east-1')
+    AWS_S3_ENDPOINT_URL = os.environ.get('AWS_S3_ENDPOINT_URL')  # set for R2/B2, leave unset for AWS
+    AWS_S3_CUSTOM_DOMAIN = os.environ.get('AWS_S3_CUSTOM_DOMAIN')  # optional CDN domain
+    AWS_DEFAULT_ACL = None
+    AWS_S3_FILE_OVERWRITE = False
+    AWS_QUERYSTRING_AUTH = False
+
+    STORAGES = {
+        'default': {
+            'BACKEND': 'storages.backends.s3.S3Storage',
+        },
+        'staticfiles': {
+            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        },
+    }
+    MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN or f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"}/'
+else:
+    STORAGES = {
+        'default': {
+            'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        },
+        'staticfiles': {
+            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        },
+    }
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
+# ─────────────────────────────────────────────────────────
+# Production hardening — only active when DEBUG is False, so it never
+# gets in the way of local `runserver` over plain http.
+# ─────────────────────────────────────────────────────────
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')

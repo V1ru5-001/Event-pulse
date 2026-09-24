@@ -1,21 +1,18 @@
 # Core
-Django==4.2.7
+Django==6.0.5
 Pillow==10.1.0
 
 # Database
 psycopg2-binary==2.9.9
+dj-database-url==2.3.0
 
 # Environment variables
 python-decouple==3.8
 
-# Authentication
-django-allauth==0.57.0
+# Static files
+whitenoise==6.6.0
 
-# Forms
-django-crispy-forms==2.1
-crispy-bootstrap5==0.7
-
-# Storage (for media/image uploads in production)
+# Storage (for media/image uploads in production — used when USE_S3=True)
 django-storages==1.14.2
 boto3==1.29.7
 
@@ -24,7 +21,6 @@ requests==2.31.0
 
 # Utilities
 django-extensions==3.2.3
-whitenoise==6.6.0
 
-# Development only
+# Development only — safe to leave installed, just not in INSTALLED_APPS
 django-debug-toolbar==4.2.0
