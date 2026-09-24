@@ -6,6 +6,7 @@ class User(AbstractUser):
 
     class Role(models.TextChoices):
         STUDENT = 'student', 'Student'
+        GUEST   = 'guest',   'Guest'
         SOCIETY = 'society', 'Society / Club'
         STAFF   = 'staff',   'Staff'
         ADMIN   = 'admin',   'Admin'

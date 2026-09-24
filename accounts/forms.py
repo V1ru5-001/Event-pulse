@@ -11,10 +11,15 @@ class RegisterForm(UserCreationForm):
     """
 
     first_name    = forms.CharField(max_length=100, required=False, label='Full Name')
-    email         = forms.EmailField(required=True,  label='University Email')
+    email         = forms.EmailField(required=True,  label='Email')
+    role          = forms.ChoiceField(
+        choices=[('student', 'Student'), ('guest', 'Guest')],
+        initial='student',
+        required=True,
+        label='I am registering as',
+    )
     university    = forms.CharField(max_length=200,  required=False, label='University')
     department    = forms.CharField(max_length=200,  required=False, label='Faculty / Department')
-    student_id    = forms.CharField(max_length=50,   required=False, label='Student ID')
     year_of_study = forms.ChoiceField(
         choices=[('', 'Select your year')] + list(User.YearOfStudy.choices),
         required=False,
@@ -26,18 +31,17 @@ class RegisterForm(UserCreationForm):
         fields = [
             'username', 'first_name', 'email',
             'password1', 'password2',
-            'university', 'department', 'student_id', 'year_of_study',
+            'role', 'university', 'department', 'year_of_study',
         ]
 
     def save(self, commit=True):
         user = super().save(commit=False)
         user.email         = self.cleaned_data['email']
         user.first_name    = self.cleaned_data.get('first_name', '')
+        user.role          = self.cleaned_data.get('role', 'student')
         user.university    = self.cleaned_data.get('university', '')
         user.department    = self.cleaned_data.get('department', '')
-        user.student_id    = self.cleaned_data.get('student_id', '')
-        user.year_of_study = self.cleaned_data.get('year_of_study', '')
-        user.role          = 'student'  # Default all new registrations to student
+        user.year_of_study = self.cleaned_data.get('year_of_study', '') if user.role == 'student' else ''
         if commit:
             user.save()
         return user

@@ -60,18 +60,30 @@
         </div>
 
         <div class="ep-field">
-          <label class="ep-field__label">University Email</label>
+          <label class="ep-field__label">Email</label>
           <div class="ep-field__input-wrap">
             <span class="ep-icon ep-icon--mail"></span>
             <input type="email" name="{{ form.email.html_name }}" id="{{ form.email.id_for_label }}"
               class="ep-input {% if form.email.errors %}ep-input--error{% endif %}"
-              placeholder="yourname@university.edu.ng" value="{{ form.email.value|default:'' }}" autocomplete="email" />
+              placeholder="yourname@example.com" value="{{ form.email.value|default:'' }}" autocomplete="email" />
           </div>
           {% if form.email.errors %}<span class="ep-field__error">{{ form.email.errors.0 }}</span>{% endif %}
         </div>
 
         <div class="ep-field">
-          <label class="ep-field__label">University</label>
+          <label class="ep-field__label">I am registering as</label>
+          <div class="ep-role-toggle">
+            <input type="radio" name="role" id="role_student" value="student"
+              {% if not request.POST.role or request.POST.role == 'student' %}checked{% endif %} />
+            <label for="role_student">Student</label>
+            <input type="radio" name="role" id="role_guest" value="guest"
+              {% if request.POST.role == 'guest' %}checked{% endif %} />
+            <label for="role_guest">Guest</label>
+          </div>
+        </div>
+
+        <div class="ep-field">
+          <label class="ep-field__label">University <span style="color:var(--muted2);font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></label>
           <div class="ep-field__input-wrap">
             <span class="ep-icon ep-icon--home"></span>
             <input type="text" name="university" class="ep-input"
@@ -100,18 +112,6 @@
               <option value="pg"  {% if request.POST.year_of_study == 'pg'  %}selected{% endif %}>Postgraduate</option>
               <option value="phd" {% if request.POST.year_of_study == 'phd' %}selected{% endif %}>PhD</option>
             </select>
-          </div>
-
-          <div class="ep-field">
-            <label class="ep-field__label">
-              Student ID
-              <span style="color:var(--muted2);font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span>
-            </label>
-            <div class="ep-field__input-wrap">
-              <span class="ep-icon ep-icon--id"></span>
-              <input type="text" name="student_id" class="ep-input"
-                placeholder="e.g. STU2024001" value="{{ request.POST.student_id|default:'' }}" />
-            </div>
           </div>
         </div>
 
