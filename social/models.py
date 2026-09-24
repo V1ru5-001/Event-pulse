@@ -24,7 +24,7 @@ class Follow(models.Model):
                 name='unique_follow',
             ),
             models.CheckConstraint(
-                check=~Q(follower=models.F('following')),
+                condition=~Q(follower=models.F('following')),
                 name='no_self_follow',
             ),
         ]
