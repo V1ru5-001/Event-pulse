@@ -11,11 +11,11 @@ Wire these up in events/apps.py:
 
 import io
 import qrcode
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.core.files.base import ContentFile
 
-from .models import Event, RSVP
+from .models import Event, RSVP, EventMedia
 
 
 # ─── QR Code generation ──────────────────────────────────────────────────────
@@ -106,3 +106,30 @@ def notify_on_rsvp_change(sender, instance, created, **kwargs):
             message=message,
             link=f"/events/{instance.event.slug}/",
         )
+
+
+# ─── Storage cleanup on delete ────────────────────────────────────────────────
+# Deletes the actual files in storage (Supabase/S3) whenever an Event or
+# EventMedia row is deleted from the database — otherwise Django only removes
+# the DB row and the file sits orphaned in the bucket forever, still counting
+# against your storage quota.
+#
+# post_delete fires for every row Django's CASCADE collector removes, so this
+# also cleans up EventMedia files automatically when their parent Event is
+# deleted, not just on a direct EventMedia delete.
+
+def _delete_file_field(field_file):
+    """Delete a single FileField/ImageField's underlying file, if it has one."""
+    if field_file and field_file.name:
+        field_file.storage.delete(field_file.name)
+
+
+@receiver(post_delete, sender=Event)
+def delete_event_files(sender, instance, **kwargs):
+    _delete_file_field(instance.cover_image)
+    _delete_file_field(instance.qr_code)
+
+
+@receiver(post_delete, sender=EventMedia)
+def delete_event_media_file(sender, instance, **kwargs):
+    _delete_file_field(instance.file)
