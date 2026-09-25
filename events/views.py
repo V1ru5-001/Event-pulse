@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.conf import settings
 from django.utils.text import slugify
 from django.utils import timezone
 from django.db.models import Q, Count
@@ -305,7 +306,6 @@ def rsvp_view(request, slug):
         return redirect('events:detail', slug=slug)
 
     event  = get_object_or_404(Event, slug=slug)
-    action = request.POST.get('action', 'rsvp')
     note   = request.POST.get('note', '')
 
     # check existing RSVP
@@ -315,14 +315,16 @@ def rsvp_view(request, slug):
         messages.info(request, 'You have already submitted a request for this event.')
         return redirect('events:detail', slug=slug)
 
-    if action == 'waitlist':
+    # Auto-approve, unless the event is already full — then waitlist
+    # instead of overselling.
+    if event.is_full:
         status = RSVP.Status.WAITLIST
         msg    = "You have been added to the waitlist."
     else:
-        status = RSVP.Status.PENDING
-        msg    = "Your RSVP request has been sent to the organiser."
+        status = RSVP.Status.APPROVED
+        msg    = "You're in! Your RSVP has been approved."
 
-    RSVP.objects.create(
+    rsvp = RSVP.objects.create(
         event  = event,
         user   = request.user,
         status = status,
@@ -330,6 +332,8 @@ def rsvp_view(request, slug):
     )
 
     from social.models import Notification
+
+    # Notify the organiser of the new RSVP, same as before.
     Notification.objects.create(
         recipient = event.organiser,
         actor     = request.user,
@@ -338,7 +342,22 @@ def rsvp_view(request, slug):
         note      = note,
     )
 
+    # Notify the attendee too, since approval is now instant instead of
+    # waiting on manage_rsvps_view to flip the status later.
+    if status == RSVP.Status.APPROVED:
+        Notification.objects.create(
+            recipient = request.user,
+            actor     = event.organiser,
+            event     = event,
+            kind      = Notification.Kind.RSVP_APPROVED,
+            note      = '',
+        )
+
     messages.success(request, msg)
+
+    if status == RSVP.Status.APPROVED:
+        return redirect(settings.RSVP_REDIRECT_URL)
+
     return redirect('events:detail', slug=slug)
 @login_required(login_url='accounts:login')
 def manage_rsvps_view(request, slug):
