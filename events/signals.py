@@ -55,59 +55,6 @@ def generate_event_qr(sender, instance, created, **kwargs):
         Event.objects.filter(pk=instance.pk).update(qr_code=instance.qr_code)
 
 
-# ─── RSVP notifications ───────────────────────────────────────────────────────
-
-@receiver(post_save, sender=RSVP)
-def notify_on_rsvp_change(sender, instance, created, **kwargs):
-    """
-    Send in-app notifications when RSVP status changes.
-    - New RSVP → notify organiser
-    - Approved / Rejected → notify attendee
-    - Promoted from waitlist → notify attendee
-    """
-    from core.models import Notification  # avoid circular import
-
-    if created:
-        # Notify organiser of new RSVP request
-        Notification.objects.create(
-            recipient=instance.event.organiser,
-            notification_type=Notification.Type.RSVP_RECEIVED,
-            title="New RSVP Request",
-            message=f"{instance.user.username} wants to join {instance.event.title}.",
-            link=f"/dashboard/events/{instance.event.slug}/rsvps/",
-        )
-        return
-
-    # Status update notifications sent to the attendee
-    status_map = {
-        RSVP.Status.APPROVED: (
-            Notification.Type.RSVP_APPROVED,
-            "RSVP Approved!",
-            f"You have been approved to attend {instance.event.title}.",
-        ),
-        RSVP.Status.REJECTED: (
-            Notification.Type.RSVP_REJECTED,
-            "RSVP Not Approved",
-            f"Your request for {instance.event.title} was not approved.",
-        ),
-        RSVP.Status.WAITLIST: (
-            Notification.Type.WAITLIST_PROMOTED,
-            "You're on the Waitlist",
-            f"You have been added to the waitlist for {instance.event.title}.",
-        ),
-    }
-
-    if instance.status in status_map:
-        n_type, title, message = status_map[instance.status]
-        Notification.objects.create(
-            recipient=instance.user,
-            notification_type=n_type,
-            title=title,
-            message=message,
-            link=f"/events/{instance.event.slug}/",
-        )
-
-
 # ─── Storage cleanup on delete ────────────────────────────────────────────────
 # Deletes the actual files in storage (Supabase/S3) whenever an Event or
 # EventMedia row is deleted from the database — otherwise Django only removes
