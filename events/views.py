@@ -12,6 +12,7 @@ import uuid
 from datetime import date
 
 from django.core.exceptions import ValidationError
+from django.core.validators import URLValidator
 from django.core.files import File
 from django.core.files.storage import default_storage
 from django.http import Http404, HttpResponse, HttpResponseNotAllowed, JsonResponse
@@ -102,6 +103,8 @@ def create_event_view(request, slug=None):
         ticket_price = request.POST.get('ticket_price', 0) or 0
         capacity     = request.POST.get('capacity', '') or None
         is_premium   = request.POST.get('is_premium_only', 'false') == 'true'
+        require_approval = request.POST.get('require_rsvp_approval', 'false') == 'true'
+        redirect_url = request.POST.get('rsvp_redirect_url', '').strip() or None
         action       = request.POST.get('action', 'publish')
         gallery_keys     = request.POST.getlist('gallery_keys')
         remove_media_ids = request.POST.getlist('remove_gallery')
@@ -111,6 +114,16 @@ def create_event_view(request, slug=None):
             return render(request, 'events/create_event.html', {
                 'categories': categories, 'event': event
             })
+
+        if redirect_url:
+            # Attendees get sent here, so only allow ordinary web links.
+            try:
+                URLValidator(schemes=['http', 'https'])(redirect_url)
+            except ValidationError:
+                messages.error(request, 'The RSVP redirect link must be a full http:// or https:// URL.')
+                return render(request, 'events/create_event.html', {
+                    'categories': categories, 'event': event
+                })
 
         try:
             classified_media = [
@@ -164,6 +177,8 @@ def create_event_view(request, slug=None):
             event.ticket_price     = ticket_price
             event.capacity         = capacity
             event.is_premium_only  = is_premium
+            event.require_rsvp_approval = require_approval
+            event.rsvp_redirect_url     = redirect_url
             event.status           = status
             event.save()
             messages.success(request, f'"{event.title}" has been updated!')
@@ -182,6 +197,8 @@ def create_event_view(request, slug=None):
                 ticket_price     = ticket_price,
                 capacity         = capacity,
                 is_premium_only  = is_premium,
+                require_rsvp_approval = require_approval,
+                rsvp_redirect_url     = redirect_url,
                 status           = status,
             )
             if end_dt:
@@ -422,16 +439,19 @@ def rsvp_view(request, slug):
         messages.info(request, 'You have already submitted a request for this event.')
         return redirect('events:detail', slug=slug)
 
-    # Auto-approve, unless the event is already full — then waitlist
-    # instead of overselling.
+    # Capacity is the authority on waitlisting; otherwise the organiser's
+    # setting decides between instant approval and manual review.
     if event.is_full:
         status = RSVP.Status.WAITLIST
         msg    = "You have been added to the waitlist."
+    elif event.require_rsvp_approval:
+        status = RSVP.Status.PENDING
+        msg    = "Your RSVP request has been sent to the organiser."
     else:
         status = RSVP.Status.APPROVED
         msg    = "You're in! Your RSVP has been approved."
 
-    rsvp = RSVP.objects.create(
+    RSVP.objects.create(
         event  = event,
         user   = request.user,
         status = status,
@@ -440,7 +460,6 @@ def rsvp_view(request, slug):
 
     from social.models import Notification
 
-    # Notify the organiser of the new RSVP, same as before.
     Notification.objects.create(
         recipient = event.organiser,
         actor     = request.user,
@@ -449,8 +468,7 @@ def rsvp_view(request, slug):
         note      = note,
     )
 
-    # Notify the attendee too, since approval is now instant instead of
-    # waiting on manage_rsvps_view to flip the status later.
+    # Manual approvals notify the attendee from manage_rsvps_view instead.
     if status == RSVP.Status.APPROVED:
         Notification.objects.create(
             recipient = request.user,
@@ -462,9 +480,8 @@ def rsvp_view(request, slug):
 
     messages.success(request, msg)
 
-    if status == RSVP.Status.APPROVED:
-        return redirect(settings.RSVP_REDIRECT_URL)
-
+    if status == RSVP.Status.APPROVED and event.rsvp_redirect_url:
+        return redirect(event.rsvp_redirect_url)
     return redirect('events:detail', slug=slug)
 @login_required(login_url='accounts:login')
 def manage_rsvps_view(request, slug):

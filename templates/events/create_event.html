@@ -221,6 +221,32 @@
           </div>
         </div>
       </div>
+
+      <div class="ep-field" style="margin-top:1rem;">
+        <label class="ep-checkbox">
+          <input type="checkbox" name="require_rsvp_approval" value="true"
+            {% if request.POST %}{% if request.POST.require_rsvp_approval == 'true' %}checked{% endif %}{% elif event.require_rsvp_approval %}checked{% endif %} />
+          <span class="ep-checkbox__box">
+            <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+              <path d="M2 6l3 3 5-5" stroke="#1A0E02" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <span>Require me to approve each RSVP <span style="color:var(--muted2);">— leave unchecked to confirm everyone instantly</span></span>
+        </label>
+      </div>
+
+      <div class="ep-field" style="margin-top:1rem;">
+        <label class="ep-field__label">
+          After-RSVP Link
+          <span style="color:var(--muted2);font-weight:400;text-transform:none;">(optional — e.g. WhatsApp group or payment page)</span>
+        </label>
+        <div class="ep-field__input-wrap">
+          <span class="ep-icon ep-icon--share"></span>
+          <input type="url" name="rsvp_redirect_url" class="ep-input"
+            placeholder="https://"
+            value="{% if event %}{{ request.POST.rsvp_redirect_url|default:event.rsvp_redirect_url|default:'' }}{% else %}{{ request.POST.rsvp_redirect_url|default:'' }}{% endif %}" />
+        </div>
+      </div>
     </div>
 
     <div class="ep-upload-status" id="uploadStatus" style="display:none;">

@@ -77,6 +77,22 @@ class Event(models.Model):
 
     # ── Visibility flags ──────────────────────
     is_premium_only = models.BooleanField(default=False, help_text="Only premium users can join")
+
+    # ── RSVP settings ─────────────────────────
+    require_rsvp_approval = models.BooleanField(
+        default=False,
+        help_text="If checked, you must manually approve each RSVP "
+                  "before the person is confirmed. Leave unchecked to "
+                  "approve everyone instantly."
+    )
+    rsvp_redirect_url = models.URLField(
+        blank=True,
+        null=True,
+        help_text="Optional: send attendees to this link right after "
+                  "their RSVP is approved (e.g. a WhatsApp group or "
+                  "payment page). Leave blank to keep them on the "
+                  "event page."
+    )
     is_featured     = models.BooleanField(default=False, help_text="Pin to top of feed")
     status          = models.CharField(max_length=20, choices=Status.choices, default=Status.DRAFT)
 
