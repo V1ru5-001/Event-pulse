@@ -23,7 +23,7 @@
     {% endfor %}
   {% endif %}
 
-  <form method="POST" enctype="multipart/form-data" class="ep-create-form" id="createForm">
+  <form method="POST" class="ep-create-form" id="createForm">
     {% csrf_token %}
 
     <div class="ep-create-card">
@@ -114,7 +114,8 @@
       </div>
       {% endif %}
 
-      <input type="file" name="gallery" id="id_gallery" accept="image/*,video/*" multiple style="display:none;" />
+      {# No name attribute: files go straight to storage, never through the form POST. #}
+      <input type="file" id="id_gallery" accept="image/*,video/*" multiple style="display:none;" />
       <div class="ep-upload-zone" id="uploadZone">
         <div id="uploadPlaceholder">
           <div class="ep-upload-zone__icon"></div>
@@ -222,6 +223,13 @@
       </div>
     </div>
 
+    <div class="ep-upload-status" id="uploadStatus" style="display:none;">
+      <div class="ep-upload-status__text" id="uploadStatusText"></div>
+      <div class="ep-upload-status__bar"><div class="ep-upload-status__fill" id="uploadStatusFill"></div></div>
+    </div>
+    <div class="ep-inline-error" id="uploadError" style="display:none;"></div>
+    <div id="uploadHidden"></div>
+
     <div class="ep-create-actions">
       <button type="submit" name="action" value="draft" class="ep-btn ep-btn--outline">Save as Draft</button>
       <button type="submit" name="action" value="publish" class="ep-btn ep-btn--primary">
@@ -237,17 +245,22 @@
 {% block extra_js %}
 <script>
 (function () {
+  var form        = document.getElementById('createForm');
   var zone        = document.getElementById('uploadZone');
   var fileInput   = document.getElementById('id_gallery');
   var placeholder = document.getElementById('uploadPlaceholder');
   var preview     = document.getElementById('uploadPreview');
+  var statusBox   = document.getElementById('uploadStatus');
+  var statusText  = document.getElementById('uploadStatusText');
+  var statusFill  = document.getElementById('uploadStatusFill');
+  var errorBox    = document.getElementById('uploadError');
+  var hiddenBox   = document.getElementById('uploadHidden');
+  var buttons     = form.querySelectorAll('button[type="submit"]');
+  var csrfToken   = form.querySelector('[name="csrfmiddlewaretoken"]').value;
+  var presignUrl  = "{% url 'events:presign_upload' %}";
   var pending     = []; // File objects picked/dropped but not yet submitted
-
-  function syncInput() {
-    var dt = new DataTransfer();
-    pending.forEach(function (f) { dt.items.add(f); });
-    fileInput.files = dt.files;
-  }
+  var uploadedKeys = new Map(); // File -> storage key, so a retry skips finished uploads
+  var busy        = false;
 
   function render() {
     preview.innerHTML = '';
@@ -284,8 +297,8 @@
       remove.textContent = '×';
       remove.addEventListener('click', function (e) {
         e.preventDefault(); e.stopPropagation();
+        if (busy) return;
         pending.splice(i, 1);
-        syncInput();
         render();
       });
       cell.appendChild(remove);
@@ -295,14 +308,15 @@
   }
 
   function addFiles(fileList) {
+    if (busy) return;
     Array.prototype.forEach.call(fileList, function (f) {
       if (f.type.startsWith('image/') || f.type.startsWith('video/')) pending.push(f);
     });
-    syncInput();
+    fileInput.value = '';
     render();
   }
 
-  zone.addEventListener('click', function () { fileInput.click(); });
+  zone.addEventListener('click', function () { if (!busy) fileInput.click(); });
   fileInput.addEventListener('change', function () { addFiles(fileInput.files); });
   zone.addEventListener('dragover', function (e) {
     e.preventDefault(); zone.classList.add('is-drag');
@@ -311,6 +325,124 @@
   zone.addEventListener('drop', function (e) {
     e.preventDefault(); zone.classList.remove('is-drag');
     addFiles(e.dataTransfer.files);
+  });
+
+  // ── Direct upload to storage ───────────────────────────
+  function setBusy(on) {
+    busy = on;
+    buttons.forEach(function (b) { b.disabled = on; });
+    statusBox.style.display = on ? '' : 'none';
+  }
+
+  function showProgress(msg, fraction) {
+    statusText.textContent = msg;
+    statusFill.style.width = Math.round(fraction * 100) + '%';
+  }
+
+  function showError(msg) {
+    errorBox.textContent = msg;
+    errorBox.style.display = '';
+    errorBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function presign(file) {
+    var body = new FormData();
+    body.append('filename', file.name);
+    body.append('content_type', file.type);
+    body.append('size', file.size);
+    return fetch(presignUrl, {
+      method: 'POST',
+      body: body,
+      headers: { 'X-CSRFToken': csrfToken },
+      credentials: 'same-origin'
+    }).then(function (res) {
+      return res.json().catch(function () {
+        throw new Error('Could not start the upload. Please refresh the page and try again.');
+      }).then(function (data) {
+        if (!res.ok) throw new Error(data.error || 'Upload was rejected.');
+        return data;
+      });
+    });
+  }
+
+  // XHR rather than fetch because fetch has no upload-progress events.
+  function putFile(url, file, onProgress) {
+    return new Promise(function (resolve, reject) {
+      var xhr = new XMLHttpRequest();
+      xhr.open('PUT', url);
+      xhr.setRequestHeader('Content-Type', file.type);
+      // Only our own local-dev endpoint needs CSRF; the bucket would reject the extra header in CORS.
+      if (new URL(url, window.location.href).origin === window.location.origin) {
+        xhr.setRequestHeader('X-CSRFToken', csrfToken);
+      }
+      xhr.upload.onprogress = function (e) { if (e.lengthComputable) onProgress(e.loaded); };
+      xhr.onload = function () {
+        if (xhr.status >= 200 && xhr.status < 300) resolve();
+        else reject(new Error('Uploading "' + file.name + '" failed (error ' + xhr.status + '). Please try again.'));
+      };
+      xhr.onerror = function () {
+        reject(new Error('Network error while uploading "' + file.name + '". Check your connection and try again.'));
+      };
+      xhr.send(file);
+    });
+  }
+
+  function uploadAll() {
+    var total = pending.reduce(function (sum, f) { return sum + f.size; }, 0) || 1;
+    var done  = 0;
+    var chain = Promise.resolve();
+
+    pending.forEach(function (file, i) {
+      chain = chain.then(function () {
+        var label = 'Uploading ' + (i + 1) + ' of ' + pending.length + '…';
+        if (uploadedKeys.has(file)) { done += file.size; return; }
+        showProgress(label, done / total);
+        return presign(file).then(function (data) {
+          return putFile(data.upload_url, file, function (loaded) {
+            showProgress(label, (done + loaded) / total);
+          }).then(function () {
+            uploadedKeys.set(file, data.key);
+            done += file.size;
+          });
+        });
+      });
+    });
+
+    return chain.then(function () {
+      showProgress('Upload complete — saving event…', 1);
+      return pending.map(function (f) { return uploadedKeys.get(f); });
+    });
+  }
+
+  function addHidden(name, value) {
+    var input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = name;
+    input.value = value;
+    hiddenBox.appendChild(input);
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (busy) return;
+
+    // form.submit() below drops the clicked button, so carry its action over.
+    var submitter = e.submitter;
+    var action = submitter && submitter.name === 'action' ? submitter.value : 'publish';
+
+    errorBox.style.display = 'none';
+    hiddenBox.innerHTML = '';
+    setBusy(true);
+
+    var work = pending.length ? uploadAll() : Promise.resolve([]);
+    work.then(function (keys) {
+      keys.forEach(function (key) { addHidden('gallery_keys', key); });
+      addHidden('action', action);
+      form.submit();
+    }).catch(function (err) {
+      setBusy(false);
+      showError(err.message || 'Upload failed. Please try again.');
+    });
   });
 })();
 

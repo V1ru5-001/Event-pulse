@@ -9,21 +9,18 @@ MAX_IMAGE_SIZE = 5 * 1024 * 1024   # 5MB
 MAX_VIDEO_SIZE = 50 * 1024 * 1024  # 50MB
 
 
-def classify_and_validate_media(uploaded_file):
-    """Classify a gallery upload as 'image' or 'video', enforcing size limits.
-
-    Raises ValidationError for unsupported types or oversized files.
-    """
-    ext = os.path.splitext(uploaded_file.name)[1].lower()
-
+def classify_media_name(name):
+    """Return 'image' or 'video' based on the file extension."""
+    ext = os.path.splitext(name)[1].lower()
     if ext in IMAGE_EXTENSIONS:
-        if uploaded_file.size > MAX_IMAGE_SIZE:
-            raise ValidationError(f'"{uploaded_file.name}" is over the 5MB image limit.')
         return "image"
-
     if ext in VIDEO_EXTENSIONS:
-        if uploaded_file.size > MAX_VIDEO_SIZE:
-            raise ValidationError(f'"{uploaded_file.name}" is over the 50MB video limit.')
         return "video"
+    raise ValidationError(f'"{name}" is not a supported image or video type.')
 
-    raise ValidationError(f'"{uploaded_file.name}" is not a supported image or video type.')
+
+def validate_media_size(name, media_type, size):
+    if media_type == "image" and size > MAX_IMAGE_SIZE:
+        raise ValidationError(f'"{name}" is over the 5MB image limit.')
+    if media_type == "video" and size > MAX_VIDEO_SIZE:
+        raise ValidationError(f'"{name}" is over the 50MB video limit.')

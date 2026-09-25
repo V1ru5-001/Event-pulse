@@ -6,12 +6,20 @@ from django.utils.text import slugify
 from django.utils import timezone
 from django.db.models import Q, Count
 import calendar as pycal
+import os
+import re
+import uuid
 from datetime import date
 
 from django.core.exceptions import ValidationError
+from django.core.files import File
+from django.core.files.storage import default_storage
+from django.http import Http404, HttpResponse, HttpResponseNotAllowed, JsonResponse
+from django.urls import reverse
+from django.views.decorators.http import require_POST
 
 from .models import Event, Category, RSVP, EventMedia
-from .validators import classify_and_validate_media
+from .validators import MAX_VIDEO_SIZE, classify_media_name, validate_media_size
 
 
 def landing_view(request):
@@ -95,7 +103,7 @@ def create_event_view(request, slug=None):
         capacity     = request.POST.get('capacity', '') or None
         is_premium   = request.POST.get('is_premium_only', 'false') == 'true'
         action       = request.POST.get('action', 'publish')
-        gallery_files    = request.FILES.getlist('gallery')
+        gallery_keys     = request.POST.getlist('gallery_keys')
         remove_media_ids = request.POST.getlist('remove_gallery')
 
         if not title or not description or not location or not start_dt:
@@ -105,7 +113,10 @@ def create_event_view(request, slug=None):
             })
 
         try:
-            classified_media = [(f, classify_and_validate_media(f)) for f in gallery_files]
+            classified_media = [
+                (key, _validate_uploaded_gallery_key(request.user, key))
+                for key in gallery_keys
+            ]
         except ValidationError as e:
             messages.error(request, e.message)
             return render(request, 'events/create_event.html', {
@@ -187,11 +198,13 @@ def create_event_view(request, slug=None):
 
         if classified_media:
             start_order = event.gallery.count()
-            for i, (uploaded_file, media_type) in enumerate(classified_media):
+            for i, (key, media_type) in enumerate(classified_media):
+                # Assigning the storage key directly points the FileField at
+                # the object the browser already uploaded — no bytes re-sent.
                 EventMedia.objects.create(
                     event=event,
                     media_type=media_type,
-                    file=uploaded_file,
+                    file=key,
                     order=start_order + i,
                 )
 
@@ -205,6 +218,100 @@ def create_event_view(request, slug=None):
         'categories': categories,
         'event':      event,
     })
+
+
+# ── Direct-to-storage gallery uploads ─────────────────────
+# Vercel functions cap request bodies at 4.5MB, so the browser uploads
+# gallery files straight to the bucket and only sends Django the key.
+
+def _gallery_prefix(user):
+    return f'events/gallery/u{user.pk}/'
+
+
+def _is_own_gallery_key(user, key):
+    pattern = re.escape(_gallery_prefix(user)) + r'[0-9a-f]{32}\.[a-z0-9]{1,5}'
+    return re.fullmatch(pattern, key) is not None
+
+
+def _validate_uploaded_gallery_key(user, key):
+    """Check a submitted key is this user's finished upload; return its media type."""
+    if not _is_own_gallery_key(user, key):
+        raise ValidationError('Invalid upload reference. Please re-add your files.')
+    if EventMedia.objects.filter(file=key).exists():
+        raise ValidationError('That file is already attached to an event. Please re-add your files.')
+    if not default_storage.exists(key):
+        raise ValidationError('A file upload did not finish. Please try again.')
+    media_type = classify_media_name(key)
+    try:
+        validate_media_size(os.path.basename(key), media_type, default_storage.size(key))
+    except ValidationError:
+        default_storage.delete(key)
+        raise
+    return media_type
+
+
+@login_required(login_url='accounts:login')
+@require_POST
+def presign_upload_view(request):
+    filename     = request.POST.get('filename', '')
+    content_type = request.POST.get('content_type', '')
+    try:
+        size = int(request.POST.get('size', '0'))
+    except ValueError:
+        size = 0
+
+    try:
+        media_type = classify_media_name(filename)
+        validate_media_size(filename, media_type, size)
+    except ValidationError as e:
+        return JsonResponse({'error': e.message}, status=400)
+
+    if not content_type.startswith(f'{media_type}/'):
+        return JsonResponse({'error': f'"{filename}" has an unexpected file type.'}, status=400)
+
+    ext = os.path.splitext(filename)[1].lower()
+    key = f'{_gallery_prefix(request.user)}{uuid.uuid4().hex}{ext}'
+
+    if settings.USE_S3:
+        # Reuse django-storages' own boto3 client so endpoint/region/
+        # credentials always match the working storage config.
+        client = default_storage.connection.meta.client
+        upload_url = client.generate_presigned_url(
+            'put_object',
+            Params={
+                'Bucket':      default_storage.bucket_name,
+                'Key':         key,
+                'ContentType': content_type,
+            },
+            ExpiresIn=600,
+        )
+    else:
+        upload_url = reverse('events:local_upload', args=[key])
+
+    return JsonResponse({'upload_url': upload_url, 'key': key})
+
+
+@login_required(login_url='accounts:login')
+def local_upload_view(request, key):
+    """Stand-in for the presigned PUT when running without a bucket (local dev)."""
+    if settings.USE_S3:
+        raise Http404
+    if request.method != 'PUT':
+        return HttpResponseNotAllowed(['PUT'])
+    if not _is_own_gallery_key(request.user, key):
+        return JsonResponse({'error': 'Invalid upload key.'}, status=403)
+    try:
+        length = int(request.META.get('CONTENT_LENGTH') or 0)
+    except ValueError:
+        length = 0
+    if length <= 0 or length > MAX_VIDEO_SIZE:
+        return JsonResponse({'error': 'File is empty or too large.'}, status=400)
+
+    # Stream from the request rather than request.body, which is capped
+    # by DATA_UPLOAD_MAX_MEMORY_SIZE (2.5MB).
+    default_storage.save(key, File(request, name=key))
+    return HttpResponse(status=204)
+
 
 @login_required(login_url='accounts:login')
 def delete_event_view(request, slug):
