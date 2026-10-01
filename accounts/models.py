@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.utils import timezone
 
 
 class User(AbstractUser):
@@ -70,6 +71,13 @@ class User(AbstractUser):
     @property
     def is_organiser(self):
         return self.role in [self.Role.SOCIETY, self.Role.STAFF, self.Role.ADMIN]
+
+    @property
+    def is_premium(self):
+        # payments sets plan to 'premium' or 'organiser_pro' with a 30-day expiry
+        if not self.plan or self.plan == self.Plan.FREE:
+            return False
+        return self.plan_expiry is None or self.plan_expiry > timezone.now()
 
     @property
     def display_university(self):
