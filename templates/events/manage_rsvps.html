@@ -1,84 +1,113 @@
 {% extends 'base.html' %}
 {% block title %}Manage RSVPs — {{ event.title }}{% endblock %}
-{% block content %}
-<div class="ep-manage-page">
+{% block body_class %}epx{% endblock %}
+{% block navbar %}{% include 'partials/nav.html' with nav_active='profile' %}{% endblock %}
 
-  <a href="{% url 'events:detail' event.slug %}" class="ep-create-back ep-manage-back">
-    <span class="ep-icon ep-icon--back ep-icon--accent"></span>
+{% block content %}
+<div class="has-tabbar">
+<div class="epx-narrow">
+
+  <a href="{% url 'events:detail' event.slug %}" class="epx-back">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/></svg>
     Back to Event
   </a>
 
-  <h1 class="ep-manage-title">Manage RSVPs</h1>
-  <p class="ep-manage-subtitle">{{ event.title }}</p>
-
-  <div class="ep-manage-stats">
-    <div class="ep-manage-stat">
-      <div class="ep-manage-stat__num">{{ rsvps.count }}</div>
-      <div class="ep-manage-stat__label">Total Requests</div>
-    </div>
-    <div class="ep-manage-stat">
-      <div class="ep-manage-stat__num ep-manage-stat__num--green">{{ approved_count }}</div>
-      <div class="ep-manage-stat__label">Approved</div>
-    </div>
+  <div class="epx-eyebrow" style="margin-top:22px;">Manage RSVPs</div>
+  <h1 class="epx-h1" style="font-size:2.2rem; margin-top:6px;">{{ event.title }}</h1>
+  <div style="font-family:var(--fm); font-size:0.8rem; color:var(--ink-soft); margin-top:8px;">
+    {{ event.start_datetime|date:"D d M · H:i" }} · {{ event.location_name }}{% if event.capacity %} · Capacity {{ event.capacity }}{% endif %}
+  </div>
+  <div style="font-family:var(--fm); font-size:0.72rem; color:var(--ink-faint); margin-top:6px;">
+    {% if event.require_rsvp_approval %}New RSVPs wait for your approval.{% else %}New RSVPs are approved instantly.{% endif %}
+    <a href="{% url 'events:edit' event.slug %}" style="color:var(--accent);">Change</a>
   </div>
 
-  <div class="ep-manage-list">
-    {% for rsvp in rsvps %}
-    <div class="ep-manage-row">
-
-      <div class="ep-manage-av">
-        {{ rsvp.user.username|first|upper }}
-      </div>
-
-      <div class="ep-manage-row__info">
-        <div class="ep-manage-row__name">{{ rsvp.user.get_full_name|default:rsvp.user.username }}</div>
-        <div class="ep-manage-row__handle">@{{ rsvp.user.username }}</div>
-        {% if rsvp.note %}
-          <div class="ep-manage-row__note">"{{ rsvp.note }}"</div>
-        {% endif %}
-      </div>
-
-      <div class="ep-manage-row__date">
-        {{ rsvp.joined_at|date:"d M Y · H:i" }}
-      </div>
-
-      <div>
-        {% if rsvp.status == 'approved' %}
-          <span class="ep-status-chip ep-status-chip--approved">Approved</span>
-        {% elif rsvp.status == 'rejected' %}
-          <span class="ep-status-chip ep-status-chip--rejected">Rejected</span>
-        {% elif rsvp.status == 'waitlist' %}
-          <span class="ep-status-chip ep-status-chip--waitlist">Waitlist</span>
-        {% else %}
-          <span class="ep-status-chip ep-status-chip--pending">Pending</span>
-        {% endif %}
-      </div>
-
-      {% if rsvp.status == 'pending' or rsvp.status == 'waitlist' %}
-      <div class="ep-manage-row__actions">
-        <form method="POST">
-          {% csrf_token %}
-          <input type="hidden" name="rsvp_id" value="{{ rsvp.pk }}" />
-          <input type="hidden" name="action" value="approve" />
-          <button type="submit" class="ep-btn ep-btn--primary ep-btn--sm">Approve</button>
-        </form>
-        <form method="POST">
-          {% csrf_token %}
-          <input type="hidden" name="rsvp_id" value="{{ rsvp.pk }}" />
-          <input type="hidden" name="action" value="reject" />
-          <button type="submit" class="ep-btn ep-btn--outline ep-btn--sm ep-btn--reject">Reject</button>
-        </form>
-      </div>
-      {% endif %}
-
-    </div>
-    {% empty %}
-    <div class="ep-manage-empty">
-      <div class="ep-empty-icon ep-empty-icon--inbox"></div>
-      <p>No RSVP requests yet.</p>
-    </div>
-    {% endfor %}
+  <div class="epx-stats">
+    <div class="epx-stat"><div class="epx-stat__n">{{ rsvps.count }}</div><div class="epx-stat__k">Total Requests</div></div>
+    <div class="epx-stat"><div class="epx-stat__n" style="color:var(--accent);">{{ approved_count }}</div><div class="epx-stat__k">Approved</div></div>
+    <div class="epx-stat"><div class="epx-stat__n" style="color:var(--warn);">{{ pending_count }}</div><div class="epx-stat__k">Pending</div></div>
+    <div class="epx-stat"><div class="epx-stat__n" style="color:var(--ink-soft);">{{ waitlist_count }}</div><div class="epx-stat__k">Waitlist</div></div>
   </div>
 
+  {% if not rsvps %}
+    <div class="epx-dashed">No RSVP requests yet.</div>
+  {% else %}
+
+  {# ── PENDING ── #}
+  <div class="epx-sechead" style="margin-top:0;"><span class="epx-sechead__dot" style="background:var(--warn);"></span><h2>Pending approval</h2></div>
+  {% if pending_count %}
+    {% for rsvp in rsvps %}{% if rsvp.status == 'pending' %}
+    <div class="epx-person epx-person--act">
+      <span class="epx-person__av">{% if rsvp.user.profile_picture %}<img src="{{ rsvp.user.profile_picture.url }}" alt="">{% else %}{{ rsvp.user.username|first|upper }}{% endif %}</span>
+      <div style="flex:1; min-width:0;">
+        <div class="epx-person__name">{{ rsvp.user.get_full_name|default:rsvp.user.username }}</div>
+        <div class="epx-person__meta">@{{ rsvp.user.username }} · requested {{ rsvp.joined_at|date:"d M Y · H:i" }}</div>
+        {% if rsvp.note %}<div class="epx-person__note">"{{ rsvp.note }}"</div>{% endif %}
+      </div>
+      <div class="epx-person__btns">
+        <form method="POST">{% csrf_token %}<input type="hidden" name="rsvp_id" value="{{ rsvp.pk }}" /><input type="hidden" name="action" value="approve" /><button type="submit" class="epx-pbtn epx-pbtn--ok">Approve</button></form>
+        <form method="POST">{% csrf_token %}<input type="hidden" name="rsvp_id" value="{{ rsvp.pk }}" /><input type="hidden" name="action" value="waitlist" /><button type="submit" class="epx-pbtn epx-pbtn--wait">Waitlist</button></form>
+        <form method="POST">{% csrf_token %}<input type="hidden" name="rsvp_id" value="{{ rsvp.pk }}" /><input type="hidden" name="action" value="reject" /><button type="submit" class="epx-pbtn epx-pbtn--x" aria-label="Reject" title="Reject"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12" stroke-linecap="round"/></svg></button></form>
+      </div>
+    </div>
+    {% endif %}{% endfor %}
+  {% else %}
+    <div class="epx-dashed">All caught up — no one waiting.</div>
+  {% endif %}
+
+  {# ── GOING ── #}
+  <div class="epx-sechead"><span class="epx-sechead__dot" style="background:var(--stamp);"></span><h2>Going ({{ approved_count }})</h2></div>
+  {% if approved_count %}
+  <div class="epx-list">
+    {% for rsvp in rsvps %}{% if rsvp.status == 'approved' %}
+    <div class="epx-person">
+      <span class="epx-person__av" style="width:40px; height:40px;">{% if rsvp.user.profile_picture %}<img src="{{ rsvp.user.profile_picture.url }}" alt="">{% else %}{{ rsvp.user.username|first|upper }}{% endif %}</span>
+      <div style="flex:1; min-width:0;">
+        <div class="epx-person__name" style="font-size:1rem;">{{ rsvp.user.get_full_name|default:rsvp.user.username }}</div>
+        <div class="epx-person__meta">@{{ rsvp.user.username }}</div>
+        {% if rsvp.note %}<div class="epx-person__note">"{{ rsvp.note }}"</div>{% endif %}
+      </div>
+      <span class="epx-going"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/></svg> Approved</span>
+    </div>
+    {% endif %}{% endfor %}
+  </div>
+  {% else %}
+    <div class="epx-dashed">No one approved yet.</div>
+  {% endif %}
+
+  {# ── WAITLIST ── #}
+  {% if waitlist_count %}
+  <div class="epx-sechead"><span class="epx-sechead__dot" style="background:var(--ink-soft);"></span><h2>Waitlist ({{ waitlist_count }})</h2></div>
+    {% for rsvp in rsvps %}{% if rsvp.status == 'waitlist' %}
+    <div class="epx-person epx-person--act">
+      <span class="epx-person__av">{% if rsvp.user.profile_picture %}<img src="{{ rsvp.user.profile_picture.url }}" alt="">{% else %}{{ rsvp.user.username|first|upper }}{% endif %}</span>
+      <div style="flex:1; min-width:0;">
+        <div class="epx-person__name">{{ rsvp.user.get_full_name|default:rsvp.user.username }}</div>
+        <div class="epx-person__meta">@{{ rsvp.user.username }} · {{ rsvp.joined_at|date:"d M Y · H:i" }}</div>
+        {% if rsvp.note %}<div class="epx-person__note">"{{ rsvp.note }}"</div>{% endif %}
+      </div>
+      <div class="epx-person__btns">
+        <form method="POST">{% csrf_token %}<input type="hidden" name="rsvp_id" value="{{ rsvp.pk }}" /><input type="hidden" name="action" value="approve" /><button type="submit" class="epx-pbtn epx-pbtn--ok">Approve</button></form>
+        <form method="POST">{% csrf_token %}<input type="hidden" name="rsvp_id" value="{{ rsvp.pk }}" /><input type="hidden" name="action" value="reject" /><button type="submit" class="epx-pbtn epx-pbtn--x" aria-label="Reject" title="Reject"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12" stroke-linecap="round"/></svg></button></form>
+      </div>
+    </div>
+    {% endif %}{% endfor %}
+  {% endif %}
+
+  {# ── REJECTED (no actions, same as before) ── #}
+  {% for rsvp in rsvps %}{% if rsvp.status == 'rejected' %}
+    {% ifchanged rsvp.status %}<div class="epx-sechead"><span class="epx-sechead__dot" style="background:var(--danger);"></span><h2>Rejected</h2></div>{% endifchanged %}
+    <div class="epx-person" style="opacity:0.7;">
+      <span class="epx-person__av" style="width:40px; height:40px;">{{ rsvp.user.username|first|upper }}</span>
+      <div style="flex:1; min-width:0;">
+        <div class="epx-person__name" style="font-size:1rem;">{{ rsvp.user.get_full_name|default:rsvp.user.username }}</div>
+        <div class="epx-person__meta">@{{ rsvp.user.username }} · {{ rsvp.joined_at|date:"d M Y · H:i" }}</div>
+      </div>
+    </div>
+  {% endif %}{% endfor %}
+
+  {% endif %}
 </div>
+</div>
+{% include 'partials/tabbar.html' with nav_active='profile' %}
 {% endblock %}

@@ -1,0 +1,58 @@
+<div class="epx-notif {% if not n.is_read %}is-unread{% endif %} {% if n.rsvp.status == 'pending' %}is-action{% endif %}">
+  <a href="{% url 'social:notification_open' n.pk %}" class="epx-notif__link" aria-label="Open notification"></a>
+
+  {% if n.kind == 'rsvp_approved' %}
+    <span class="epx-notif__av epx-notif__av--ok"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--stamp)" stroke-width="2"><path d="M20 6 9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+  {% else %}
+    <span class="epx-notif__av">{% if n.actor.profile_picture %}<img src="{{ n.actor.profile_picture.url }}" alt="{{ n.actor.username }}">{% else %}{{ n.actor.username|first|upper }}{% endif %}</span>
+  {% endif %}
+
+  <div style="flex:1; min-width:0;">
+    <div class="epx-notif__text">
+      {% if n.kind == 'rsvp_request' %}
+        <b>{{ n.actor.username }}</b> asked to join
+        {% if n.event %}<b>{{ n.event.title|truncatechars:40 }}</b>{% else %}your event{% endif %}
+      {% elif n.kind == 'rsvp_approved' %}
+        <b>{{ n.actor.username }}</b> approved your request to join
+        {% if n.event %}<b>{{ n.event.title|truncatechars:40 }}</b>{% else %}the event{% endif %}
+      {% else %}
+        <b>{{ n.actor.username }}</b> posted
+        {% if n.event %}<b>{{ n.event.title|truncatechars:48 }}</b>{% else %}an event{% endif %}
+      {% endif %}
+    </div>
+    {% if n.kind == 'rsvp_request' and n.note %}<div class="epx-notif__note">"{{ n.note }}"</div>{% endif %}
+    {% if n.event %}
+    <div class="epx-notif__meta">
+      {{ n.event.start_datetime|date:"D, d M · H:i" }} · {{ n.event.location_name|truncatechars:26 }}{% if n.event.category %} · {{ n.event.category.name }}{% endif %}
+    </div>
+    {% endif %}
+    <div class="epx-notif__time">{{ n.created_at|timesince }} ago</div>
+
+    {% if n.kind == 'rsvp_request' and n.rsvp %}
+      {% if n.rsvp.status == 'pending' %}
+      <div class="epx-notif__btns">
+        <form method="POST" action="{% url 'events:manage_rsvps' n.event.slug %}">
+          {% csrf_token %}
+          <input type="hidden" name="rsvp_id" value="{{ n.rsvp.pk }}" />
+          <input type="hidden" name="action" value="approve" />
+          <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+          <button type="submit" class="epx-pbtn epx-pbtn--ok">Approve</button>
+        </form>
+        <form method="POST" action="{% url 'events:manage_rsvps' n.event.slug %}">
+          {% csrf_token %}
+          <input type="hidden" name="rsvp_id" value="{{ n.rsvp.pk }}" />
+          <input type="hidden" name="action" value="reject" />
+          <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+          <button type="submit" class="epx-pbtn">Reject</button>
+        </form>
+      </div>
+      {% elif n.rsvp.status == 'approved' %}<span class="epx-notif__chip epx-notif__chip--ok">Approved</span>
+      {% elif n.rsvp.status == 'waitlist' %}<span class="epx-notif__chip epx-notif__chip--wait">Waitlist</span>
+      {% elif n.rsvp.status == 'rejected' %}<span class="epx-notif__chip">Rejected</span>
+      {% endif %}
+    {% endif %}
+  </div>
+
+  {% if not n.is_read %}<span class="epx-notif__dot" aria-label="Unread"></span>{% endif %}
+</div>
+

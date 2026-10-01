@@ -1,0 +1,60 @@
+{# Chat list column, shared by inbox and conversation. Expects `threads`; `active_pk` highlights the open chat. #}
+{% now "Ymd" as today %}
+<div class="wa-list">
+  <div class="wa-search">
+    <div class="epx-search" style="border-radius:999px; padding:10px 16px; background:var(--bg);">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2" style="flex-shrink:0;"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3" stroke-linecap="round"/></svg>
+      <input type="text" id="threadFilter" placeholder="Search chats" autocomplete="off" aria-label="Search chats" style="padding:0;" />
+    </div>
+  </div>
+  <div class="wa-list__scroll">
+    {% for t in threads %}
+    <a href="{% url 'social:conversation' t.conversation.pk %}"
+       class="wa-convo {% if t.conversation.pk == active_pk %}is-open{% endif %} {% if t.unread %}is-unread{% endif %}"
+       data-name="{{ t.other.get_full_name|default:t.other.username|lower }} {{ t.other.username|lower }}">
+      <span class="wa-av">{% if t.other.profile_picture %}<img src="{{ t.other.profile_picture.url }}" alt="{{ t.other.username }}">{% else %}{{ t.other.username|first|upper }}{% endif %}</span>
+      <div class="wa-convo__body">
+        <div class="wa-convo__top">
+          <span class="wa-convo__name">{{ t.other.get_full_name|default:t.other.username }}</span>
+          {% if t.last_message %}
+            <span class="wa-convo__time">{% if t.last_message.created_at|date:"Ymd" == today %}{{ t.last_message.created_at|date:"H:i" }}{% else %}{{ t.last_message.created_at|date:"M j" }}{% endif %}</span>
+          {% endif %}
+        </div>
+        <div class="wa-convo__bottom">
+          <span class="wa-convo__preview">
+            {% if t.last_message %}
+              {% if t.last_message.sender == user %}<span class="wa-convo__you">You:</span> {% endif %}{{ t.last_message.body|truncatechars:48 }}
+            {% else %}
+              <em>No messages yet</em>
+            {% endif %}
+          </span>
+          {% if t.unread %}<span class="wa-badge">{{ t.unread }}</span>{% endif %}
+        </div>
+      </div>
+    </a>
+    {% empty %}
+    <div class="wa-empty">
+      <div class="wa-empty__t">No conversations yet.</div>
+      <div>Visit someone's profile and tap Message to start chatting.</div>
+    </div>
+    {% endfor %}
+    <div class="wa-empty" id="threadFilterEmpty" hidden>No chats match.</div>
+  </div>
+</div>
+<script>
+(function () {
+  var input = document.getElementById('threadFilter');
+  var empty = document.getElementById('threadFilterEmpty');
+  var rows  = document.querySelectorAll('.wa-convo');
+  if (!input || !rows.length) return;
+  input.addEventListener('input', function () {
+    var q = input.value.trim().toLowerCase(), shown = 0;
+    rows.forEach(function (r) {
+      var hit = !q || r.dataset.name.indexOf(q) !== -1;
+      r.hidden = !hit;
+      if (hit) shown++;
+    });
+    empty.hidden = shown !== 0;
+  });
+})();
+</script>

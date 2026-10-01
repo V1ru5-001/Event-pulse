@@ -2,304 +2,265 @@
 {% load static %}
 
 {% block title %}{{ event.title }} — EventPulse{% endblock %}
+{% block body_class %}epx{% endblock %}
+{% block navbar %}{% include 'partials/nav.html' with nav_active='discover' %}{% endblock %}
 
 {% block content %}
-<div class="detail-page">
+<div class="has-tabbar">
+{% with going=event.approved_rsvp_count left=event.spots_remaining %}
 
-  <div class="detail-hero">
-    {% with gallery=event.gallery.all %}
-    {% if gallery %}
-      <div class="ep-gallery js-carousel" id="eventGallery">
-        {% for media in gallery %}
-        <div class="ep-gallery__slide js-car-slide {% if forloop.first %}is-active{% endif %}">
-          {% if media.media_type == 'video' %}
-            <video class="ep-gallery__media js-car-video js-car-tap" src="{{ media.file.url }}" muted autoplay loop playsinline preload="metadata"></video>
-          {% else %}
-            <img class="ep-gallery__media" src="{{ media.file.url }}" alt="{{ event.title }}" />
-          {% endif %}
-        </div>
-        {% endfor %}
+  {# ── COVER (gallery carousel / cover image / category fallback) ── #}
+  <div class="epx-wrap" style="padding-top:24px;">
+    <a href="{% url 'events:home' %}" class="epx-back">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Back
+    </a>
 
-        {% if gallery|length > 1 %}
-        <div class="ep-gallery__dots">
+    <div class="epx-detail-cover" style="margin-top:16px;">
+      {% with gallery=event.gallery.all %}
+      {% if gallery %}
+        <div class="js-carousel" id="eventGallery" style="position:absolute; inset:0;">
           {% for media in gallery %}
-          <button type="button" class="ep-gallery__dot js-car-dot {% if forloop.first %}is-active{% endif %}" aria-label="Slide {{ forloop.counter }}"></button>
+          <div class="epx-feat__slide js-car-slide {% if forloop.first %}is-active{% endif %}">
+            {% if media.media_type == 'video' %}
+              <video class="epx-feat__media js-car-video js-car-tap" src="{{ media.file.url }}" muted autoplay loop playsinline preload="metadata"></video>
+            {% else %}
+              <img class="epx-feat__media" src="{{ media.file.url }}" alt="{{ event.title }}" />
+            {% endif %}
+          </div>
           {% endfor %}
+          {% if gallery|length > 1 %}
+          <div class="epx-detail-cover__dots">
+            {% for media in gallery %}
+            <button type="button" class="epx-feat__dot js-car-dot {% if forloop.first %}is-active{% endif %}" aria-label="Slide {{ forloop.counter }}"></button>
+            {% endfor %}
+          </div>
+          {% endif %}
         </div>
-        {% endif %}
-      </div>
-    {% elif event.cover_image %}
-      <div class="detail-hero__img" style="background-image:url('{{ event.cover_image.url }}')"></div>
-    {% else %}
-      <div class="detail-hero__img detail-hero__img--placeholder ep-flyerbg--{{ event.category.slug|default:'academic' }}">
-        <span class="ep-cat-icon ep-cat-icon--{{ event.category.slug|default:'academic' }}" style="width:72px;height:72px;background-color:rgba(242,234,217,0.5);"></span>
-      </div>
+      {% elif event.cover_image %}
+        <div class="epx-feat__media" style="background-image:url('{{ event.cover_image.url }}')"></div>
+      {% else %}
+        <div class="epx-feat__media epx-cover epx-cover--{{ event.category.slug|default:'academic' }}"></div>
+      {% endif %}
+      {% endwith %}
+      <div class="epx-detail-cover__shade"></div>
+      {% if event.category %}<span class="epx-tag">{{ event.category.name }}</span>{% endif %}
+    </div>
+  </div>
+
+  {# ── TITLE BAND ── #}
+  <div class="epx-wrap" style="padding-top:28px;">
+    <div class="epx-detail-when">
+      {{ event.start_datetime|date:"D d M" }} · {{ event.start_datetime|date:"H:i" }}{% if event.end_datetime %} — {{ event.end_datetime|date:"H:i" }}{% endif %}
+    </div>
+    <h1 class="epx-detail-title">{{ event.title }}</h1>
+    <div class="epx-detail-venue">{{ event.location_name }}{% if event.location_address %} · {{ event.location_address }}{% endif %}</div>
+
+    <div class="epx-statusrow">
+      {% if is_ended %}<span class="epx-status">Ended</span>
+      {% elif is_live %}<span class="epx-status epx-status--live">Live Now</span>
+      {% elif is_coming_soon %}<span class="epx-status epx-status--soon">Coming Soon</span>{% endif %}
+      {% if event.is_free %}<span class="epx-status epx-status--price">Free</span>
+      {% else %}<span class="epx-status epx-status--price">₦{{ event.ticket_price }}</span>{% endif %}
+      {% if event.is_premium_only %}<span class="epx-status epx-status--prem">Premium Only</span>{% endif %}
+    </div>
+
+    {% if request.user.is_authenticated and request.user == event.organiser %}
+    <div class="epx-ownerbar">
+      <a href="{% url 'events:edit' event.slug %}">Edit</a>
+      <a href="{% url 'events:manage_rsvps' event.slug %}">Manage RSVPs ({{ event.rsvps.count }})</a>
+      <form method="POST" action="{% url 'events:delete' event.slug %}" style="margin:0;"
+        onsubmit="return confirm('Delete this event? This cannot be undone.')">
+        {% csrf_token %}
+        <button type="submit">Delete</button>
+      </form>
+    </div>
     {% endif %}
-    {% endwith %}
-    <div class="detail-hero__overlay" style="pointer-events:none;"></div>
 
-    <div class="detail-datestub">
-      <div class="ep-datestub">
-        <div class="ep-datestub__d">{{ event.start_datetime|date:"d" }}</div>
-        <div class="ep-datestub__m">{{ event.start_datetime|date:"M" }}</div>
+    {% if is_live %}
+    <div class="epx-live">
+      <span class="epx-live__dot"></span>
+      <span>This event is happening <strong>right now</strong> on campus</span>
+      {% if event.location_name %}<span style="font-family:var(--fm); font-size:0.78rem; color:var(--ink-soft);">{{ event.location_name }}</span>{% endif %}
+    </div>
+    {% endif %}
+
+    {% if is_coming_soon %}
+    <div class="epx-countdown" id="eventCountdown" data-start="{{ event.start_datetime|date:'c' }}">
+      <span class="epx-countdown__label">Starts in</span>
+      <div class="epx-countdown__unit"><span id="cd-days">--</span><small>days</small></div>
+      <div class="epx-countdown__unit"><span id="cd-hours">--</span><small>hrs</small></div>
+      <div class="epx-countdown__unit"><span id="cd-mins">--</span><small>min</small></div>
+      <div class="epx-countdown__unit"><span id="cd-secs">--</span><small>sec</small></div>
+    </div>
+    {% endif %}
+  </div>
+
+  {# ── BODY: details + RSVP card (stacks to one column on mobile) ── #}
+  <div class="epx-wrap epx-detail-body" style="padding-top:36px; padding-bottom:60px;">
+
+    <div>
+      <div class="epx-label">About this Event</div>
+      <div class="epx-detail-desc">{{ event.description|linebreaks }}</div>
+
+      <div class="epx-detail-facts">
+        <div class="epx-fact">
+          <span class="epx-fact__icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></span>
+          <div><div class="epx-fact__k">Date</div><div class="epx-fact__v">{{ event.start_datetime|date:"l, d F Y" }}</div></div>
+        </div>
+        <div class="epx-fact">
+          <span class="epx-fact__icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></span>
+          <div><div class="epx-fact__k">Time</div><div class="epx-fact__v">{{ event.start_datetime|date:"H:i" }}{% if event.end_datetime %} — {{ event.end_datetime|date:"H:i" }}{% endif %}</div></div>
+        </div>
+        <div class="epx-fact">
+          <span class="epx-fact__icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg></span>
+          <div><div class="epx-fact__k">Venue</div><div class="epx-fact__v">{{ event.location_name }}</div></div>
+        </div>
+        {% if event.capacity %}
+        <div class="epx-fact">
+          <span class="epx-fact__icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><circle cx="9" cy="8" r="3.2"/><path d="M2 20c0-3.5 3-6 7-6s7 2.5 7 6M16 7a3 3 0 1 1 3 3"/></svg></span>
+          <div><div class="epx-fact__k">Capacity</div><div class="epx-fact__v">{{ going }} / {{ event.capacity }} spots filled</div></div>
+        </div>
+        {% endif %}
+      </div>
+
+      {# No stored coordinates are filled in, so this stays a styled placeholder. #}
+      <div class="epx-label" style="margin-top:36px;">Where</div>
+      <div class="epx-map">
+        <div class="epx-map__grid"></div>
+        <div class="epx-map__pin">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="var(--accent)" stroke="var(--bg)" stroke-width="1.5"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5" fill="var(--bg)"/></svg>
+        </div>
+        <div class="epx-map__label">{{ event.location_name }}{% if event.location_address %} · {{ event.location_address }}{% endif %}</div>
       </div>
     </div>
 
-    <div class="detail-hero__nav">
-      <a href="{% url 'events:home' %}" class="detail-hero__back">
-        <span class="ep-icon ep-icon--back"></span>
-        Back
-      </a>
-      <div class="detail-hero__nav-right">
-        {% if request.user.is_authenticated and request.user == event.organiser %}
-          <a href="{% url 'events:edit' event.slug %}" class="ep-btn ep-btn--outline ep-btn--sm" style="margin-right:.5rem;display:inline-flex;align-items:center;gap:.4rem;">
-            <span class="ep-icon ep-icon--edit"></span>Edit
-          </a>
-          <form method="POST" action="{% url 'events:delete' event.slug %}" style="display:inline;margin:0;"
-            onsubmit="return confirm('Delete this event? This cannot be undone.')">
-            {% csrf_token %}
-            <button type="submit" class="ep-btn ep-btn--sm ep-btn--danger" style="margin-right:.5rem;display:inline-flex;align-items:center;gap:.4rem;">
-              <span class="ep-icon ep-icon--trash ep-icon--sm ep-icon--coral"></span>
-              Delete
-            </button>
-          </form>
+    {# ── RSVP CARD ── #}
+    <div class="epx-detail-rsvp">
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
+        <div>
+          {% if event.is_free %}
+            <div class="epx-rsvp__price">Free</div>
+          {% else %}
+            <div class="epx-rsvp__price">₦{{ event.ticket_price }}</div>
+            <div class="epx-rsvp__per">per person</div>
+          {% endif %}
+        </div>
+        {% if event.capacity %}
+          <div class="epx-rsvp__cap">
+            {% if left == 0 %}Sold out
+            {% elif left <= 5 %}Only {{ left }} spot{{ left|pluralize }} left!
+            {% else %}{{ left }} spots remaining{% endif %}
+          </div>
         {% endif %}
-        <button class="detail-hero__share" style="position:relative;z-index:10;" onclick="navigator.clipboard.writeText(window.location.href).then(()=>alert('Link copied!'))">
-          <span class="ep-icon ep-icon--share"></span>
-          Share
-        </button>
       </div>
-    </div>
+      <div class="epx-rsvp__sub">{{ going }} going{% if event.capacity %} · capacity {{ event.capacity }}{% endif %}</div>
 
-    <div class="detail-hero__content">
-      <div class="detail-hero__badges">
-        {% if event.category %}
-          <span class="ep-badge ep-badge--cat">
-            <span class="ep-cat-icon ep-cat-icon--{{ event.category.slug }}"></span>
-            {{ event.category.name }}
-          </span>
-        {% endif %}
+      <div class="epx-rsvp__actions">
+        {% if not user.is_authenticated %}
+          <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="epx-btn">Sign in to RSVP</a>
 
-        <!-- ── STATUS BADGE ── -->
-        {% if is_ended %}
-          <span class="ep-badge ep-badge--sold">Ended</span>
-        {% elif is_live %}
-          <span class="ep-badge ep-badge--live">Live Now</span>
+        {% elif is_ended %}
+          <div class="epx-ended">
+            <div class="epx-ended__t">This event has ended</div>
+            <div class="epx-ended__d">{{ event.start_datetime|date:"d M Y" }}</div>
+          </div>
+          <a href="{% url 'events:home' %}" class="epx-btn epx-btn--ghost">Browse More Events</a>
+
         {% elif is_coming_soon %}
-          <span class="ep-badge ep-badge--soon">Coming Soon</span>
-        {% endif %}
-
-        {% if event.is_free %}
-          <span class="ep-badge ep-badge--free">Free</span>
-        {% else %}
-          <span class="ep-badge ep-badge--paid">₦{{ event.ticket_price }}</span>
-        {% endif %}
-        {% if event.is_premium_only %}
-          <span class="ep-badge ep-badge--prem">
-            <span class="ep-icon ep-icon--lock" style="width:12px;height:12px;"></span>
-            Premium Only
-          </span>
-        {% endif %}
-      </div>
-      <h1 class="detail-hero__title">{{ event.title }}</h1>
-
-      <!-- ── LIVE BANNER ── -->
-      {% if is_live %}
-      <div class="detail-live-banner">
-        <span>This event is happening <strong>right now</strong> on campus</span>
-        {% if event.location_name %}<span class="detail-live-venue">{{ event.location_name }}</span>{% endif %}
-      </div>
-      {% endif %}
-
-      <!-- ── COMING SOON COUNTDOWN ── -->
-      {% if is_coming_soon %}
-      <div class="detail-countdown-wrap">
-        <div class="detail-countdown-label">Starts in</div>
-        <div class="detail-countdown" id="eventCountdown"
-          data-start="{{ event.start_datetime|date:'c' }}">
-          <div class="detail-countdown__unit"><span id="cd-days">--</span><small>days</small></div>
-          <div class="detail-countdown__sep">:</div>
-          <div class="detail-countdown__unit"><span id="cd-hours">--</span><small>hrs</small></div>
-          <div class="detail-countdown__sep">:</div>
-          <div class="detail-countdown__unit"><span id="cd-mins">--</span><small>min</small></div>
-          <div class="detail-countdown__sep">:</div>
-          <div class="detail-countdown__unit"><span id="cd-secs">--</span><small>sec</small></div>
-        </div>
-      </div>
-      {% endif %}
-
-    </div>
-  </div>
-
-  <div class="detail-body">
-    <div class="detail-body__inner">
-
-      <div class="detail-left">
-
-        <div class="detail-section">
-          <div class="detail-meta-block">
-            <div class="detail-meta-item">
-              <div class="ep-detail-icon ep-detail-icon--calendar"></div>
-              <div>
-                <div class="detail-meta-label">Date & Time</div>
-                <div class="detail-meta-value">{{ event.start_datetime|date:"l, d F Y" }}</div>
-                <div class="detail-meta-sub">
-                  {{ event.start_datetime|date:"H:i" }}
-                  {% if event.end_datetime %} — {{ event.end_datetime|date:"H:i" }}{% endif %}
-                </div>
-              </div>
-            </div>
-
-            <div class="detail-meta-item">
-              <div class="ep-detail-icon ep-detail-icon--pin"></div>
-              <div>
-                <div class="detail-meta-label">Location</div>
-                <div class="detail-meta-value">{{ event.location_name }}</div>
-                {% if event.location_address %}
-                  <div class="detail-meta-sub">{{ event.location_address }}</div>
-                {% endif %}
-              </div>
-            </div>
-
-            {% if event.capacity %}
-            <div class="detail-meta-item">
-              <div class="ep-detail-icon ep-detail-icon--people"></div>
-              <div>
-                <div class="detail-meta-label">Capacity</div>
-                <div class="detail-meta-value">{{ event.approved_rsvp_count }} / {{ event.capacity }} spots filled</div>
-                <div class="detail-cap-bar">
-                  <div class="detail-cap-fill"></div>
-                </div>
-              </div>
-            </div>
-            {% endif %}
-          </div>
-        </div>
-
-        <div class="detail-section">
-          <h2 class="detail-section__title">About this Event</h2>
-          <div class="detail-description">{{ event.description|linebreaks }}</div>
-        </div>
-
-        <div class="detail-section">
-          <h2 class="detail-section__title">Organiser</h2>
-          <div class="detail-organiser">
-            <div class="detail-organiser__av">{{ event.organiser.username|first|upper }}</div>
-            <div class="detail-organiser__info">
-              <div class="detail-organiser__name">{{ event.organiser.get_full_name|default:event.organiser.username }}</div>
-              <div class="detail-organiser__username">@{{ event.organiser.username }}</div>
-              {% if event.organiser.university %}
-                <div class="detail-organiser__uni">{{ event.organiser.university }}</div>
+          {% if user_rsvp %}
+            {% if user_rsvp.status == 'approved' %}
+              <div class="epx-state epx-state--going">You're going!</div>
+              {% if event.rsvp_redirect_url %}
+                <a href="{{ event.rsvp_redirect_url }}" class="epx-btn" target="_blank" rel="noopener noreferrer">Open registration link →</a>
               {% endif %}
-            </div>
-            <a href="{% url 'accounts:profile' event.organiser.username %}" class="ep-btn ep-btn--outline ep-btn--sm">View Profile</a>
-            {% if user == event.organiser %}
-              <a href="{% url 'events:manage_rsvps' event.slug %}" class="ep-btn ep-btn--outline ep-btn--sm">
-                Manage RSVPs ({{ event.rsvps.count }})
-              </a>
+            {% elif user_rsvp.status == 'pending' %}
+              <div class="epx-state epx-state--pending">Request pending</div>
+              <div class="epx-rsvp__hint">The organiser approves each request — you'll get a notification.</div>
+            {% elif user_rsvp.status == 'waitlist' %}
+              <div class="epx-state epx-state--pending">On waitlist</div>
             {% endif %}
-          </div>
-        </div>
-
-      </div>
-
-      <div class="detail-right">
-        <div class="detail-rsvp-card">
-
-          <div class="detail-rsvp-price">
-            {% if event.is_free %}
-              <span class="detail-rsvp-price__free">Free</span>
-            {% else %}
-              <span class="detail-rsvp-price__amount">₦{{ event.ticket_price }}</span>
-              <span class="detail-rsvp-price__per">per person</span>
-            {% endif %}
-          </div>
-
-          {% if event.capacity %}
-            <div class="detail-rsvp-cap">
-              <div class="detail-rsvp-cap__label">
-                {% if event.spots_remaining == 0 %}Sold out
-                {% elif event.spots_remaining <= 5 %}Only {{ event.spots_remaining }} spot{{ event.spots_remaining|pluralize }} left!
-                {% else %}{{ event.spots_remaining }} spots remaining{% endif %}
-              </div>
-              <div class="detail-rsvp-cap__bar">
-                <div class="detail-rsvp-cap__fill {% if event.spots_remaining == 0 %}detail-rsvp-cap__fill--full{% endif %}"></div>
-              </div>
+          {% elif event.is_full %}
+            <form method="POST" action="{% url 'events:rsvp' event.slug %}">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="waitlist" />
+              <button type="submit" class="epx-btn epx-btn--wait" style="width:100%;">Join Waitlist</button>
+            </form>
+          {% elif event.is_premium_only and not user.is_premium %}
+            <div class="epx-premlock">
+              <p>This event is for Premium members only.</p>
+              <a href="{% url 'payments:pricing' %}" class="epx-btn" style="width:100%;">Upgrade to Premium</a>
             </div>
+          {% else %}
+            <form method="POST" action="{% url 'events:rsvp' event.slug %}" style="display:flex; flex-direction:column; gap:10px;">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="rsvp" />
+              <textarea name="note" class="epx-rsvp__note" placeholder="Optional message to the organiser..." rows="2"></textarea>
+              <button type="submit" class="epx-btn">{% if event.require_rsvp_approval %}Request to Join{% else %}Reserve My Spot{% endif %}</button>
+              <div class="epx-rsvp__hint">
+                {% if event.require_rsvp_approval %}The organiser approves each request — you'll get a notification.
+                {% elif event.rsvp_redirect_url %}You're confirmed instantly, then taken to the organiser's registration link.
+                {% else %}You're confirmed instantly.{% endif %}
+              </div>
+            </form>
           {% endif %}
 
-          {% if not user.is_authenticated %}
-            <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="ep-btn ep-btn--primary ep-btn--full">Sign in to RSVP</a>
-
-          {% elif is_ended %}
-            <div class="detail-ended-box">
-              <div class="detail-ended-box__title">This event has ended</div>
-              <div class="detail-ended-box__date">{{ event.start_datetime|date:"d M Y" }}</div>
-            </div>
-            <a href="{% url 'events:home' %}" class="ep-btn ep-btn--outline ep-btn--full" style="margin-top:.5rem;">Browse More Events</a>
-
-          {% elif is_coming_soon %}
-            {% if user_rsvp %}
-              {% if user_rsvp.status == 'approved' %}
-                <button class="ep-btn ep-btn--full ep-btn--state ep-btn--state-going" disabled>You're going!</button>
-              {% elif user_rsvp.status == 'pending' %}
-                <button class="ep-btn ep-btn--full ep-btn--state ep-btn--state-pending" disabled>Request pending</button>
-              {% elif user_rsvp.status == 'waitlist' %}
-                <button class="ep-btn ep-btn--full ep-btn--state ep-btn--state-waitlist" disabled>On waitlist</button>
-              {% endif %}
-            {% elif event.is_full %}
-              <form method="POST" action="{% url 'events:rsvp' event.slug %}">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="waitlist" />
-                <button type="submit" class="ep-btn ep-btn--coral ep-btn--full">Join Waitlist</button>
-              </form>
-            {% elif event.is_premium_only and not user.is_premium %}
-              <div class="detail-premium-lock">
-                <p>This event is for Premium members only.</p>
-                <a href="{% url 'payments:pricing' %}" class="ep-btn ep-btn--primary ep-btn--full">Upgrade to Premium</a>
-              </div>
-            {% else %}
-              <form method="POST" action="{% url 'events:rsvp' event.slug %}">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="rsvp" />
-                <textarea name="note" class="ep-textarea" placeholder="Optional message to the organiser..." rows="2" style="margin-bottom:.75rem;border-radius:10px;font-size:.85rem;"></textarea>
-                <button type="submit" class="ep-btn ep-btn--primary ep-btn--full">Reserve My Spot</button>
-              </form>
+        {% elif is_live %}
+          {% if user_rsvp and user_rsvp.status == 'approved' %}
+            <div class="epx-state epx-state--going">You're checked in — Live Now</div>
+            {% if event.rsvp_redirect_url %}
+              <a href="{{ event.rsvp_redirect_url }}" class="epx-btn" target="_blank" rel="noopener noreferrer">Open registration link →</a>
             {% endif %}
-
-          {% elif is_live %}
-            {% if user_rsvp and user_rsvp.status == 'approved' %}
-              <button class="ep-btn ep-btn--full ep-btn--state ep-btn--state-going" disabled>You're checked in — Live Now</button>
-            {% elif user_rsvp %}
-              <button class="ep-btn ep-btn--full ep-btn--state ep-btn--state-pending" disabled>Request pending</button>
-            {% elif event.is_full %}
-              <form method="POST" action="{% url 'events:rsvp' event.slug %}">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="waitlist" />
-                <button type="submit" class="ep-btn ep-btn--coral ep-btn--full">Join Waitlist</button>
-              </form>
-            {% else %}
-              <form method="POST" action="{% url 'events:rsvp' event.slug %}">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="rsvp" />
-                <button type="submit" class="ep-btn ep-btn--primary ep-btn--full">Join — Happening Now</button>
-              </form>
-            {% endif %}
+          {% elif user_rsvp %}
+            <div class="epx-state epx-state--pending">Request pending</div>
+          {% elif event.is_full %}
+            <form method="POST" action="{% url 'events:rsvp' event.slug %}">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="waitlist" />
+              <button type="submit" class="epx-btn epx-btn--wait" style="width:100%;">Join Waitlist</button>
+            </form>
+          {% else %}
+            <form method="POST" action="{% url 'events:rsvp' event.slug %}" style="display:flex; flex-direction:column; gap:10px;">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="rsvp" />
+              <button type="submit" class="epx-btn">{% if event.require_rsvp_approval %}Request to Join{% else %}Join — Happening Now{% endif %}</button>
+              {% if event.require_rsvp_approval %}<div class="epx-rsvp__hint">The organiser approves each request — you'll get a notification.</div>{% endif %}
+            </form>
           {% endif %}
+        {% endif %}
 
-          <div class="detail-share">
-            <span>Share:</span>
-            <a href="https://wa.me/?text={{ event.title|urlencode }}%20{{ request.build_absolute_uri }}" target="_blank" class="detail-share__btn detail-share__btn--wa">WhatsApp</a>
-            <button onclick="navigator.clipboard.writeText(window.location.href);alert('Copied!')" class="detail-share__btn">Copy Link</button>
-          </div>
-
+        <div class="epx-share">
+          <a href="https://wa.me/?text={{ event.title|urlencode }}%20{{ request.build_absolute_uri|urlencode }}" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+          <button type="button" onclick="navigator.clipboard.writeText(window.location.href);alert('Copied!')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5 15.4 17.5M15.4 6.5 8.6 10.5"/></svg>
+            Copy Link
+          </button>
         </div>
       </div>
 
+      <div class="epx-host-card">
+        <div class="epx-label" style="margin-bottom:12px;">Organiser</div>
+        <div class="epx-host-card__row">
+          <span class="epx-host-card__av">{% if event.organiser.profile_picture %}<img src="{{ event.organiser.profile_picture.url }}" alt="{{ event.organiser.username }}">{% else %}{{ event.organiser.username|first|upper }}{% endif %}</span>
+          <div style="min-width:0;">
+            <div class="epx-host-card__name">{{ event.organiser.get_full_name|default:event.organiser.username }}</div>
+            <div class="epx-host-card__sub">@{{ event.organiser.username }}{% if event.organiser.university %} · {{ event.organiser.university }}{% endif %}</div>
+          </div>
+        </div>
+        <div class="epx-host-card__links">
+          <a href="{% url 'accounts:profile' event.organiser.username %}">View Profile</a>
+          {% if user == event.organiser %}
+            <a href="{% url 'events:manage_rsvps' event.slug %}">Manage RSVPs ({{ event.rsvps.count }})</a>
+          {% endif %}
+        </div>
+      </div>
     </div>
+
   </div>
 
+{% endwith %}
 </div>
+{% include 'partials/tabbar.html' with nav_active='discover' %}
 {% endblock %}
 
 {% block extra_js %}

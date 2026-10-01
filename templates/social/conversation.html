@@ -2,58 +2,65 @@
 {% load static %}
 
 {% block title %}{{ other.username }} — Messages{% endblock %}
+{% block body_class %}epx epx-chat-thread{% endblock %}
+{% block navbar %}{% include 'partials/nav.html' with nav_active='messages' %}{% endblock %}
 
 {% block content %}
-<div class="ep-chat-page">
-  <div class="ep-chat-container ep-convo"
-       data-convo-id="{{ conversation.pk }}"
-       data-fetch-url="{% url 'social:fetch_messages' conversation.pk %}"
-       data-send-url="{% url 'social:send_message' conversation.pk %}">
+<div class="has-tabbar">
+<div class="epx-chatwrap">
+  <h1 class="epx-h1" style="font-size:2.2rem; margin:0 0 18px;">Messages</h1>
 
-    <header class="ep-convo__header">
-      <a href="{% url 'social:inbox' %}" class="ep-convo__back" aria-label="Back to inbox">
-        <span class="ep-icon ep-icon--arrow-left ep-icon--accent"></span>
-      </a>
-      <a href="{% url 'accounts:profile' other.username %}" class="ep-convo__peer">
-        <div class="ep-convo__avatar">
-          {% if other.profile_picture %}
-            <img src="{{ other.profile_picture.url }}" alt="{{ other.username }}">
-          {% else %}
-            <span>{{ other.username|first|upper }}</span>
-          {% endif %}
-        </div>
-        <div class="ep-convo__peer-info">
-          <span class="ep-convo__peer-name">{{ other.get_full_name|default:other.username }}</span>
-          <span class="ep-convo__peer-handle">@{{ other.username }}</span>
-        </div>
-      </a>
-    </header>
+  <div class="wa-shell" data-view="thread">
+    {% include 'social/_thread_list.html' with active_pk=conversation.pk %}
 
-    <div class="ep-convo__messages" id="messageWindow">
-      {% for m in messages_list %}
-        <div class="ep-msg {% if m.sender == user %}ep-msg--mine{% else %}ep-msg--theirs{% endif %}"
-             data-id="{{ m.id }}">
-          <div class="ep-msg__bubble">{{ m.body|linebreaksbr }}</div>
-          <span class="ep-msg__time">{{ m.created_at|date:"H:i" }}</span>
+    {# .ep-convo + data-* + the #ids below are what the chat script hooks into. #}
+    <div class="wa-thread ep-convo"
+         data-convo-id="{{ conversation.pk }}"
+         data-fetch-url="{% url 'social:fetch_messages' conversation.pk %}"
+         data-send-url="{% url 'social:send_message' conversation.pk %}">
+
+      <div class="wa-head">
+        <a href="{% url 'social:inbox' %}" class="wa-back" aria-label="Back to inbox">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <a href="{% url 'accounts:profile' other.username %}" style="display:flex; align-items:center; gap:12px; flex:1; min-width:0;">
+          <span class="wa-av">{% if other.profile_picture %}<img src="{{ other.profile_picture.url }}" alt="{{ other.username }}">{% else %}{{ other.username|first|upper }}{% endif %}</span>
+          <div style="min-width:0;">
+            <div class="wa-head__name">{{ other.get_full_name|default:other.username }}</div>
+            <div class="wa-head__sub">@{{ other.username }}</div>
+          </div>
+        </a>
+        <a href="{% url 'accounts:profile' other.username %}" class="wa-head__pill">View profile</a>
+      </div>
+
+      <div class="wa-msgs" id="messageWindow">
+        {% for m in messages_list %}
+          <div class="ep-msg {% if m.sender == user %}ep-msg--mine{% else %}ep-msg--theirs{% endif %}"
+               data-id="{{ m.id }}">
+            <div class="ep-msg__bubble">{{ m.body|linebreaksbr }}</div>
+            <span class="ep-msg__time">{{ m.created_at|date:"H:i" }}</span>
+          </div>
+        {% empty %}
+          <div class="ep-convo__hello">
+            <p>This is the start of your conversation with <b>@{{ other.username }}</b>.</p>
+            <p>Say hi — maybe about an event you're both going to.</p>
+          </div>
+        {% endfor %}
+      </div>
+
+      <div class="wa-compose">
+        <div class="wa-compose__field">
+          <textarea id="msgInput" rows="1" placeholder="Type a message…" maxlength="2000" aria-label="Message"></textarea>
         </div>
-      {% empty %}
-        <div class="ep-convo__hello">
-          <p>This is the start of your conversation with <b>@{{ other.username }}</b>.</p>
-          <p>Say hi — maybe about an event you're both going to.</p>
-        </div>
-      {% endfor %}
+        <button id="msgSend" class="wa-send" type="button" aria-label="Send">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-ink)" stroke-width="2"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
     </div>
-
-    <div class="ep-convo__compose">
-      <textarea id="msgInput" class="ep-convo__input" rows="1"
-                placeholder="Type a message…" maxlength="2000"></textarea>
-      <button id="msgSend" class="ep-convo__send" aria-label="Send">
-        <span class="ep-icon ep-icon--send"></span>
-      </button>
-    </div>
-
   </div>
 </div>
+</div>
+{% include 'partials/tabbar.html' with nav_active='messages' %}
 {% endblock %}
 
 {% block extra_js %}

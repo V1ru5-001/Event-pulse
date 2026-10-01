@@ -2,79 +2,44 @@
 {% load static %}
 
 {% block title %}Notifications — EventPulse{% endblock %}
+{% block body_class %}epx{% endblock %}
+{% block navbar %}{% include 'partials/nav.html' with nav_active='' %}{% endblock %}
 
 {% block content %}
-<div class="ep-chat-page">
-  <div class="ep-chat-container ep-notifs">
+<div class="has-tabbar">
+<div class="epx-notifs">
 
-    <header class="ep-inbox__header">
-      <h1 class="ep-inbox__title">
-        <span class="ep-icon ep-icon--bell ep-icon--accent"></span>
-        Notifications
-      </h1>
-      {% if notifs %}
-      <form method="POST" action="{% url 'social:notifications_read_all' %}" class="ep-notifs__readall">
-        {% csrf_token %}
-        <button type="submit" class="ep-btn ep-btn--ghost ep-btn--sm">Mark all read</button>
-      </form>
-      {% endif %}
-    </header>
-
+  <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:20px;">
+    <h1 class="epx-h1" style="font-size:2.2rem; margin:0;">Notifications</h1>
     {% if notifs %}
-      <ul class="ep-notif-list">
-        {% for n in notifs %}
-        <li>
-          <a href="{% url 'social:notification_open' n.pk %}" class="ep-notif {% if not n.is_read %}ep-notif--unread{% endif %}">
-            <div class="ep-notif__avatar">
-              {% if n.actor.profile_picture %}
-                <img src="{{ n.actor.profile_picture.url }}" alt="{{ n.actor.username }}">
-              {% else %}
-                <span>{{ n.actor.username|first|upper }}</span>
-              {% endif %}
-            </div>
-            <div class="ep-notif__body">
-              <p class="ep-notif__text">
-                {% if n.kind == 'rsvp_request' %}
-                  <b>{{ n.actor.username }}</b> asked to join
-                  {% if n.event %}<b>{{ n.event.title|truncatechars:40 }}</b>{% else %}your event{% endif %}
-                {% elif n.kind == 'rsvp_approved' %}
-                  <b>{{ n.actor.username }}</b> approved your request to join
-                  {% if n.event %}<b>{{ n.event.title|truncatechars:40 }}</b>{% else %}the event{% endif %}
-                {% else %}
-                  <b>{{ n.actor.username }}</b> posted
-                  {% if n.event %}<b>{{ n.event.title|truncatechars:48 }}</b>{% else %}an event{% endif %}
-                {% endif %}
-              </p>
-              {% if n.kind == 'rsvp_request' and n.note %}
-              <p class="ep-notif__meta" style="font-style:italic;">"{{ n.note }}"</p>
-              {% endif %}
-              {% if n.event %}
-              <p class="ep-notif__meta">
-                {{ n.event.start_datetime|date:"D, d M · H:i" }} · {{ n.event.location_name|truncatechars:26 }}
-                {% if n.event.category %} · {{ n.event.category.name }}{% endif %}
-              </p>
-              {% endif %}
-              <span class="ep-notif__time">{{ n.created_at|timesince }} ago</span>
-            </div>
-            {% if n.event %}
-            <div class="ep-notif__date">
-              <b>{{ n.event.start_datetime|date:"d" }}</b>
-              <span>{{ n.event.start_datetime|date:"M" }}</span>
-            </div>
-            {% endif %}
-            {% if not n.is_read %}<span class="ep-notif__dot"></span>{% endif %}
-          </a>
-        </li>
-        {% endfor %}
-      </ul>
-    {% else %}
-      <div class="ep-chat-empty">
-        <span class="ep-icon ep-icon--bell ep-icon--accent"></span>
-        <p>No notifications yet.</p>
-        <span class="ep-chat-empty__hint">Follow organisers and friends — when they post an event, you'll see it here first.</span>
+    <form method="POST" action="{% url 'social:notifications_read_all' %}" style="margin:0;">
+      {% csrf_token %}
+      <button type="submit" class="epx-linkbtn">Mark all read</button>
+    </form>
+    {% endif %}
+  </div>
+
+  {% if notifs %}
+    {% if unread %}
+      <div class="epx-group">New</div>
+      <div class="epx-nlist">
+        {% for n in unread %}{% include 'social/_notif_card.html' %}{% endfor %}
       </div>
     {% endif %}
+    {% if earlier %}
+      <div class="epx-group" {% if unread %}style="margin-top:28px;"{% endif %}>Earlier</div>
+      <div class="epx-nlist">
+        {% for n in earlier %}{% include 'social/_notif_card.html' %}{% endfor %}
+      </div>
+    {% endif %}
+  {% else %}
+    <div class="epx-dashed" style="padding:44px 24px;">
+      <div style="font-family:var(--fd); font-weight:700; font-size:1.2rem; text-transform:uppercase; color:var(--ink-soft);">No notifications yet.</div>
+      <div style="margin-top:8px;">Follow organisers and friends — when they post an event, you'll see it here first.</div>
+    </div>
+  {% endif %}
 
-  </div>
 </div>
+</div>
+{% include 'partials/tabbar.html' with nav_active='' %}
 {% endblock %}

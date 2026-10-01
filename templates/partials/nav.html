@@ -1,0 +1,44 @@
+{# New signed-in nav. Usage: {% include 'partials/nav.html' with nav_active='discover' %} #}
+<nav class="epx-nav" id="epNav">
+  <div class="epx-nav__inner">
+    <a href="{% if user.is_authenticated %}{% url 'events:home' %}{% else %}{% url 'events:landing' %}{% endif %}" class="epx-logo">EVENT<b>PULSE</b></a>
+
+    {% if user.is_authenticated %}
+    <div class="epx-navlinks">
+      <a href="{% url 'events:home' %}" {% if nav_active == 'discover' %}class="on"{% endif %}>Discover</a>
+      <a href="{% url 'events:calendar' %}" {% if nav_active == 'calendar' %}class="on"{% endif %}>Calendar</a>
+      <a href="{% url 'social:inbox' %}" {% if nav_active == 'messages' %}class="on"{% endif %}>Messages{% if unread_messages_count %}<span class="epx-navlinks__count">{% if unread_messages_count > 9 %}9+{% else %}{{ unread_messages_count }}{% endif %}</span>{% endif %}</a>
+      <a href="{% url 'accounts:profile' user.username %}" {% if nav_active == 'profile' %}class="on"{% endif %}>Profile</a>
+    </div>
+
+    <div class="epx-nav__actions">
+      <a href="{% url 'events:create' %}" class="epx-host" aria-label="Post Event">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>
+        <span>Post Event</span>
+      </a>
+      <a href="{% url 'social:notifications' %}" class="epx-iconbtn" title="Notifications" aria-label="Notifications">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0" stroke-linecap="round"/></svg>
+        <span class="epx-iconbtn__badge" id="notifBadge" style="display:none;"></span>
+      </a>
+      <div class="epx-usermenu" id="userMenu">
+        <div class="epx-avatar" id="avatarBtn" role="button" tabindex="0" aria-label="Account menu">
+          {% if user.profile_picture %}<img src="{{ user.profile_picture.url }}" alt="{{ user.username }}">{% else %}{{ user.username|first|upper }}{% endif %}
+        </div>
+        <div class="epx-dropdown" id="userDropdown">
+          <span class="epx-dropdown__name">{{ user.username }}</span>
+          <a href="{% url 'accounts:profile' user.username %}">My Profile</a>
+          <a href="{% url 'social:inbox' %}">Messages{% if unread_messages_count %}<span class="epx-iconbtn__badge" style="position:static;">{% if unread_messages_count > 9 %}9+{% else %}{{ unread_messages_count }}{% endif %}</span>{% endif %}</a>
+          <a href="{% url 'events:create' %}">Post an Event</a>
+          <a href="{% url 'payments:pricing' %}">Upgrade Plan</a>
+          <a href="{% url 'accounts:logout' %}" class="is-danger">Sign Out</a>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="epx-nav__actions">
+      <a href="{% url 'accounts:login' %}" class="epx-btn epx-btn--ghost" style="padding:10px 20px;font-size:0.8rem;">Sign In</a>
+      <a href="{% url 'accounts:register' %}" class="epx-host">Register</a>
+    </div>
+    {% endif %}
+  </div>
+</nav>

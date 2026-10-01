@@ -1,58 +1,82 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Post an Event — EventPulse{% endblock %}
+{% block title %}{% if event %}Edit Event{% else %}Post an Event{% endif %} — EventPulse{% endblock %}
+{% block body_class %}epx{% endblock %}
+{% block navbar %}{% include 'partials/nav.html' with nav_active='' %}{% endblock %}
 
 {% block content %}
-<div class="ep-create-page">
+<div class="has-tabbar">
+<div class="epx-form-col">
 
-  <div class="ep-create-header">
-    <a href="{% url 'events:home' %}" class="ep-create-back">
-      <span class="ep-icon ep-icon--back"></span>
-      Back
-    </a>
-    <div>
-      <h1 class="ep-create-title">{% if event %}Edit Event{% else %}Post an Event{% endif %}</h1>
-      <p class="ep-create-sub">{% if event %}Update your event details below.{% else %}Fill in the details and let your campus know.{% endif %}</p>
-    </div>
-  </div>
+  <a href="{% if event %}{% url 'events:detail' event.slug %}{% else %}{% url 'events:home' %}{% endif %}" class="epx-back" style="margin-bottom:22px;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Back
+  </a>
+
+  <div class="epx-ticket"><span>{% if event %}Editing listing{% else %}New listing{% endif %}</span><span>EP-{% now "y" %}</span></div>
+  <div class="epx-ticket-rule"></div>
+
+  <h1 class="epx-h1" style="font-size:2.6rem; margin:0;">{% if event %}Edit Event{% else %}Post an Event{% endif %}</h1>
+  <p style="color:var(--ink-soft); margin-top:10px;">{% if event %}Update your event details below.{% else %}Fill in the details and let your campus know.{% endif %}</p>
 
   {% if form.non_field_errors %}
     {% for error in form.non_field_errors %}
-      <div class="ep-inline-error">{{ error }}</div>
+      <div class="epx-error" style="margin-top:18px;">{{ error }}</div>
     {% endfor %}
   {% endif %}
 
-  <form method="POST" class="ep-create-form" id="createForm">
+  <form method="POST" class="epx-form" id="createForm">
     {% csrf_token %}
 
-    <div class="ep-create-card">
-      <h2 class="ep-create-section-title">
-        <span class="ep-create-section-num">1</span>
-        Event Basics
-      </h2>
+    {# ── Photos & videos (uploaded straight to storage by the script below) ── #}
+    <div>
+      <label class="epx-flabel">Photos &amp; Videos</label>
+      {% if event and event.gallery.all %}
+      <div class="epx-existing">
+        {% for media in event.gallery.all %}
+        <label class="epx-existing__item">
+          {% if media.media_type == 'video' %}
+            <video src="{{ media.file.url }}" muted></video>
+            <span class="epx-existing__badge">Video</span>
+          {% else %}
+            <img src="{{ media.file.url }}" alt="" />
+          {% endif %}
+          <span class="epx-existing__remove">
+            <input type="checkbox" name="remove_gallery" value="{{ media.id }}" />
+            Remove
+          </span>
+        </label>
+        {% endfor %}
+      </div>
+      {% endif %}
 
-      <div class="ep-field">
-        <label class="ep-field__label">Event Title *</label>
-        <div class="ep-field__input-wrap">
-          <span class="ep-icon ep-icon--edit"></span>
-          <input type="text" name="title" class="ep-input"
-            placeholder="Give your event a great title"
-            value="{% if event %}{{ request.POST.title|default:event.title }}{% else %}{{ request.POST.title|default:'' }}{% endif %}" required />
+      {# No name attribute: files go straight to storage, never through the form POST. #}
+      <input type="file" id="id_gallery" accept="image/*,video/*" multiple style="display:none;" />
+      <div class="epx-upload" id="uploadZone" role="button" tabindex="0">
+        <div id="uploadPlaceholder" style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 17-5-5L5 20" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <div class="epx-upload__t">Click to upload or drag and drop</div>
+          <div class="epx-upload__s">Images up to 5MB, videos up to 50MB — add as many as you like</div>
         </div>
+        <div id="uploadPreview" class="ep-upload-preview-grid" style="display:none;"></div>
       </div>
+    </div>
 
-      <div class="ep-field" style="margin-top:1rem;">
-        <label class="ep-field__label">Description *</label>
-        <textarea name="description" class="ep-textarea" rows="4"
-          placeholder="Tell people what to expect, who it's for, what to bring..."
-          required>{% if event %}{{ request.POST.description|default:event.description }}{% else %}{{ request.POST.description|default:'' }}{% endif %}</textarea>
+    <div>
+      <label class="epx-flabel" for="ce-title">Event Title *</label>
+      <div class="epx-field">
+        <input id="ce-title" type="text" name="title" placeholder="Give your event a great title"
+          value="{% if event %}{{ request.POST.title|default:event.title }}{% else %}{{ request.POST.title|default:'' }}{% endif %}" required />
       </div>
+    </div>
 
-      <div class="ep-create-grid" style="margin-top:1rem;">
-        <div class="ep-field">
-          <label class="ep-field__label">Category *</label>
-          <select name="category" class="ep-select" required>
+    <div class="epx-frow">
+      <div>
+        <label class="epx-flabel" for="ce-cat">Category *</label>
+        <div class="epx-field">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2"><path d="M3 6h18M7 12h10M10 18h4" stroke-linecap="round"/></svg>
+          <select id="ce-cat" name="category" required>
             <option value="" disabled {% if not request.POST.category and not event %}selected{% endif %}>Select a category</option>
             {% if categories %}
               {% for cat in categories %}
@@ -76,196 +100,143 @@
             {% endif %}
           </select>
         </div>
-
-        <div class="ep-field">
-          <label class="ep-field__label">Department / Society</label>
-          <div class="ep-field__input-wrap">
-            <span class="ep-icon ep-icon--home"></span>
-            <input type="text" name="department" class="ep-input"
-              placeholder="e.g. Computer Science Society"
-              value="{{ request.POST.department|default:'' }}" />
-          </div>
+      </div>
+      <div>
+        <label class="epx-flabel" for="ce-dept">Department / Society</label>
+        <div class="epx-field">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg>
+          <input id="ce-dept" type="text" name="department" placeholder="e.g. Computer Science Society"
+            value="{{ request.POST.department|default:'' }}" />
         </div>
       </div>
     </div>
 
-    <div class="ep-create-card">
-      <h2 class="ep-create-section-title">
-        <span class="ep-create-section-num">2</span>
-        Photos &amp; Videos
-      </h2>
-
-      {% if event and event.gallery.all %}
-      <div class="ep-gallery-existing">
-        {% for media in event.gallery.all %}
-        <label class="ep-gallery-existing__item">
-          {% if media.media_type == 'video' %}
-            <video src="{{ media.file.url }}" muted></video>
-            <span class="ep-gallery-existing__badge">Video</span>
-          {% else %}
-            <img src="{{ media.file.url }}" alt="" />
-          {% endif %}
-          <span class="ep-gallery-existing__remove">
-            <input type="checkbox" name="remove_gallery" value="{{ media.id }}" />
-            Remove
-          </span>
-        </label>
-        {% endfor %}
-      </div>
-      {% endif %}
-
-      {# No name attribute: files go straight to storage, never through the form POST. #}
-      <input type="file" id="id_gallery" accept="image/*,video/*" multiple style="display:none;" />
-      <div class="ep-upload-zone" id="uploadZone">
-        <div id="uploadPlaceholder">
-          <div class="ep-upload-zone__icon"></div>
-          <div class="ep-upload-zone__text">
-            <strong>Click to upload</strong> or drag and drop<br>
-            <span style="font-size:.78rem;color:var(--muted2);">Images up to 5MB, videos up to 50MB — add as many as you like</span>
-          </div>
-        </div>
-        <div id="uploadPreview" class="ep-upload-preview-grid" style="display:none;"></div>
-      </div>
-    </div>
-
-    <div class="ep-create-card">
-      <h2 class="ep-create-section-title">
-        <span class="ep-create-section-num">3</span>
-        Date, Time &amp; Location
-      </h2>
-      <div class="ep-create-grid">
-        <div class="ep-field">
-          <label class="ep-field__label">Start Date &amp; Time *</label>
-          <input type="datetime-local" name="start_datetime" class="ep-input ep-input--no-icon"
+    <div class="epx-frow">
+      <div>
+        <label class="epx-flabel" for="ce-start">Start Date &amp; Time *</label>
+        <div class="epx-field">
+          <input id="ce-start" type="datetime-local" name="start_datetime"
             value="{% if event %}{{ request.POST.start_datetime|default:event.start_datetime|date:'Y-m-d\TH:i' }}{% else %}{{ request.POST.start_datetime|default:'' }}{% endif %}" required />
         </div>
-        <div class="ep-field">
-          <label class="ep-field__label">End Date &amp; Time</label>
-          <input type="datetime-local" name="end_datetime" class="ep-input ep-input--no-icon"
+      </div>
+      <div>
+        <label class="epx-flabel" for="ce-end">End Date &amp; Time</label>
+        <div class="epx-field">
+          <input id="ce-end" type="datetime-local" name="end_datetime"
             value="{% if event %}{{ request.POST.end_datetime|default:event.end_datetime|date:'Y-m-d\TH:i' }}{% else %}{{ request.POST.end_datetime|default:'' }}{% endif %}" />
         </div>
       </div>
-      <div class="ep-create-grid" style="margin-top:1rem;">
-        <div class="ep-field">
-          <label class="ep-field__label">Venue *</label>
-          <div class="ep-field__input-wrap">
-            <span class="ep-icon ep-icon--pin"></span>
-            <input type="text" name="location_name" class="ep-input"
-              placeholder="e.g. Main Hall, Library, Sports Centre"
-              value="{% if event %}{{ request.POST.location_name|default:event.location_name }}{% else %}{{ request.POST.location_name|default:'' }}{% endif %}" required />
-          </div>
+    </div>
+
+    <div>
+      <label class="epx-flabel" for="ce-venue">Venue *</label>
+      <div class="epx-field">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+        <input id="ce-venue" type="text" name="location_name" placeholder="e.g. Main Hall, Library, Sports Centre"
+          value="{% if event %}{{ request.POST.location_name|default:event.location_name }}{% else %}{{ request.POST.location_name|default:'' }}{% endif %}" required />
+      </div>
+    </div>
+
+    <div>
+      <label class="epx-flabel" for="ce-addr">Full Address</label>
+      <div class="epx-field">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg>
+        <input id="ce-addr" type="text" name="location_address" placeholder="e.g. University Road, Block C"
+          value="{% if event %}{{ request.POST.location_address|default:event.location_address }}{% else %}{{ request.POST.location_address|default:'' }}{% endif %}" />
+      </div>
+    </div>
+
+    <div>
+      <label class="epx-flabel">Price Type</label>
+      <div class="epx-toggle">
+        <input type="radio" name="price_type" id="price_free" value="free"
+          {% if request.POST %}{% if request.POST.price_type != 'paid' %}checked{% endif %}{% elif event.price_type != 'paid' %}checked{% endif %} />
+        <label for="price_free">Free</label>
+        <input type="radio" name="price_type" id="price_paid" value="paid"
+          {% if request.POST %}{% if request.POST.price_type == 'paid' %}checked{% endif %}{% elif event.price_type == 'paid' %}checked{% endif %} />
+        <label for="price_paid">Paid</label>
+      </div>
+    </div>
+
+    <div class="epx-frow">
+      <div id="priceField">
+        <label class="epx-flabel" for="ce-price">Ticket Price (₦)</label>
+        <div class="epx-field">
+          <span style="color:var(--ink-faint); font-family:var(--fm);">₦</span>
+          <input id="ce-price" type="number" name="ticket_price" placeholder="0.00" min="0" step="0.01"
+            value="{% if event %}{{ request.POST.ticket_price|default:event.ticket_price }}{% else %}{{ request.POST.ticket_price|default:'' }}{% endif %}" />
         </div>
-        <div class="ep-field">
-          <label class="ep-field__label">Full Address</label>
-          <div class="ep-field__input-wrap">
-            <span class="ep-icon ep-icon--home"></span>
-            <input type="text" name="location_address" class="ep-input"
-              placeholder="e.g. University Road, Block C"
-              value="{% if event %}{{ request.POST.location_address|default:event.location_address }}{% else %}{{ request.POST.location_address|default:'' }}{% endif %}" />
-          </div>
+      </div>
+      <div>
+        <label class="epx-flabel" for="ce-cap">Capacity <small>(blank = unlimited)</small></label>
+        <div class="epx-field">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2"><circle cx="9" cy="8" r="3.2"/><path d="M2 20c0-3.5 3-6 7-6s7 2.5 7 6M16 7a3 3 0 1 1 3 3"/></svg>
+          <input id="ce-cap" type="number" name="capacity" placeholder="e.g. 100" min="1"
+            value="{% if event %}{{ request.POST.capacity|default:event.capacity|default:'' }}{% else %}{{ request.POST.capacity|default:'' }}{% endif %}" />
         </div>
       </div>
     </div>
 
-    <div class="ep-create-card">
-      <h2 class="ep-create-section-title">
-        <span class="ep-create-section-num">4</span>
-        Tickets &amp; Capacity
-      </h2>
-      <div class="ep-field">
-        <label class="ep-field__label">Price Type</label>
-        <div class="ep-price-toggle">
-          <input type="radio" name="price_type" id="price_free" value="free"
-            {% if not request.POST.price_type or request.POST.price_type == 'free' %}checked{% endif %} />
-          <label for="price_free">Free</label>
-          <input type="radio" name="price_type" id="price_paid" value="paid"
-            {% if request.POST.price_type == 'paid' %}checked{% endif %} />
-          <label for="price_paid">Paid</label>
-        </div>
+    <div>
+      <label class="epx-flabel" for="ce-desc">Description *</label>
+      <div class="epx-field" style="align-items:flex-start;">
+        <textarea id="ce-desc" name="description" rows="4"
+          placeholder="Tell people what to expect, who it's for, what to bring..."
+          required>{% if event %}{{ request.POST.description|default:event.description }}{% else %}{{ request.POST.description|default:'' }}{% endif %}</textarea>
       </div>
+    </div>
 
-      <div id="priceField" style="margin-top:1rem;">
-        <div class="ep-field">
-          <label class="ep-field__label">Ticket Price (₦)</label>
-          <div class="ep-field__input-wrap">
-            <span class="ep-icon ep-icon--money"></span>
-            <input type="number" name="ticket_price" class="ep-input"
-              placeholder="0.00" min="0" step="0.01"
-              value="{% if event %}{{ request.POST.ticket_price|default:event.ticket_price }}{% else %}{{ request.POST.ticket_price|default:'' }}{% endif %}" />
-          </div>
-        </div>
+    <div>
+      <label class="epx-flabel">Visibility</label>
+      <div class="epx-toggle">
+        <input type="radio" name="is_premium_only" id="vis_all" value="false"
+          {% if request.POST %}{% if request.POST.is_premium_only != 'true' %}checked{% endif %}{% elif not event.is_premium_only %}checked{% endif %} />
+        <label for="vis_all">Everyone</label>
+        <input type="radio" name="is_premium_only" id="vis_prem" value="true"
+          {% if request.POST %}{% if request.POST.is_premium_only == 'true' %}checked{% endif %}{% elif event.is_premium_only %}checked{% endif %} />
+        <label for="vis_prem">Premium Only</label>
       </div>
+    </div>
 
-      <div class="ep-create-grid" style="margin-top:1rem;">
-        <div class="ep-field">
-          <label class="ep-field__label">
-            Capacity
-            <span style="color:var(--muted2);font-weight:400;text-transform:none;">(blank = unlimited)</span>
-          </label>
-          <div class="ep-field__input-wrap">
-            <span class="ep-icon ep-icon--people"></span>
-            <input type="number" name="capacity" class="ep-input"
-              placeholder="e.g. 100" min="1"
-              value="{% if event %}{{ request.POST.capacity|default:event.capacity }}{% else %}{{ request.POST.capacity|default:'' }}{% endif %}" />
-          </div>
-        </div>
-        <div class="ep-field">
-          <label class="ep-field__label">Visibility</label>
-          <div class="ep-role-toggle">
-            <input type="radio" name="is_premium_only" id="vis_all" value="false"
-              {% if not request.POST.is_premium_only or request.POST.is_premium_only == 'false' %}checked{% endif %} />
-            <label for="vis_all">Everyone</label>
-            <input type="radio" name="is_premium_only" id="vis_prem" value="true"
-              {% if request.POST.is_premium_only == 'true' %}checked{% endif %} />
-            <label for="vis_prem">Premium Only</label>
-          </div>
-        </div>
-      </div>
-
-      <div class="ep-field" style="margin-top:1rem;">
-        <label class="ep-checkbox">
-          <input type="checkbox" name="require_rsvp_approval" value="true"
-            {% if request.POST %}{% if request.POST.require_rsvp_approval == 'true' %}checked{% endif %}{% elif event.require_rsvp_approval %}checked{% endif %} />
-          <span class="ep-checkbox__box">
-            <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-              <path d="M2 6l3 3 5-5" stroke="#1A0E02" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </span>
-          <span>Require me to approve each RSVP <span style="color:var(--muted2);">— leave unchecked to confirm everyone instantly</span></span>
-        </label>
-      </div>
-
-      <div class="ep-field" style="margin-top:1rem;">
-        <label class="ep-field__label">
-          After-RSVP Link
-          <span style="color:var(--muted2);font-weight:400;text-transform:none;">(optional — e.g. WhatsApp group or payment page)</span>
-        </label>
-        <div class="ep-field__input-wrap">
-          <span class="ep-icon ep-icon--share"></span>
-          <input type="url" name="rsvp_redirect_url" class="ep-input"
-            placeholder="https://"
+    <div class="epx-settings">
+      <div class="epx-flabel" style="margin:0;">RSVP settings</div>
+      <label class="epx-checkrow">
+        <input type="checkbox" name="require_rsvp_approval" value="true"
+          {% if request.POST %}{% if request.POST.require_rsvp_approval == 'true' %}checked{% endif %}{% elif event.require_rsvp_approval %}checked{% endif %} />
+        <span>
+          <span class="epx-checkrow__t">Require me to approve each RSVP</span>
+          <span class="epx-checkrow__s">Leave unchecked to confirm everyone instantly.</span>
+        </span>
+      </label>
+      <div>
+        <label class="epx-flabel" for="ce-link">After-RSVP Link <small>(optional — e.g. WhatsApp group or payment page)</small></label>
+        <div class="epx-field">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1" stroke-linecap="round"/></svg>
+          <input id="ce-link" type="url" name="rsvp_redirect_url" placeholder="https://"
             value="{% if event %}{{ request.POST.rsvp_redirect_url|default:event.rsvp_redirect_url|default:'' }}{% else %}{{ request.POST.rsvp_redirect_url|default:'' }}{% endif %}" />
         </div>
+        <span class="epx-fhint">Instantly approved attendees are sent here right after they RSVP. Everyone approved can also open it from the event page.</span>
       </div>
     </div>
 
-    <div class="ep-upload-status" id="uploadStatus" style="display:none;">
-      <div class="ep-upload-status__text" id="uploadStatusText"></div>
-      <div class="ep-upload-status__bar"><div class="ep-upload-status__fill" id="uploadStatusFill"></div></div>
+    <div class="epx-progress" id="uploadStatus" style="display:none;">
+      <div class="epx-progress__t" id="uploadStatusText"></div>
+      <div class="epx-progress__bar"><div class="epx-progress__fill" id="uploadStatusFill"></div></div>
     </div>
-    <div class="ep-inline-error" id="uploadError" style="display:none;"></div>
+    <div class="epx-error" id="uploadError" style="display:none;"></div>
     <div id="uploadHidden"></div>
 
-    <div class="ep-create-actions">
-      <button type="submit" name="action" value="draft" class="ep-btn ep-btn--outline">Save as Draft</button>
-      <button type="submit" name="action" value="publish" class="ep-btn ep-btn--primary">
-        {% if event %}Save Changes{% else %}Publish Event{% endif %}
-        <span class="ep-icon ep-icon--arrow-right ep-icon--lg" style="color:#1A0E02;"></span>
+    <div class="epx-actions">
+      <button type="submit" name="action" value="publish" class="epx-btn">
+        {% if event %}Save Changes{% else %}Publish Event{% endif %} →
       </button>
+      <button type="submit" name="action" value="draft" class="epx-btn epx-btn--ghost">Save as Draft</button>
     </div>
 
   </form>
 </div>
+</div>
+{% include 'partials/tabbar.html' with nav_active='' %}
 {% endblock %}
 
 {% block extra_js %}

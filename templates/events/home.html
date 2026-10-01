@@ -2,252 +2,239 @@
 {% load static %}
 
 {% block title %}{% if query %}"{{ query }}" — Events{% else %}EventPulse — Campus Events{% endif %}{% endblock %}
+{% block body_class %}epx{% endblock %}
+{% block navbar %}{% include 'partials/nav.html' with nav_active='discover' %}{% endblock %}
 
 {% block content %}
+<div class="has-tabbar">
 
-{% if query %}
-{# ══════════ SEARCH MODE — compact rows, no slideshow ══════════ #}
+{# ── Greeting + search ───────────────────────── #}
+<div class="epx-wrap" style="padding-top:44px;">
+  {% if query %}
+    <div class="epx-eyebrow">Search results</div>
+    <h1 class="epx-h1">"{{ query }}"</h1>
+    <div style="display:flex; gap:18px; align-items:center; margin-top:12px; font-family:var(--fm); font-size:0.78rem; color:var(--ink-soft);">
+      <span>{{ events|length }} event{{ events|length|pluralize }} found</span>
+      <a href="{% url 'events:home' %}" style="color:var(--accent); border-bottom:1px solid var(--accent);">Clear search</a>
+    </div>
+  {% else %}
+    {% now "G" as hour %}
+    <div class="epx-eyebrow">
+      Good {% if hour|add:"0" < 12 %}morning{% elif hour|add:"0" < 17 %}afternoon{% else %}evening{% endif %}, {{ user.first_name|default:user.username }}{% if user.university %} · {{ user.university }}{% endif %}
+    </div>
+    <h1 class="epx-h1">What's the move?</h1>
+  {% endif %}
 
-<div class="ep-search-head">
-  <div class="ep-search-head__label">Search results</div>
-  <h1 class="ep-search-head__title">"{{ query }}"</h1>
-  <div class="ep-search-head__meta">
-    <span>{{ events|length }} event{{ events|length|pluralize }} found</span>
-    <a href="{% url 'events:home' %}" class="ep-search-head__clear">Clear search</a>
+  {# Same search as the old nav bar: base.html wires up #navSearchForm's Events/People toggle. #}
+  <form id="navSearchForm" method="get" action="{% url 'events:home' %}"
+        data-events-url="{% url 'events:home' %}"
+        data-people-url="{% url 'accounts:search_people' %}"
+        style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:24px;">
+    <div class="epx-search">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2" style="flex-shrink:0;"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3" stroke-linecap="round"/></svg>
+      <input type="text" name="q" id="navSearchInput" placeholder="Search events…" value="{{ request.GET.q|default:'' }}" autocomplete="off" />
+      <div class="epx-search__scope" role="tablist" aria-label="Search scope">
+        <button type="button" class="ep-search-scope__btn is-active" data-scope="events">Events</button>
+        <button type="button" class="ep-search-scope__btn" data-scope="people">People</button>
+      </div>
+    </div>
+  </form>
+
+  {% if not query %}
+  <div style="display:flex; gap:10px; margin-top:20px; flex-wrap:wrap;" id="catChips">
+    <button type="button" class="epx-chip is-on" data-cat="all">All</button>
+    <button type="button" class="epx-chip" data-cat="academic">Academic</button>
+    <button type="button" class="epx-chip" data-cat="social">Social</button>
+    <button type="button" class="epx-chip" data-cat="sports">Sports</button>
+    <button type="button" class="epx-chip" data-cat="career">Career</button>
+    <button type="button" class="epx-chip" data-cat="arts">Arts</button>
+    <button type="button" class="epx-chip" data-cat="music">Music</button>
+    <button type="button" class="epx-chip" data-cat="international">International</button>
   </div>
+  {% endif %}
 </div>
 
-<section class="ep-socialfeed-wrap ep-searchfeed" id="feed">
-  <div class="ep-socialfeed">
+{% if query %}
+{# ══════════ SEARCH MODE — compact rows ══════════ #}
+<div class="epx-wrap" style="padding-top:32px; padding-bottom:60px;">
+  <div class="epx-rows">
     {% for event in events %}
-    <article class="ep-card ep-card--social" data-cat="{{ event.category.slug|default:'all' }}"
-      onclick="window.location.href='{% url "events:detail" event.slug %}'">
-
-      <div class="ep-feed-item__thumb {% if not event.display_image_url %}ep-flyerbg--{{ event.category.slug|default:'academic' }}{% endif %}">
-        {% if event.display_image_url %}
-          <img src="{{ event.display_image_url }}" alt="{{ event.title }}" loading="lazy">
-        {% endif %}
-        <div class="ep-feed-item__date">
-          <b>{{ event.start_datetime|date:"d" }}</b>
-          <span>{{ event.start_datetime|date:"M" }}</span>
-        </div>
+    <article class="epx-row" onclick="window.location.href='{% url "events:detail" event.slug %}'">
+      <div class="epx-row__thumb epx-cover epx-cover--{{ event.category.slug|default:'academic' }}">
+        {% if event.display_image_url %}<img src="{{ event.display_image_url }}" alt="{{ event.title }}" loading="lazy">{% endif %}
       </div>
-
-      <div class="ep-feed-item__body">
-        <h3 class="ep-feed-item__title">{{ event.title }}</h3>
-        <div class="ep-feed-item__meta">
-          <span>{{ event.start_datetime|date:"D · H:i" }}</span>
-          <span>{{ event.location_name|truncatechars:28 }}</span>
-          {% if event.category %}<span>{{ event.category.name }}</span>{% endif %}
-        </div>
-        <div class="ep-feed-item__foot">
-          {% if event.is_past %}
-            <span class="ep-feed-item__price ep-feed-item__price--ended">Ended</span>
-          {% elif event.is_free %}
-            <span class="ep-feed-item__price ep-feed-item__price--free">Free</span>
-          {% else %}
-            <span class="ep-feed-item__price">₦{{ event.ticket_price }}</span>
-          {% endif %}
-          <span class="ep-feed-item__organiser">
-            <span class="ep-card__organiser-av">{{ event.organiser.username|first|upper }}</span>
-            {{ event.organiser.username }}
-          </span>
-          {% if not event.is_past %}<span class="ep-feed-item__rsvp">View →</span>{% endif %}
-        </div>
+      <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:5px;">
+        <div class="epx-card__when">{{ event.start_datetime|date:"D d M · H:i" }}{% if event.category %} · {{ event.category.name }}{% endif %}</div>
+        <div class="epx-card__title" style="font-size:1.1rem;">{{ event.title }}</div>
+        <div class="epx-card__venue">{{ event.location_name|truncatechars:40 }} · {{ event.organiser.username }}</div>
       </div>
+      {% if event.is_past %}
+        <span class="epx-price epx-price--ended">Ended</span>
+      {% elif event.is_free %}
+        <span class="epx-price epx-price--free">Free</span>
+      {% else %}
+        <span class="epx-price">₦{{ event.ticket_price }}</span>
+      {% endif %}
     </article>
     {% empty %}
-    <div class="ep-empty">
-      <div class="ep-empty-icon ep-empty-icon--events"></div>
+    <div class="epx-empty">
       <h3>Nothing found for "{{ query }}"</h3>
       <p>Try a different name, venue, or organiser.</p>
-      <a href="{% url 'events:home' %}" class="ep-btn ep-btn--outline" style="margin-top:1rem">Back to all events</a>
+      <a href="{% url 'events:home' %}" class="epx-btn epx-btn--ghost">Back to all events</a>
     </div>
     {% endfor %}
   </div>
-</section>
+</div>
 
 {% else %}
-{# ══════════ DEFAULT MODE — slideshow + column flyer cards ══════════ #}
+{# ══════════ DEFAULT MODE — featured strip + pinned cards ══════════ #}
 
 {% with slides=featured_events|default:events|slice:":5" %}
 {% if slides %}
-<section class="ep-slideshow js-carousel" id="epSlideshow">
-  {% for event in slides %}
-  {% with media=event.primary_media %}
-  <div class="ep-slide js-car-slide {% if forloop.first %}is-active{% endif %}">
-    {% if media and media.media_type == 'video' %}
-      <video class="ep-slide__media js-car-video" src="{{ media.file.url }}" muted autoplay loop playsinline preload="metadata"></video>
-      <div class="ep-slide__video-controls">
-      </div>
-    {% elif media %}
-      <div class="ep-slide__bg" style="background-image:url('{{ media.file.url }}')"></div>
-    {% elif event.cover_image %}
-      <div class="ep-slide__bg" style="background-image:url('{{ event.cover_image.url }}')"></div>
-    {% else %}
-      <div class="ep-slide__bg-fallback ep-flyerbg--{{ event.category.slug|default:'academic' }}"></div>
-    {% endif %}
-    <a href="{% url 'events:detail' event.slug %}" class="ep-slide__linkarea" aria-label="{{ event.title }}"></a>
-    <div class="ep-slide__body">
-      {% if event.category %}<div class="ep-slide__cat">{{ event.category.name }}</div>{% endif %}
-      <div class="ep-slide__title">{{ event.title|truncatechars:64 }}</div>
-      <div class="ep-slide__meta">
-        <span><span class="ep-icon ep-icon--calendar ep-icon--sm"></span>{{ event.start_datetime|date:"D, d M · H:i" }}</span>
-        <span><span class="ep-icon ep-icon--pin ep-icon--sm"></span>{{ event.location_name|truncatechars:40 }}</span>
-        {% if event.is_free %}<span>Free</span>{% else %}<span>₦{{ event.ticket_price }}</span>{% endif %}
-      </div>
-      <span class="ep-btn ep-btn--primary ep-btn--sm">View event →</span>
-    </div>
-  </div>
-  {% endwith %}
-  {% endfor %}
-
-  {% if slides|length > 1 %}
-  <button class="ep-slideshow__arrow ep-slideshow__arrow--prev" type="button" data-car-action="prev" aria-label="Previous">
-    <span class="ep-icon ep-icon--back"></span>
-  </button>
-  <button class="ep-slideshow__arrow ep-slideshow__arrow--next" type="button" data-car-action="next" aria-label="Next">
-    <span class="ep-icon ep-icon--arrow-right"></span>
-  </button>
-  <div class="ep-slideshow__dots">
+<div class="epx-wrap" style="padding-top:36px;">
+  <section class="epx-feat js-carousel" id="epSlideshow">
     {% for event in slides %}
-    <button type="button" class="ep-slideshow__dot js-car-dot {% if forloop.first %}is-active{% endif %}" aria-label="Slide {{ forloop.counter }}"></button>
+    {% with media=event.primary_media %}
+    <div class="epx-feat__slide js-car-slide {% if forloop.first %}is-active{% endif %}">
+      {% if media and media.media_type == 'video' %}
+        <video class="epx-feat__media js-car-video" src="{{ media.file.url }}" muted autoplay loop playsinline preload="metadata"></video>
+      {% elif media %}
+        <div class="epx-feat__media" style="background-image:url('{{ media.file.url }}')"></div>
+      {% elif event.cover_image %}
+        <div class="epx-feat__media" style="background-image:url('{{ event.cover_image.url }}')"></div>
+      {% else %}
+        <div class="epx-feat__media epx-cover epx-cover--{{ event.category.slug|default:'academic' }}"></div>
+      {% endif %}
+      <div class="epx-feat__shade"></div>
+      {% if not media or media.media_type != 'video' %}
+        <a href="{% url 'events:detail' event.slug %}" class="epx-feat__link" aria-label="{{ event.title }}"></a>
+      {% endif %}
+      {% if event.is_featured %}<div class="epx-feat__pill">★ Featured</div>{% endif %}
+      <div class="epx-feat__body">
+        <div class="epx-feat__meta">{{ event.start_datetime|date:"D d M · H:i" }} · {{ event.location_name|truncatechars:40 }}</div>
+        <a href="{% url 'events:detail' event.slug %}" class="epx-feat__title" style="display:block; pointer-events:auto;">{{ event.title|truncatechars:64 }}</a>
+        <div class="epx-feat__facts">
+          {% if event.category %}<span>{{ event.category.name }}</span>{% endif %}
+          {% if event.approved_count %}<span>{{ event.approved_count }} going</span>{% endif %}
+          {% if event.is_free %}<span>Free entry</span>{% else %}<span>₦{{ event.ticket_price }}</span>{% endif %}
+        </div>
+      </div>
+    </div>
+    {% endwith %}
     {% endfor %}
-  </div>
-  {% endif %}
-</section>
-{% else %}
-<div class="ep-pagetop-pad"></div>
+
+    {% if slides|length > 1 %}
+    <div class="epx-feat__dots">
+      {% for event in slides %}
+      <button type="button" class="epx-feat__dot js-car-dot {% if forloop.first %}is-active{% endif %}" aria-label="Slide {{ forloop.counter }}"></button>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </section>
+</div>
 {% endif %}
 {% endwith %}
 
-<div class="ep-cats" style="margin-top:1.2rem;">
-  <div class="ep-cats__inner">
-    <button class="ep-cat active" data-cat="all">All</button>
-    <button class="ep-cat" data-cat="academic"><span class="ep-cat-icon ep-cat-icon--academic"></span> Academic</button>
-    <button class="ep-cat" data-cat="social"><span class="ep-cat-icon ep-cat-icon--social"></span> Social</button>
-    <button class="ep-cat" data-cat="sports"><span class="ep-cat-icon ep-cat-icon--sports"></span> Sports</button>
-    <button class="ep-cat" data-cat="career"><span class="ep-cat-icon ep-cat-icon--career"></span> Career</button>
-    <button class="ep-cat" data-cat="arts"><span class="ep-cat-icon ep-cat-icon--arts"></span> Arts</button>
-    <button class="ep-cat" data-cat="music"><span class="ep-cat-icon ep-cat-icon--music"></span> Music</button>
-    <button class="ep-cat" data-cat="international"><span class="ep-cat-icon ep-cat-icon--international"></span> International</button>
-  </div>
-</div>
+<section class="epx-wrap" id="feed" style="padding-top:40px; padding-bottom:60px;">
+  <h2 class="epx-h2" style="margin-bottom:22px;">
+    {% if events %}{{ events|length }} Event{{ events|length|pluralize }} on Campus{% else %}Campus Events{% endif %}
+  </h2>
 
-<section class="ep-feed" id="feed">
-  <div class="ep-feed__header">
-    <h2 class="ep-feed__title">
-      {% if events %}{{ events|length }} Event{{ events|length|pluralize }} on Campus
-      {% else %}Campus Events{% endif %}
-    </h2>
-  </div>
-
-  <div class="ep-grid">
+  <div class="epx-grid3">
     {% for event in events %}
-    <article class="ep-card" data-cat="{{ event.category.slug|default:'all' }}"
+    <article class="epx-card pin-card {% cycle 'tl-a' 'tl-b' 'tl-c' 'tl-d' 'tl-e' %}" data-cat="{{ event.category.slug|default:'all' }}"
       onclick="window.location.href='{% url "events:detail" event.slug %}'">
 
-      <div class="ep-card__img {% if not event.display_image_url %}ep-flyerbg--{{ event.category.slug|default:'academic' }}{% endif %}">
+      <div class="epx-card__img epx-cover epx-cover--{{ event.category.slug|default:'academic' }}">
         {% if event.display_image_url %}
           <img src="{{ event.display_image_url }}" alt="{{ event.title }}" loading="lazy">
-        {% else %}
-          <div class="ep-card__placeholder">
-            <span class="ep-cat-icon ep-cat-icon--{{ event.category.slug|default:'academic' }}" style="width:48px;height:48px;"></span>
-          </div>
         {% endif %}
-
-        <div class="ep-datestub">
-          <div class="ep-datestub__d">{{ event.start_datetime|date:"d" }}</div>
-          <div class="ep-datestub__m">{{ event.start_datetime|date:"M" }}</div>
+        {% if not event.is_past and event.is_featured or not event.is_past and event.is_premium_only %}
+        <div class="epx-card__badges">
+          {% if event.is_featured %}<span class="epx-badge">Featured</span>{% endif %}
+          {% if event.is_premium_only %}<span class="epx-badge epx-badge--prem">Premium</span>{% endif %}
         </div>
-
-        {% if event.is_past %}
-          <span class="ep-pricechip" style="background:var(--card2);color:var(--muted);">Ended</span>
-        {% elif event.is_free %}
-          <span class="ep-pricechip ep-pricechip--free">Free</span>
-        {% else %}
-          <span class="ep-pricechip">₦{{ event.ticket_price }}</span>
         {% endif %}
-
-        {% if not event.is_past %}
-          <div class="ep-cornerbadges">
-            {% if event.is_featured %}<span class="ep-badge ep-badge--feat">Featured</span>{% endif %}
-            {% if event.is_premium_only %}<span class="ep-badge ep-badge--prem">Premium</span>{% endif %}
-          </div>
-        {% endif %}
-
-        {% if event.is_past %}
-          <div class="ep-card__ended-overlay">
-            <span class="ep-card__ended-label">This event has ended</span>
-          </div>
-        {% endif %}
+        {% if event.category %}<span class="epx-tag">{{ event.category.name }}</span>{% endif %}
+        {% if event.is_past %}<div class="epx-card__ended">This event has ended</div>{% endif %}
       </div>
 
-      <div class="ep-perf"></div>
+      <div class="epx-card__body">
+        <div class="epx-card__when">{{ event.start_datetime|date:"D d M Y · H:i" }}</div>
+        <h3 class="epx-card__title">{{ event.title }}</h3>
+        <div class="epx-card__venue">{{ event.location_name }}</div>
+        <div style="font-family:var(--fm); font-size:0.7rem; color:var(--ink-faint);">by {{ event.organiser.username }}</div>
 
-      <div class="ep-card__body">
-        <h3 class="ep-card__title">{{ event.title }}</h3>
-        <div class="ep-card__meta">
-          <div class="ep-card__meta-row">
-            <span class="ep-meta-icon ep-meta-icon--calendar"></span>
-            {{ event.start_datetime|date:"D, d M Y · H:i" }}
-          </div>
-          <div class="ep-card__meta-row">
-            <span class="ep-meta-icon ep-meta-icon--pin"></span>
-            {{ event.location_name }}
-          </div>
-          {% if event.category %}
-          <div class="ep-card__meta-row">
-            <span class="ep-cat-icon ep-cat-icon--{{ event.category.slug }}" style="width:13px;height:13px;background-color:var(--muted);"></span>
-            {{ event.category.name }}
-          </div>
+        <div class="epx-card__foot">
+          {% if event.capacity and not event.is_past %}
+            {% with left=event.spots_remaining %}
+              {% if left == 0 %}<span class="epx-card__spots">Full · waitlist open</span>
+              {% else %}<span class="epx-card__spots">{{ left }} spot{{ left|pluralize }} left</span>{% endif %}
+            {% endwith %}
+          {% else %}
+            <span>{{ event.approved_count }} going</span>
           {% endif %}
-        </div>
-        <div class="ep-card__footer">
-          <div class="ep-card__organiser">
-            <div class="ep-card__organiser-av">{{ event.organiser.username|first|upper }}</div>
-            <span>{{ event.organiser.username }}</span>
-          </div>
-          {% if event.capacity %}
-            <div class="ep-card__capacity">
-              <div>{{ event.approved_count }}/{{ event.capacity }}</div>
-              <div class="ep-card__cap-bar">
-                <div class="ep-card__cap-fill {% if event.is_full %}ep-card__cap-fill--warn{% endif %}"></div>
-              </div>
-            </div>
+
+          {% if event.is_past %}
+            <span class="epx-price epx-price--ended">Ended</span>
+          {% elif event.is_free %}
+            <span class="epx-price epx-price--free">Free</span>
+          {% else %}
+            <span class="epx-price">₦{{ event.ticket_price }}</span>
           {% endif %}
         </div>
 
         {% if request.user.is_authenticated and request.user == event.organiser %}
-        <div class="ep-card__own" onclick="event.stopPropagation()">
-          <a href="{% url 'events:edit' event.slug %}" class="ep-card__own-btn">
-            <span class="ep-icon ep-icon--edit ep-icon--sm"></span>
-            Edit
-          </a>
-          <form method="POST" action="{% url 'events:delete' event.slug %}" style="flex:1;margin:0;"
+        <div class="epx-card__own" onclick="event.stopPropagation()">
+          <a href="{% url 'events:edit' event.slug %}">Edit</a>
+          <form method="POST" action="{% url 'events:delete' event.slug %}" style="flex:1; margin:0;"
             onsubmit="return confirm('Delete this event? This cannot be undone.')">
             {% csrf_token %}
-            <button type="submit" class="ep-card__own-btn ep-btn--danger" style="width:100%;">
-              <span class="ep-icon ep-icon--trash ep-icon--sm ep-icon--coral"></span>
-              Delete
-            </button>
+            <button type="submit">Delete</button>
           </form>
         </div>
         {% endif %}
-
       </div>
     </article>
     {% empty %}
-    <div class="ep-empty">
-      <div class="ep-empty-icon ep-empty-icon--events"></div>
+    <div class="epx-empty">
       <h3>No events yet</h3>
       <p>Be the first to post a campus event.</p>
-      <a href="{% url 'events:create' %}" class="ep-btn ep-btn--primary" style="margin-top:1rem">Post an Event</a>
+      <a href="{% url 'events:create' %}" class="epx-btn">Post an Event</a>
     </div>
     {% endfor %}
+
+    {% if events %}
+    <a href="{% url 'events:create' %}" class="epx-hosttile">
+      <span class="epx-hosttile__plus">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>
+      </span>
+      <div style="font-family:var(--fd); font-weight:700; font-size:1.2rem; text-transform:uppercase;">Post an Event</div>
+      <div style="font-family:var(--fm); font-size:0.76rem; color:var(--ink-soft); max-width:22ch;">Got something happening? Put it on the board in minutes.</div>
+    </a>
+    {% endif %}
   </div>
 </section>
 
 {% endif %}
 
+</div>
+{% include 'partials/tabbar.html' with nav_active='discover' %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  var chips = document.querySelectorAll('#catChips .epx-chip');
+  chips.forEach(function (chip) {
+    chip.addEventListener('click', function () {
+      chips.forEach(function (c) { c.classList.toggle('is-on', c === chip); });
+      var cat = chip.dataset.cat;
+      document.querySelectorAll('#feed .epx-card').forEach(function (card) {
+        card.style.display = (cat === 'all' || card.dataset.cat === cat) ? '' : 'none';
+      });
+    });
+  });
+})();
+</script>
 {% endblock %}

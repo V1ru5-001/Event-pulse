@@ -1,0 +1,9 @@
+{# Mobile bottom tab bar (shown under 760px). Usage: {% include 'partials/tabbar.html' with nav_active='discover' %} #}
+{% if user.is_authenticated %}
+<nav class="tabbar" aria-label="Main">
+  <a href="{% url 'events:home' %}" {% if nav_active == 'discover' %}class="on"{% endif %}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10l9-7 9 7v9a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2z"/></svg>Discover</a>
+  <a href="{% url 'events:calendar' %}" {% if nav_active == 'calendar' %}class="on"{% endif %}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>Calendar</a>
+  <a href="{% url 'social:inbox' %}" {% if nav_active == 'messages' %}class="on"{% endif %}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Messages{% if unread_messages_count %}<span class="tabbar__count">{% if unread_messages_count > 9 %}9+{% else %}{{ unread_messages_count }}{% endif %}</span>{% endif %}</a>
+  <a href="{% url 'accounts:profile' user.username %}" {% if nav_active == 'profile' %}class="on"{% endif %}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Profile</a>
+</nav>
+{% endif %}
