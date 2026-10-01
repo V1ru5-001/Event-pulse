@@ -58,10 +58,9 @@ def follow_list(request, username, mode):
 
 
 # ── Chat ──────────────────────────────────
-@login_required(login_url='accounts:login')
-def inbox(request):
+def _threads_for(user):
     convos = (
-        request.user.conversations
+        user.conversations
         .prefetch_related('participants', 'messages')
         .annotate(last=Max('messages__created_at'))
         .order_by('-last')
@@ -69,19 +68,23 @@ def inbox(request):
     # Build lightweight view objects
     threads = []
     for c in convos:
-        other = c.other_participant(request.user)
+        other = c.other_participant(user)
         if other is None:
             continue
         last = c.last_message
-        unread = c.messages.filter(is_read=False).exclude(sender=request.user).count()
+        unread = c.messages.filter(is_read=False).exclude(sender=user).count()
         threads.append({
             'conversation': c,
             'other':        other,
             'last_message': last,
             'unread':       unread,
         })
+    return threads
 
-    return render(request, 'social/inbox.html', {'threads': threads})
+
+@login_required(login_url='accounts:login')
+def inbox(request):
+    return render(request, 'social/inbox.html', {'threads': _threads_for(request.user)})
 
 
 @login_required(login_url='accounts:login')
@@ -110,6 +113,7 @@ def conversation_detail(request, pk):
         'conversation': convo,
         'other':        other,
         'messages_list': msg_list,
+        'threads':      _threads_for(request.user),
     })
 
 
@@ -162,13 +166,29 @@ def fetch_messages(request, pk):
     return JsonResponse({'messages': data})
 @login_required(login_url='accounts:login')
 def notifications_view(request):
-    notifs = (
+    notifs = list(
         request.user.notifications
         .select_related('actor', 'event', 'event__category')
         [:50]
     )
+
+    # Attach the RSVP behind each request so the page can offer Approve/Reject
+    # only while it's still pending.
+    requests = [n for n in notifs if n.kind == Notification.Kind.RSVP_REQUEST and n.event_id]
+    if requests:
+        from events.models import RSVP
+        rsvps = RSVP.objects.filter(
+            event_id__in={n.event_id for n in requests},
+            user_id__in={n.actor_id for n in requests},
+        )
+        by_key = {(r.event_id, r.user_id): r for r in rsvps}
+        for n in requests:
+            n.rsvp = by_key.get((n.event_id, n.actor_id))
+
     return render(request, 'social/notifications.html', {
-        'notifs': notifs,
+        'notifs':   notifs,
+        'unread':   [n for n in notifs if not n.is_read],
+        'earlier':  [n for n in notifs if n.is_read],
     })
 
 

@@ -17,6 +17,7 @@ from django.core.files import File
 from django.core.files.storage import default_storage
 from django.http import Http404, HttpResponse, HttpResponseNotAllowed, JsonResponse
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
 from .models import Event, Category, RSVP, EventMedia
@@ -508,14 +509,25 @@ def manage_rsvps_view(request, slug):
                 rsvp.status = RSVP.Status.REJECTED
                 rsvp.save()
                 messages.info(request, f'{rsvp.user.username} has been rejected.')
+            elif action == 'waitlist':
+                rsvp.status = RSVP.Status.WAITLIST
+                rsvp.save()
+                messages.info(request, f'{rsvp.user.username} has been moved to the waitlist.')
         except RSVP.DoesNotExist:
             pass
+        next_url = request.POST.get('next', '')
+        if next_url and url_has_allowed_host_and_scheme(
+            next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+        ):
+            return redirect(next_url)
         return redirect('events:manage_rsvps', slug=slug)
 
     return render(request, 'events/manage_rsvps.html', {
         'event': event,
         'rsvps': rsvps,
          'approved_count': rsvps.filter(status=RSVP.Status.APPROVED).count(),
+        'pending_count':  rsvps.filter(status=RSVP.Status.PENDING).count(),
+        'waitlist_count': rsvps.filter(status=RSVP.Status.WAITLIST).count(),
     })
 # ═══════════════════════════════════════════════════════════
 # ADD TO: events/views.py
