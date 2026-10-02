@@ -12,6 +12,11 @@ def pricing_view(request):
 
 @login_required(login_url='accounts:login')
 def checkout_view(request):
+    # Disabled until a real payment gateway is wired in: the code below
+    # upgrades the account without taking any payment.
+    messages.info(request, "Premium isn't available yet — it's coming soon.")
+    return redirect('payments:pricing')
+
     if request.method != 'POST':
         return redirect('payments:pricing')
 
