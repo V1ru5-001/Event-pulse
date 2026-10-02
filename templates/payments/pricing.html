@@ -2,275 +2,82 @@
 {% load static %}
 
 {% block title %}Go Premium — EventPulse{% endblock %}
+{% block body_class %}epx{% endblock %}
+{% block navbar %}{% include 'partials/nav.html' with nav_active='' %}{% endblock %}
 
 {% block content %}
-<div class="pay-page">
+<div class="has-tabbar">
 
-  <div class="pay-header">
-    <div class="pay-header__inner" style="text-align:center;">
-      <h1 class="pay-header__title">Go Premium</h1>
-      <p class="pay-header__sub">Free gets you in the door. Premium gets you the whole night.</p>
+  {# ── HERO ── #}
+  <div class="epx-wrap" style="max-width:860px; padding-top:80px; padding-bottom:40px; text-align:center;">
+    <div style="display:inline-flex; align-items:center; gap:8px; background:rgba(242,107,33,0.1); border:1px solid rgba(242,107,33,0.35); color:var(--accent); font-family:var(--fm); font-size:0.72rem; font-weight:700; letter-spacing:0.08em; padding:7px 16px; border-radius:999px; text-transform:uppercase;">
+      <span style="width:7px; height:7px; border-radius:50%; background:var(--accent);"></span> Coming soon
+    </div>
+    <h1 class="epx-h1" style="font-size:3.6rem; line-height:0.98; margin-top:24px;">EventPulse Premium<br>is on the way.</h1>
+    <p style="font-size:1.15rem; line-height:1.6; color:var(--ink-soft); max-width:50ch; margin:20px auto 0;">
+      Free gets you in the door. Premium gets you the whole night — we're still building it. Here's a peek at what's coming.
+    </p>
+  </div>
+
+  {# ── PLANS ── #}
+  <div class="epx-wrap" style="max-width:1000px; padding-bottom:20px;">
+    <div class="epx-plans">
+
+      <div class="epx-plan">
+        <div class="epx-eyebrow">Free</div>
+        <div class="epx-plan__price"><b>₦0</b><span style="font-family:var(--fm); font-size:0.8rem; color:var(--ink-faint);">/ forever</span></div>
+        <p style="color:var(--ink-soft); font-size:0.95rem; margin-top:10px;">Start browsing your campus.</p>
+        <div class="epx-plan__feats">
+          <div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.4"><path d="M20 6 9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/></svg> Discover every campus event</div>
+          <div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.4"><path d="M20 6 9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/></svg> Post events &amp; take RSVPs</div>
+          <div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.4"><path d="M20 6 9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/></svg> Follow friends &amp; organisers</div>
+          <div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.4"><path d="M20 6 9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/></svg> Messaging &amp; notifications</div>
+        </div>
+        <div class="epx-plan__btn" style="background:var(--surface); color:var(--ink); border:1.5px solid var(--line-strong);">
+          {% if user.is_premium %}Included with your plan{% else %}You're on this plan{% endif %}
+        </div>
+      </div>
+
+      <div class="epx-plan epx-plan--soon">
+        <div style="position:relative;">
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <div class="epx-eyebrow" style="color:var(--accent);">Premium</div>
+            <span style="font-family:var(--fm); font-size:0.64rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--accent-ink); background:var(--accent); padding:4px 10px; border-radius:999px; font-weight:700;">Coming soon</span>
+          </div>
+          <div class="epx-plan__price" style="filter:blur(5px); user-select:none;" aria-hidden="true"><b>₦—,———</b><span style="font-family:var(--fm); font-size:0.8rem; color:var(--ink-faint);">/ month</span></div>
+          <p style="color:var(--ink-soft); font-size:0.95rem; margin-top:10px;">For students who do it all, and hosts who want to fill every room.</p>
+          <div class="epx-plan__feats">
+            <div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.4"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6L5.7 21l2.3-7.4-6-4.6h7.6z"/></svg> Featured placement on the feed</div>
+            <div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.4"><path d="M20 6 9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/></svg> Verified organiser badge</div>
+            <div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.4"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg> Attendee insights</div>
+            <div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.4"><path d="M3 10h18M7 15h4M3 6h18v12H3z"/></svg> Premium-only events</div>
+          </div>
+          {% if user.is_premium %}
+            <div class="epx-plan__btn" style="background:rgba(67,196,172,0.12); border:1px solid var(--stamp); color:var(--stamp);">
+              You have Premium{% if user.plan_expiry %} until {{ user.plan_expiry|date:"d M Y" }}{% endif %}
+            </div>
+          {% else %}
+            <div class="epx-plan__btn" style="background:rgba(244,239,232,0.04); border:1px dashed var(--line-strong); color:var(--ink-soft);">Launching soon</div>
+          {% endif %}
+        </div>
+      </div>
+
     </div>
   </div>
 
-  <div class="pay-plans">
-
-    <!-- FREE -->
-    <div class="pay-plan" id="plan-free" data-plan="free" data-price="0">
-      <div class="pay-plan__header">
-        <h2 class="pay-plan__name">Free</h2>
-        <div class="pay-plan__price">
-          <span class="pay-plan__amount">₦0</span>
-          <span class="pay-plan__period">/ forever</span>
-        </div>
-        <p class="pay-plan__tagline">Start browsing your campus</p>
+  {# ── NOTIFY ME (placeholder: nothing stores the email yet) ── #}
+  <div class="epx-wrap" style="max-width:640px; padding-top:48px; padding-bottom:80px; text-align:center;">
+    <h2 class="epx-h2" style="font-size:1.8rem;">Want early access?</h2>
+    <p style="color:var(--ink-soft); font-size:0.98rem; margin:10px 0 24px;">Early-access sign-up opens soon. We'll announce it right here.</p>
+    <div class="epx-notify">
+      <div class="epx-search" style="border-radius:999px; padding:14px 18px; margin:0;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2" style="flex-shrink:0;"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+        <input type="email" placeholder="{{ user.email|default:'you@example.com' }}" aria-label="Email for early access" disabled style="padding:0;" />
       </div>
-      <ul class="pay-plan__features">
-        <li class="pay-plan__feat pay-plan__feat--yes">3 events per day</li>
-        <li class="pay-plan__feat pay-plan__feat--yes">Basic search</li>
-        <li class="pay-plan__feat pay-plan__feat--yes">Follow friends &amp; organisers</li>
-        <li class="pay-plan__feat pay-plan__feat--yes">Supported by ads</li>
-      </ul>
-      <button class="ep-btn ep-btn--outline pay-plan__btn pay-select-btn" data-plan="free">Current Plan</button>
-    </div>
-
-    <!-- STUDENT PREMIUM -->
-    <div class="pay-plan pay-plan--popular" id="plan-student" data-plan="student" data-price="1500">
-      <div class="pay-plan__popular-badge">Most Popular</div>
-      <div class="pay-plan__header">
-        <h2 class="pay-plan__name">Student Premium</h2>
-        <div class="pay-plan__price">
-          <span class="pay-plan__amount">₦1,500</span>
-          <span class="pay-plan__period">/ month</span>
-        </div>
-        <p class="pay-plan__tagline">For students who do it all</p>
-      </div>
-      <ul class="pay-plan__features">
-        <li class="pay-plan__feat pay-plan__feat--yes">Unlimited browsing, ad-free</li>
-        <li class="pay-plan__feat pay-plan__feat--yes">For You feed</li>
-        <li class="pay-plan__feat pay-plan__feat--yes">Who's Going</li>
-        <li class="pay-plan__feat pay-plan__feat--yes">Squad Sync</li>
-        <li class="pay-plan__feat pay-plan__feat--yes">Campus Calendar</li>
-        <li class="pay-plan__feat pay-plan__feat--yes">Conflict Detector</li>
-        <li class="pay-plan__feat pay-plan__feat--yes">AI Assistant</li>
-      </ul>
-      <button class="ep-btn ep-btn--primary pay-plan__btn pay-select-btn" data-plan="student">Choose Student Premium</button>
-    </div>
-
-    <!-- ORGANISER PREMIUM -->
-    <div class="pay-plan" id="plan-organiser" data-plan="organiser" data-price="3500">
-      <div class="pay-plan__header">
-        <h2 class="pay-plan__name">Organiser Premium</h2>
-        <div class="pay-plan__price">
-          <span class="pay-plan__amount">₦3,500</span>
-          <span class="pay-plan__period">/ month</span>
-        </div>
-        <p class="pay-plan__tagline">For societies &amp; serious hosts</p>
-      </div>
-      <ul class="pay-plan__features">
-        <li class="pay-plan__feat pay-plan__feat--yes">AI Event Creation</li>
-        <li class="pay-plan__feat pay-plan__feat--yes">Featured placement</li>
-        <li class="pay-plan__feat pay-plan__feat--yes">Verified badge</li>
-        <li class="pay-plan__feat pay-plan__feat--yes">Custom profile</li>
-        <li class="pay-plan__feat pay-plan__feat--yes">RSVP &amp; attendee list</li>
-        <li class="pay-plan__feat pay-plan__feat--yes">Waitlist</li>
-        <li class="pay-plan__feat pay-plan__feat--yes">Ghost Mode, ad-free</li>
-      </ul>
-      <button class="ep-btn ep-btn--outline pay-plan__btn pay-select-btn" data-plan="organiser">Choose Organiser Premium</button>
-    </div>
-
-    <!-- PULSE BUNDLE -->
-    <div class="pay-plan pay-plan--bundle" id="plan-bundle" data-plan="bundle" data-price="4500">
-      <div class="pay-plan__popular-badge">Best Value</div>
-      <div class="pay-plan__header">
-        <h2 class="pay-plan__name">Pulse Bundle</h2>
-        <div class="pay-plan__price">
-          <span class="pay-plan__amount">₦4,500</span>
-          <span class="pay-plan__period">/ month</span>
-        </div>
-        <p class="pay-plan__tagline">Everything, both sides — save ₦500</p>
-      </div>
-      <ul class="pay-plan__features">
-        <li class="pay-plan__feat pay-plan__feat--yes">Everything in Student Premium</li>
-        <li class="pay-plan__feat pay-plan__feat--yes">Everything in Organiser Premium</li>
-        <li class="pay-plan__feat pay-plan__feat--yes">One subscription, both sides</li>
-        <li class="pay-plan__feat pay-plan__feat--yes">Save ₦500 every month</li>
-      </ul>
-      <button class="ep-btn ep-btn--primary pay-plan__btn pay-select-btn" data-plan="bundle">Get the Bundle</button>
-    </div>
-
-  </div>
-
-  <div class="pay-form-wrap" id="payFormWrap" style="display:none;">
-    <div class="pay-form-card">
-      <div class="pay-form-header">
-        <button class="pay-form-back" id="payFormBack" type="button" aria-label="Back to plans">
-          <span class="ep-icon ep-icon--back"></span>
-        </button>
-        <div>
-          <h2 class="pay-form-title">Complete Payment</h2>
-          <p class="pay-form-sub" id="payFormSub">Student Premium — ₦1,500/month</p>
-        </div>
-        <div class="pay-form-secure">
-          <span class="ep-icon ep-icon--secure ep-icon--sm"></span>
-          Secure
-        </div>
-      </div>
-
-      <form method="POST" action="{% url 'payments:checkout' %}" class="ep-form" id="paymentForm">
-        {% csrf_token %}
-        <input type="hidden" name="plan" id="selectedPlan" value="" />
-        <input type="hidden" name="amount" id="selectedAmount" value="" />
-
-        <div class="pay-summary" id="paySummary">
-          <div class="pay-summary__row">
-            <span id="summaryPlan">Student Premium</span>
-            <span id="summaryPrice">₦1,500</span>
-          </div>
-          <div class="pay-summary__row pay-summary__row--total">
-            <span>Total today</span>
-            <span id="summaryTotal">₦1,500</span>
-          </div>
-        </div>
-
-        <div class="ep-field">
-          <label class="ep-field__label">Cardholder Name *</label>
-          <div class="ep-field__input-wrap">
-            <span class="ep-icon ep-icon--user"></span>
-            <input type="text" name="cardholder_name" class="ep-input" placeholder="Name as it appears on card" required autocomplete="cc-name" />
-          </div>
-        </div>
-
-        <div class="ep-field">
-          <label class="ep-field__label">Card Number *</label>
-          <div class="ep-field__input-wrap">
-            <span class="ep-icon ep-icon--card"></span>
-            <input type="text" name="card_number" id="cardNumber" class="ep-input" placeholder="1234 5678 9012 3456" maxlength="19" required autocomplete="cc-number" />
-            <div class="pay-card-icons" id="cardBrandIcon">
-              <svg width="32" height="20" viewBox="0 0 32 20" fill="none">
-                <rect width="32" height="20" rx="3" fill="#1A1F71"/>
-                <circle cx="12" cy="10" r="6" fill="#EB001B"/>
-                <circle cx="20" cy="10" r="6" fill="#F79E1B"/>
-                <path d="M16 5.5a6 6 0 0 1 0 9 6 6 0 0 1 0-9z" fill="#FF5F00"/>
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        <div class="pay-card-row">
-          <div class="ep-field">
-            <label class="ep-field__label">Expiry Date *</label>
-            <div class="ep-field__input-wrap">
-              <span class="ep-icon ep-icon--calendar"></span>
-              <input type="text" name="expiry" id="cardExpiry" class="ep-input" placeholder="MM / YY" maxlength="7" required autocomplete="cc-exp" />
-            </div>
-          </div>
-          <div class="ep-field">
-            <label class="ep-field__label">CVV *</label>
-            <div class="ep-field__input-wrap">
-              <span class="ep-icon ep-icon--lock"></span>
-              <input type="text" name="cvv" id="cardCvv" class="ep-input" placeholder="123" maxlength="4" required autocomplete="cc-csc" />
-            </div>
-          </div>
-        </div>
-
-        <div class="ep-field">
-          <label class="ep-field__label">Email for Receipt *</label>
-          <div class="ep-field__input-wrap">
-            <span class="ep-icon ep-icon--mail"></span>
-            <input type="email" name="email" class="ep-input" placeholder="your@email.com" required autocomplete="email" value="{{ user.email|default:'' }}" />
-          </div>
-        </div>
-
-        <div class="ep-field">
-          <label class="ep-field__label">Billing Address</label>
-          <div class="ep-field__input-wrap">
-            <span class="ep-icon ep-icon--home"></span>
-            <input type="text" name="billing_address" class="ep-input" placeholder="Street address, City" autocomplete="street-address" />
-          </div>
-        </div>
-
-        <label class="ep-checkbox">
-          <input type="checkbox" name="save_card" />
-          <span class="ep-checkbox__box">
-            <span class="ep-icon ep-icon--check ep-icon--sm" style="color:#1A0E02;"></span>
-          </span>
-          <span>Save card for future payments</span>
-        </label>
-
-        <button type="submit" class="ep-btn ep-btn--primary ep-btn--full pay-submit-btn" id="paySubmitBtn">
-          <span class="ep-icon ep-icon--lock ep-icon--sm"></span>
-          Pay <span id="btnAmount">₦1,500</span>
-        </button>
-
-        <p class="pay-disclaimer">
-          Your payment is encrypted and secure. You can cancel anytime from your account settings.
-          Powered by EventPulse Payments.
-        </p>
-      </form>
-    </div>
-  </div>
-
-  <div class="pay-faq">
-    <div class="pay-faq__inner">
-      <h2 class="pay-faq__title">Common Questions</h2>
-      <div class="pay-faq__grid">
-        <div class="pay-faq__item"><h3>Can I cancel anytime?</h3><p>Yes. Cancel from your account settings and your plan stays active until the end of the billing period.</p></div>
-        <div class="pay-faq__item"><h3>Is my card data safe?</h3><p>We never store raw card numbers. All payments are processed through secure encrypted channels.</p></div>
-        <div class="pay-faq__item"><h3>Can I upgrade or downgrade?</h3><p>Yes, you can switch plans at any time. Upgrades take effect immediately, downgrades at next billing cycle.</p></div>
-        <div class="pay-faq__item"><h3>Do you offer refunds?</h3><p>We offer a 7-day refund on your first payment if you are not satisfied.</p></div>
-      </div>
+      <button type="button" class="epx-btn" disabled>Notify me</button>
     </div>
   </div>
 
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-var plans = {
-  free:      { name:'Free',              price:0,    display:'₦0/forever'   },
-  student:   { name:'Student Premium',   price:1500, display:'₦1,500/month' },
-  organiser: { name:'Organiser Premium', price:3500, display:'₦3,500/month' },
-  bundle:    { name:'Pulse Bundle',      price:4500, display:'₦4,500/month' }
-};
-
-document.querySelectorAll('.pay-select-btn').forEach(function (btn) {
-  btn.addEventListener('click', function () {
-    var plan = btn.dataset.plan;
-    if (plan === 'free') return;
-    var p = plans[plan];
-    document.getElementById('selectedPlan').value   = plan;
-    document.getElementById('selectedAmount').value = p.price;
-    document.getElementById('payFormSub').textContent   = p.name + ' — ' + p.display;
-    document.getElementById('summaryPlan').textContent  = p.name;
-    document.getElementById('summaryPrice').textContent = '₦' + p.price.toLocaleString();
-    document.getElementById('summaryTotal').textContent = '₦' + p.price.toLocaleString();
-    document.getElementById('btnAmount').textContent    = '₦' + p.price.toLocaleString();
-    document.getElementById('payFormWrap').style.display = 'block';
-    document.getElementById('payFormWrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    document.querySelectorAll('.pay-plan').forEach(function (c) { c.classList.remove('pay-plan--selected'); });
-    document.getElementById('plan-' + plan).classList.add('pay-plan--selected');
-  });
-});
-
-document.getElementById('payFormBack').addEventListener('click', function () {
-  document.getElementById('payFormWrap').style.display = 'none';
-  document.querySelectorAll('.pay-plan').forEach(function (c) { c.classList.remove('pay-plan--selected'); });
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-});
-
-document.getElementById('cardNumber').addEventListener('input', function () {
-  var v = this.value.replace(/\D/g,'').substring(0,16);
-  this.value = v.replace(/(.{4})/g,'$1 ').trim();
-});
-document.getElementById('cardExpiry').addEventListener('input', function () {
-  var v = this.value.replace(/\D/g,'').substring(0,4);
-  if (v.length >= 2) v = v.substring(0,2) + ' / ' + v.substring(2);
-  this.value = v;
-});
-document.getElementById('cardCvv').addEventListener('input', function () {
-  this.value = this.value.replace(/\D/g,'').substring(0,4);
-});
-</script>
+{% include 'partials/tabbar.html' with nav_active='' %}
 {% endblock %}

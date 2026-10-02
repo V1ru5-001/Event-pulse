@@ -54,6 +54,8 @@ def follow_list(request, username, mode):
         'people':       qs,
         'list_title':   title,
         'mode':         mode,
+        # So each row can show Follow vs Following for the viewer
+        'following_ids': set(request.user.following_set.values_list('following_id', flat=True)),
     })
 
 

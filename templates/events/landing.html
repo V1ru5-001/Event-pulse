@@ -2,203 +2,155 @@
 {% load static %}
 
 {% block title %}EventPulse — Your Campus Event Hub{% endblock %}
+{% block body_class %}epx{% endblock %}
+
+{% block navbar %}
+<nav class="epx-nav">
+  <div class="epx-nav__inner">
+    <a href="{% url 'events:landing' %}" class="epx-logo">EVENT<b>PULSE</b></a>
+    <div class="epx-lnav">
+      <a href="#board">What's on</a>
+      <a href="#categories">Categories</a>
+      <a href="#how">How it works</a>
+    </div>
+    <div class="epx-nav__actions" style="gap:14px;">
+      <a href="{% url 'accounts:login' %}" class="epx-btn epx-btn--ghost epx-lnav-signin" style="padding:10px 20px; font-size:0.8rem;">Sign In</a>
+      <a href="{% url 'accounts:register' %}" class="epx-host">Join Free</a>
+    </div>
+  </div>
+</nav>
+{% endblock %}
 
 {% block content %}
 
-<section class="land-hero" id="landHero">
-  <div class="land-hero__content">
-
-    <h1 class="land-hero__title">
-      Your campus.<br>
-      <span class="land-grad">Your events.</span><br>
-      Your community.
-    </h1>
-    <p class="land-hero__sub">
-      Discover lectures, socials, sports days, career fairs and parties
-      happening at your university — all in one place.
+{# ── HERO ── #}
+<div class="epx-wrap epx-hero">
+  <div>
+    <div class="epx-eyebrow">Find it. Post it. <span style="color:var(--accent); font-weight:700;">Show up.</span></div>
+    <h1 class="epx-hero__h1">Your campus.<br><em>Your events.</em><br>Your community.</h1>
+    <p style="font-size:1.1rem; line-height:1.6; color:var(--ink-soft); max-width:46ch; margin-top:22px;">
+      Discover lectures, socials, sports days, career fairs and parties happening at your university — all in one place.
     </p>
-    <div class="land-hero__ctas">
-      <a href="{% url 'accounts:register' %}" class="ep-btn ep-btn--primary land-cta-btn">Join Free →</a>
-      <a href="{% url 'accounts:login' %}" class="ep-btn ep-btn--outline">Sign In</a>
+    <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:28px;">
+      <a href="{% url 'accounts:register' %}" class="epx-btn">Join Free →</a>
+      <a href="{% url 'accounts:login' %}" class="epx-btn epx-btn--ghost">Sign In</a>
     </div>
-    <div class="land-hero__stats">
-      <div class="land-stat">
-        <span class="land-stat__num" data-target="{{ stats.students|default:0 }}">0</span>
-        <span class="land-stat__label">Students</span>
-      </div>
-      <div class="land-stat__divider"></div>
-      <div class="land-stat">
-        <span class="land-stat__num" data-target="{{ stats.events|default:0 }}">0</span>
-        <span class="land-stat__label">Events Posted</span>
-      </div>
-      <div class="land-stat__divider"></div>
-      <div class="land-stat">
-        <span class="land-stat__num" data-target="{{ stats.societies|default:0 }}">0</span>
-        <span class="land-stat__label">Societies</span>
-      </div>
+    <div class="epx-lstats">
+      <div><div class="epx-lstats__n land-stat__num" data-target="{{ stats.students|default:0 }}">0</div><div class="epx-lstats__k">Students</div></div>
+      <div><div class="epx-lstats__n land-stat__num" data-target="{{ stats.events|default:0 }}">0</div><div class="epx-lstats__k">Events Posted</div></div>
+      <div><div class="epx-lstats__n land-stat__num" data-target="{{ stats.societies|default:0 }}">0</div><div class="epx-lstats__k">Societies</div></div>
     </div>
   </div>
-</section>
 
-<section class="land-showcase-wrap">
-  <p class="land-section-label">Live on campus this week</p>
-  <div class="land-showcase">
-    {% for e in events|slice:":6" %}
-      <a href="{% url 'accounts:register' %}" class="land-showcase__card ep-flyerbg--{{ e.category.slug|default:'academic' }}">
-        <div class="land-showcase__date">
-          <b>{{ e.start_datetime|date:"d" }}</b>
-          <span>{{ e.start_datetime|date:"M" }}</span>
+  {% with e=events.0 %}
+  {% if e %}
+  <a href="{% url 'accounts:register' %}" class="epx-card" style="box-shadow:0 20px 44px -22px rgba(0,0,0,0.6);">
+    <div class="epx-card__img epx-cover epx-cover--{{ e.category.slug|default:'academic' }}" style="height:160px;">
+      {% if e.display_image_url %}<img src="{{ e.display_image_url }}" alt="{{ e.title }}">{% endif %}
+      {% if e.category %}<span class="epx-tag">{{ e.category.name }}</span>{% endif %}
+    </div>
+    <div class="epx-card__body" style="padding:22px;">
+      <div class="epx-card__when">{{ e.start_datetime|date:"D d M · H:i" }}</div>
+      <div class="epx-card__title" style="font-size:1.5rem; font-weight:800;">{{ e.title }}</div>
+      <div class="epx-card__venue">{{ e.location_name }}</div>
+      <div class="epx-card__foot">
+        <span>{{ e.approved_count }} going</span>
+        {% if e.is_free %}<span class="epx-price epx-price--free">Free</span>{% else %}<span class="epx-price">₦{{ e.ticket_price }}</span>{% endif %}
+      </div>
+    </div>
+  </a>
+  {% endif %}
+  {% endwith %}
+</div>
+
+{# ── BOARD: real upcoming events ── #}
+<section id="board" class="epx-wrap epx-lsection" style="margin-top:20px;">
+  <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:36px;">
+    <div>
+      <div class="epx-eyebrow">Live on campus this week</div>
+      <h2 class="epx-h1" style="font-size:2.6rem;">See what's happening now</h2>
+      <p style="color:var(--ink-soft); margin-top:10px;">Sign in or register to RSVP, create events and connect with your campus.</p>
+    </div>
+    {% if events %}<a href="{% url 'accounts:register' %}" style="font-family:var(--fm); font-size:0.8rem; text-transform:uppercase; color:var(--accent); border-bottom:1px solid var(--accent); padding-bottom:2px;">See all events — sign up free →</a>{% endif %}
+  </div>
+
+  <div class="epx-grid3">
+    {% for event in events %}
+    <a href="{% url 'accounts:register' %}" class="epx-card pin-card {% cycle 'tl-a' 'tl-b' 'tl-c' %}">
+      <div class="epx-card__img epx-cover epx-cover--{{ event.category.slug|default:'academic' }}">
+        {% if event.display_image_url %}<img src="{{ event.display_image_url }}" alt="{{ event.title }}" loading="lazy">{% endif %}
+        {% if event.category %}<span class="epx-tag">{{ event.category.name }}</span>{% endif %}
+        {% if event.is_past %}<div class="epx-card__ended">This event has ended</div>{% endif %}
+      </div>
+      <div class="epx-card__body">
+        <div class="epx-card__when">{{ event.start_datetime|date:"D d M · H:i" }}</div>
+        <h3 class="epx-card__title">{{ event.title }}</h3>
+        <div class="epx-card__venue">{{ event.location_name|truncatechars:40 }}</div>
+        <div class="epx-card__foot">
+          <span>{{ event.approved_count }} going</span>
+          {% if event.is_past %}<span class="epx-price epx-price--ended">Ended</span>
+          {% elif event.is_free %}<span class="epx-price epx-price--free">Free</span>
+          {% else %}<span class="epx-price">₦{{ event.ticket_price }}</span>{% endif %}
         </div>
-        <div class="land-showcase__body">
-          <div class="land-showcase__title">{{ e.title|truncatechars:34 }}</div>
-          <div class="land-showcase__venue">{{ e.location_name|truncatechars:22 }}</div>
-        </div>
-      </a>
+      </div>
+    </a>
     {% empty %}
-      <a href="{% url 'accounts:register' %}" class="land-showcase__card ep-flyerbg--music">
-        <div class="land-showcase__date"><b>03</b><span>JUL</span></div>
-        <div class="land-showcase__body">
-          <div class="land-showcase__title">Hall 3 Block Party</div>
-          <div class="land-showcase__venue">Hall 3 Courtyard</div>
-        </div>
-      </a>
-      <a href="{% url 'accounts:register' %}" class="land-showcase__card ep-flyerbg--academic">
-        <div class="land-showcase__date"><b>05</b><span>JUL</span></div>
-        <div class="land-showcase__body">
-          <div class="land-showcase__title">NACOS Tech Mixer</div>
-          <div class="land-showcase__venue">CCE Auditorium</div>
-        </div>
-      </a>
-      <a href="{% url 'accounts:register' %}" class="land-showcase__card ep-flyerbg--career">
-        <div class="land-showcase__date"><b>06</b><span>JUL</span></div>
-        <div class="land-showcase__body">
-          <div class="land-showcase__title">ENG Faculty Dinner</div>
-          <div class="land-showcase__venue">Marble Arch Hotel</div>
-        </div>
-      </a>
-      <a href="{% url 'accounts:register' %}" class="land-showcase__card ep-flyerbg--sports">
-        <div class="land-showcase__date"><b>10</b><span>JUL</span></div>
-        <div class="land-showcase__body">
-          <div class="land-showcase__title">Faculty Cup QF</div>
-          <div class="land-showcase__venue">Sports Complex</div>
-        </div>
-      </a>
+    <div class="epx-empty">
+      <h3>Events coming soon</h3>
+      <p>Be the first to post a campus event.</p>
+      <a href="{% url 'accounts:register' %}" class="epx-btn">Get Started</a>
+    </div>
     {% endfor %}
   </div>
 </section>
 
-<section class="land-features">
-  <div class="land-features__inner">
-    <p class="land-section-label">Why EventPulse?</p>
-    <h2 class="land-section-title">Everything campus life<br><span>in one feed</span></h2>
-    <div class="land-features-grid">
+{# ── CATEGORIES ── #}
+<section id="categories" class="epx-wrap epx-lsection">
+  <div style="margin-bottom:36px;">
+    <div class="epx-eyebrow">Why EventPulse?</div>
+    <h2 class="epx-h1" style="font-size:2.6rem;">Everything campus life in one feed</h2>
+  </div>
+  <div class="epx-cats6">
+    <div><h3>Academic</h3><p>Lectures, seminars, workshops and study groups from every department.</p></div>
+    <div><h3>Social</h3><p>Parties, game nights, movie screenings and casual meetups organised by students.</p></div>
+    <div><h3>Sports</h3><p>Tournaments, training sessions and fun runs hosted by sports societies.</p></div>
+    <div><h3>Career</h3><p>Job fairs, networking nights, CV workshops and employer talks.</p></div>
+    <div><h3>Arts</h3><p>Theatre, exhibitions, spoken word and creative showcases.</p></div>
+    <div><h3>International</h3><p>Cultural celebrations, language exchange and international society events.</p></div>
+  </div>
+</section>
 
-      <div class="land-feat-card">
-        <div class="ep-feat-icon-box ep-feat-icon-box--academic"></div>
-        <h3 class="land-feat-title">Academic</h3>
-        <p class="land-feat-desc">Lectures, seminars, workshops and study groups from every department.</p>
-      </div>
+{# ── HOW IT WORKS ── #}
+<section id="how" class="epx-wrap epx-lsection">
+  <div style="margin-bottom:36px;">
+    <div class="epx-eyebrow">How it works</div>
+    <h2 class="epx-h1" style="font-size:2.6rem;">From feed to front row</h2>
+  </div>
+  <div class="epx-grid3 epx-how" style="gap:40px;">
+    <div><div style="font-family:var(--fm); font-size:0.78rem; color:var(--accent); letter-spacing:0.08em;">01 — FIND</div><h3>Scroll what's on</h3><p>Everything happening on your campus in one place — filter by category or search by name.</p></div>
+    <div><div style="font-family:var(--fm); font-size:0.78rem; color:var(--accent); letter-spacing:0.08em;">02 — RSVP</div><h3>Grab your spot</h3><p>One tap to RSVP, or join the waitlist when an event fills up.</p></div>
+    <div><div style="font-family:var(--fm); font-size:0.78rem; color:var(--accent); letter-spacing:0.08em;">03 — HOST</div><h3>Throw your own</h3><p>Post an event in minutes, set a capacity or approve each guest, and watch the RSVPs roll in.</p></div>
+  </div>
+</section>
 
-      <div class="land-feat-card">
-        <div class="ep-feat-icon-box ep-feat-icon-box--social"></div>
-        <h3 class="land-feat-title">Social</h3>
-        <p class="land-feat-desc">Parties, game nights, movie screenings and casual meetups organised by students.</p>
-      </div>
-
-      <div class="land-feat-card">
-        <div class="ep-feat-icon-box ep-feat-icon-box--sports"></div>
-        <h3 class="land-feat-title">Sports</h3>
-        <p class="land-feat-desc">Tournaments, training sessions and fun runs hosted by sports societies.</p>
-      </div>
-
-      <div class="land-feat-card">
-        <div class="ep-feat-icon-box ep-feat-icon-box--career"></div>
-        <h3 class="land-feat-title">Career</h3>
-        <p class="land-feat-desc">Job fairs, networking nights, CV workshops and employer talks.</p>
-      </div>
-
-      <div class="land-feat-card">
-        <div class="ep-feat-icon-box ep-feat-icon-box--arts"></div>
-        <h3 class="land-feat-title">Arts</h3>
-        <p class="land-feat-desc">Theatre, exhibitions, spoken word and creative showcases.</p>
-      </div>
-
-      <div class="land-feat-card">
-        <div class="ep-feat-icon-box ep-feat-icon-box--international"></div>
-        <h3 class="land-feat-title">International</h3>
-        <p class="land-feat-desc">Cultural celebrations, language exchange and international society events.</p>
-      </div>
-
+{# ── CTA ── #}
+<section class="epx-wrap" style="padding-top:20px; padding-bottom:60px;">
+  <div class="epx-cta">
+    <div>
+      <h2>Ready to join your campus?</h2>
+      <p style="margin-top:12px; font-size:1.05rem; max-width:40ch;">Create a free account in 30 seconds and never miss an event again.</p>
+    </div>
+    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+      <a href="{% url 'accounts:register' %}">Create Free Account →</a>
+      <a href="{% url 'accounts:login' %}" class="is-ghost">Already have an account?</a>
     </div>
   </div>
 </section>
 
-<section class="land-preview">
-  <div class="land-preview__inner">
-    <p class="land-section-label">Upcoming Events</p>
-    <h2 class="land-section-title">See what's <span>happening now</span></h2>
-    <p class="land-preview__note">Sign in or register to RSVP, create events and connect with your campus.</p>
-
-    <div class="land-preview__grid">
-      {% for event in events %}
-      <article class="ep-card ep-card--social land-preview__card" data-cat="{{ event.category.slug|default:'all' }}">
-        <div class="ep-feed-item__thumb {% if not event.display_image_url %}ep-flyerbg--{{ event.category.slug|default:'academic' }}{% endif %}">
-          {% if event.display_image_url %}
-            <img src="{{ event.display_image_url }}" alt="{{ event.title }}" loading="lazy">
-          {% endif %}
-          <div class="ep-feed-item__date">
-            <b>{{ event.start_datetime|date:"d" }}</b>
-            <span>{{ event.start_datetime|date:"M" }}</span>
-          </div>
-        </div>
-        <div class="ep-feed-item__body">
-          <h3 class="ep-feed-item__title">{{ event.title }}</h3>
-          <div class="ep-feed-item__meta">
-            <span>{{ event.start_datetime|date:"D · H:i" }}</span>
-            <span>{{ event.location_name|truncatechars:26 }}</span>
-          </div>
-          <div class="ep-feed-item__foot">
-            {% if event.is_past %}
-              <span class="ep-feed-item__price ep-feed-item__price--ended">Ended</span>
-            {% elif event.is_free %}
-              <span class="ep-feed-item__price ep-feed-item__price--free">Free</span>
-            {% else %}
-              <span class="ep-feed-item__price">₦{{ event.ticket_price }}</span>
-            {% endif %}
-            <a href="{% url 'accounts:login' %}" class="ep-feed-item__rsvp">Sign in →</a>
-          </div>
-        </div>
-      </article>
-      {% empty %}
-      <div class="ep-empty">
-        <div class="ep-empty-icon ep-empty-icon--events"></div>
-        <h3>Events coming soon</h3>
-        <p>Be the first to post a campus event.</p>
-        <a href="{% url 'accounts:register' %}" class="ep-btn ep-btn--primary" style="margin-top:1rem">Get Started</a>
-      </div>
-      {% endfor %}
-    </div>
-
-    {% if events %}
-    <div style="text-align:center;margin-top:2rem;">
-      <a href="{% url 'accounts:register' %}" class="ep-btn ep-btn--outline" style="font-size:.9rem;">
-        See all events — sign up free →
-      </a>
-    </div>
-    {% endif %}
-  </div>
-</section>
-
-<section class="land-cta-banner">
-  <div class="land-cta-banner__inner">
-    <h2 class="land-cta-banner__title">Ready to join your campus?</h2>
-    <p class="land-cta-banner__sub">Create a free account in 30 seconds and never miss an event again.</p>
-    <div class="land-cta-banner__btns">
-      <a href="{% url 'accounts:register' %}" class="ep-btn ep-btn--primary land-cta-btn">Create Free Account →</a>
-      <a href="{% url 'accounts:login' %}" class="ep-btn ep-btn--outline">Already have an account?</a>
-    </div>
-  </div>
-</section>
+<footer class="epx-wrap" style="border-top:1px solid var(--line); padding-top:32px; padding-bottom:36px; display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; font-family:var(--fm); font-size:0.74rem; color:var(--ink-faint);">
+  <span class="epx-logo" style="font-size:1.1rem; color:var(--ink);">EVENT<b>PULSE</b></span>
+  <span>© {% now "Y" %} EVENTPULSE · Your campus event hub</span>
+</footer>
 
 {% endblock %}
 

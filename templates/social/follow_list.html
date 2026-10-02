@@ -2,52 +2,92 @@
 {% load static %}
 
 {% block title %}{{ list_title }} — {{ profile_user.username }}{% endblock %}
+{% block body_class %}epx{% endblock %}
+{% block navbar %}{% include 'partials/nav.html' with nav_active='profile' %}{% endblock %}
 
 {% block content %}
-<div class="ep-chat-page">
-  <div class="ep-chat-container ep-follow-list">
+<div class="has-tabbar">
+<div class="epx-notifs">
 
-    <header class="ep-inbox__header">
-      <a href="{% url 'accounts:profile' profile_user.username %}" class="ep-convo__back" aria-label="Back to profile">
-        <span class="ep-icon ep-icon--arrow-left ep-icon--purple"></span>
-      </a>
-      <h1 class="ep-inbox__title">{{ list_title }} · @{{ profile_user.username }}</h1>
-    </header>
+  <a href="{% url 'accounts:profile' profile_user.username %}" class="epx-back" aria-label="Back to profile">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Back to profile
+  </a>
 
-    {% if people %}
-      <ul class="ep-people-list">
-        {% for person in people %}
-        <li class="ep-person">
-          <a href="{% url 'accounts:profile' person.username %}" class="ep-person__main">
-            <div class="ep-person__avatar">
-              {% if person.profile_picture %}
-                <img src="{{ person.profile_picture.url }}" alt="{{ person.username }}">
-              {% else %}
-                <span>{{ person.username|first|upper }}</span>
-              {% endif %}
-            </div>
-            <div class="ep-person__info">
-              <span class="ep-person__name">{{ person.get_full_name|default:person.username }}</span>
-              <span class="ep-person__handle">@{{ person.username }}</span>
-            </div>
+  <h1 class="epx-h1" style="font-size:2.2rem; margin-top:18px;">{{ profile_user.get_full_name|default:profile_user.username }}</h1>
+  <div style="font-family:var(--fm); font-size:0.8rem; color:var(--ink-soft); margin:4px 0 22px;">@{{ profile_user.username }}</div>
+
+  <nav class="epx-ftabs" aria-label="{{ list_title }}">
+    <a href="{% url 'social:follow_list' profile_user.username 'followers' %}" {% if mode == 'followers' %}class="on" aria-current="page"{% endif %}>Followers {{ profile_user.followers_count }}</a>
+    <a href="{% url 'social:follow_list' profile_user.username 'following' %}" {% if mode != 'followers' %}class="on" aria-current="page"{% endif %}>Following {{ profile_user.following_count }}</a>
+  </nav>
+
+  {% if people %}
+    <div class="epx-search" style="border-radius:999px; padding:11px 16px; margin-bottom:16px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2" style="flex-shrink:0;"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3" stroke-linecap="round"/></svg>
+      <input type="text" id="peopleFilter" placeholder="Search people" autocomplete="off" aria-label="Search people" style="padding:0;" />
+    </div>
+
+    <div id="peopleList">
+      {% for person in people %}
+      <div class="epx-person" data-name="{{ person.get_full_name|default:person.username|lower }} {{ person.username|lower }}">
+        <a href="{% url 'accounts:profile' person.username %}" style="display:flex; align-items:center; gap:14px; flex:1; min-width:0;">
+          <span class="epx-person__av">{% if person.profile_picture %}<img src="{{ person.profile_picture.url }}" alt="{{ person.username }}">{% else %}{{ person.username|first|upper }}{% endif %}</span>
+          <div style="min-width:0;">
+            <div class="epx-person__name" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ person.get_full_name|default:person.username }}</div>
+            <div class="epx-person__meta">@{{ person.username }}</div>
+          </div>
+        </a>
+        {% if user.is_authenticated and person != user %}
+          <a href="{% url 'social:start_conversation' person.username %}" class="epx-iconlink" aria-label="Message {{ person.username }}" title="Message">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           </a>
-          {% if user.is_authenticated and person != user %}
-            <a href="{% url 'social:start_conversation' person.username %}" class="ep-btn ep-btn--outline ep-btn--sm">
-              <span class="ep-icon ep-icon--chat ep-icon--purple"></span>
-            </a>
-          {% endif %}
-        </li>
-        {% endfor %}
-      </ul>
-    {% else %}
-      <div class="ep-chat-empty">
-        <span class="ep-icon ep-icon--user ep-icon--purple"></span>
-        <p>
-          {% if mode == 'followers' %}No followers yet.{% else %}Not following anyone yet.{% endif %}
-        </p>
+          <button type="button" class="epx-fbtn {% if person.pk in following_ids %}is-following{% endif %}"
+                  data-url="{% url 'social:toggle_follow' person.username %}">{% if person.pk in following_ids %}Following{% else %}Follow{% endif %}</button>
+        {% endif %}
       </div>
-    {% endif %}
+      {% endfor %}
+      <div class="epx-dashed" id="peopleEmpty" hidden style="margin-top:10px;">No one matches.</div>
+    </div>
+  {% else %}
+    <div class="epx-dashed">
+      {% if mode == 'followers' %}No followers yet.{% else %}Not following anyone yet.{% endif %}
+    </div>
+  {% endif %}
 
-  </div>
 </div>
+</div>
+{% include 'partials/tabbar.html' with nav_active='profile' %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  var input = document.getElementById('peopleFilter');
+  var rows  = document.querySelectorAll('#peopleList .epx-person');
+  var empty = document.getElementById('peopleEmpty');
+  if (input) {
+    input.addEventListener('input', function () {
+      var q = input.value.trim().toLowerCase(), shown = 0;
+      rows.forEach(function (r) { var hit = !q || r.dataset.name.indexOf(q) !== -1; r.hidden = !hit; if (hit) shown++; });
+      empty.hidden = shown !== 0;
+    });
+  }
+
+  function csrf() { var m = document.cookie.match(/csrftoken=([^;]+)/); return m ? m[1] : ''; }
+  document.querySelectorAll('.epx-fbtn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      btn.disabled = true;
+      fetch(btn.dataset.url, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': csrf() } })
+        .then(function (res) { if (!res.ok) throw new Error(); return res.json(); })
+        .then(function (data) {
+          btn.classList.toggle('is-following', data.followed);
+          btn.textContent = data.followed ? 'Following' : 'Follow';
+        })
+        .catch(function () {})
+        .finally(function () { btn.disabled = false; });
+    });
+  });
+})();
+</script>
 {% endblock %}

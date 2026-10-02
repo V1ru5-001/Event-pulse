@@ -1,84 +1,62 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block title %}Sign In — EventPulse{% endblock %}
+{% block body_class %}epx{% endblock %}
 {% block navbar %}{% endblock %}
 {% block content %}
-<div class="ep-auth">
-  <div class="ep-auth__card">
+<div class="epx-authpage">
+  <div class="epx-authcard">
 
-    <div class="ep-auth__ticket-top">
-      <span>Admit One</span>
-      <span>EP-{% now "y" %}</span>
-    </div>
+    <div class="epx-ticket"><span>Admit One</span><span>EP-{% now "y" %}</span></div>
+    <div class="epx-perf"><span></span><span></span></div>
 
-    <div class="ep-auth__logo">
-      <span>Event<b>Pulse</b></span>
-    </div>
-
-    <h1 class="ep-auth__title">Welcome Back</h1>
-    <p class="ep-auth__sub">Sign in to see what's happening on campus today.</p>
+    <a href="{% url 'events:landing' %}" class="epx-logo">EVENT<b>PULSE</b></a>
+    <h1 class="epx-h1" style="font-size:2.6rem; margin-top:16px;">Welcome Back</h1>
+    <p style="color:var(--ink-soft); margin-top:8px;">Sign in to see what's happening on campus today.</p>
 
     {% if form.non_field_errors %}
       {% for error in form.non_field_errors %}
-        <div class="ep-inline-error">{{ error }}</div>
+        <div class="epx-error" style="margin-top:18px;">{{ error }}</div>
       {% endfor %}
     {% endif %}
 
-    <form method="POST" class="ep-form">
+    <form method="POST" style="margin-top:28px; display:flex; flex-direction:column; gap:20px;">
       {% csrf_token %}
 
-      <div class="ep-field">
-        <label class="ep-field__label" for="{{ form.username.id_for_label }}">Username or University Email</label>
-        <div class="ep-field__input-wrap">
-          <span class="ep-icon ep-icon--mail"></span>
-          <input type="text" id="{{ form.username.id_for_label }}" name="{{ form.username.html_name }}"
-            class="ep-input {% if form.username.errors %}ep-input--error{% endif %}"
-            placeholder="username or uni email"
-            value="{{ form.username.value|default:'' }}" autocomplete="username" />
+      <div>
+        <label class="epx-flabel" for="{{ form.username.id_for_label }}">Email</label>
+        <div class="epx-field ep-field__input-wrap {% if form.username.errors %}has-error{% endif %}">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+          <input type="email" id="{{ form.username.id_for_label }}" name="{{ form.username.html_name }}"
+            placeholder="yourname@example.com"
+            value="{{ form.username.value|default:'' }}" autocomplete="email" required />
         </div>
-        {% if form.username.errors %}<span class="ep-field__error">{{ form.username.errors.0 }}</span>{% endif %}
+        {% if form.username.errors %}<span class="epx-ferr">{{ form.username.errors.0 }}</span>{% endif %}
       </div>
 
-      <div class="ep-field">
-        <label class="ep-field__label" for="{{ form.password.id_for_label }}">Password</label>
-        <div class="ep-field__input-wrap">
-          <span class="ep-icon ep-icon--lock"></span>
+      <div>
+        <label class="epx-flabel" for="{{ form.password.id_for_label }}">Password</label>
+        <div class="epx-field ep-field__input-wrap {% if form.password.errors %}has-error{% endif %}">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
           <input type="password" id="{{ form.password.id_for_label }}" name="{{ form.password.html_name }}"
-            class="ep-input ep-input--has-eye {% if form.password.errors %}ep-input--error{% endif %}"
-            placeholder="Your password" autocomplete="current-password" />
+            placeholder="Your password" autocomplete="current-password" required />
           <button type="button" class="ep-field__eye" aria-label="Toggle password">
-            <svg class="eye-show" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-            </svg>
-            <svg class="eye-hide" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:none">
-              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-              <line x1="1" y1="1" x2="23" y2="23"/>
-            </svg>
+            <svg class="eye-show" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="eye-hide" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
           </button>
         </div>
+        {% if form.password.errors %}<span class="epx-ferr">{{ form.password.errors.0 }}</span>{% endif %}
       </div>
 
-      <div class="ep-auth__row">
-        <label class="ep-checkbox">
-          <input type="checkbox" name="remember_me" />
-          <span class="ep-checkbox__box">
-            <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-              <path d="M2 6l3 3 5-5" stroke="#1A0E02" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </span>
-          <span>Remember me</span>
-        </label>
-        <a href="#" class="ep-auth__forgot">Forgot password?</a>
+      <div class="epx-authrow">
+        <label><input type="checkbox" name="remember_me" /> Remember me</label>
+        <a href="#" style="font-family:var(--fm); font-size:0.82rem; color:var(--accent);">Forgot password?</a>
       </div>
 
-      <button type="submit" class="ep-btn ep-btn--primary ep-btn--full">Sign In</button>
-
+      <button type="submit" class="epx-btn" style="width:100%;">Sign In</button>
     </form>
 
-    <p class="ep-auth__footer">
-      Don't have an account? <a href="{% url 'accounts:register' %}">Create one →</a>
-    </p>
-
+    <p class="epx-authfoot">Don't have an account? <a href="{% url 'accounts:register' %}">Create one →</a></p>
   </div>
 </div>
 {% endblock %}

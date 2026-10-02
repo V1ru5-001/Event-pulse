@@ -1,109 +1,100 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block title %}Create Account — EventPulse{% endblock %}
+{% block body_class %}epx{% endblock %}
 {% block navbar %}{% endblock %}
 
 {% block content %}
-<div class="ep-auth" style="align-items:flex-start;padding-top:5rem;padding-bottom:3rem;">
-  <div class="ep-auth--register">
+<div class="epx-reg">
 
-    <div class="ep-auth__splash">
-      <div class="ep-auth__splash-img"></div>
-      <div class="ep-auth__splash-overlay"></div>
-      <div class="ep-auth__splash-content">
-        <p class="ep-auth__splash-quote">Your campus.<br>Your events.<br>Your community.</p>
-        <p class="ep-auth__splash-sub">Find lectures, socials, sports days, career fairs and parties at your university.</p>
-      </div>
+  {# ── PROMO (hidden on phones) ── #}
+  <div class="epx-reg__promo">
+    <div class="epx-reg__glow"></div>
+    <a href="{% url 'events:landing' %}" class="epx-logo" style="position:relative;">EVENT<b>PULSE</b></a>
+    <div style="position:relative;">
+      <h2 style="font-family:var(--fd); font-weight:800; font-size:3.4rem; text-transform:uppercase; line-height:0.95;">Your campus.<br>Your events.<br>Your community.</h2>
+      <p style="color:var(--ink-soft); margin-top:20px; font-size:1.05rem; line-height:1.6; max-width:38ch;">Find lectures, socials, sports days, career fairs and parties at your university.</p>
     </div>
+  </div>
 
-    <div class="ep-auth__form-side" style="justify-content:flex-start;overflow-y:auto;max-height:90vh;">
+  {# ── FORM ── #}
+  <div class="epx-reg__form">
+    <div class="epx-ticket"><span>Admit One</span><span>EP-{% now "y" %}</span></div>
+    <div class="epx-ticket-rule" style="margin-bottom:24px;"></div>
 
-      <div class="ep-auth__ticket-top">
-        <span>Admit One</span>
-        <span>EP-{% now "y" %}</span>
+    <a href="{% url 'events:landing' %}" class="epx-logo">EVENT<b>PULSE</b></a>
+    <h1 class="epx-h1" style="font-size:2.6rem; margin-top:16px;">Create Account</h1>
+    <p style="color:var(--ink-soft); margin-top:8px;">Join your campus community today.</p>
+
+    {% if form.non_field_errors %}
+      {% for error in form.non_field_errors %}
+        <div class="epx-error" style="margin-top:18px;">{{ error }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="POST" style="margin-top:28px; display:flex; flex-direction:column; gap:18px;">
+      {% csrf_token %}
+
+      <div>
+        <label class="epx-flabel" for="rg-name">Full Name</label>
+        <div class="epx-field">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+          <input id="rg-name" type="text" name="first_name" placeholder="Your full name" value="{{ request.POST.first_name|default:'' }}" autocomplete="name" />
+        </div>
       </div>
 
-      <div class="ep-auth__logo">
-        <span>Event<b>Pulse</b></span>
+      <div>
+        <label class="epx-flabel" for="{{ form.username.id_for_label }}">Username</label>
+        <div class="epx-field {% if form.username.errors %}has-error{% endif %}">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+          <input type="text" name="{{ form.username.html_name }}" id="{{ form.username.id_for_label }}"
+            placeholder="Choose a username" value="{{ form.username.value|default:'' }}" autocomplete="username" />
+        </div>
+        {% if form.username.errors %}<span class="epx-ferr">{{ form.username.errors.0 }}</span>{% endif %}
       </div>
 
-      <h1 class="ep-auth__title">Create Account</h1>
-      <p class="ep-auth__sub">Join your campus community today.</p>
+      <div>
+        <label class="epx-flabel" for="{{ form.email.id_for_label }}">Email</label>
+        <div class="epx-field {% if form.email.errors %}has-error{% endif %}">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+          <input type="email" name="{{ form.email.html_name }}" id="{{ form.email.id_for_label }}"
+            placeholder="yourname@example.com" value="{{ form.email.value|default:'' }}" autocomplete="email" />
+        </div>
+        {% if form.email.errors %}<span class="epx-ferr">{{ form.email.errors.0 }}</span>{% endif %}
+      </div>
 
-      {% if form.non_field_errors %}
-        {% for error in form.non_field_errors %}
-          <div class="ep-inline-error">{{ error }}</div>
-        {% endfor %}
-      {% endif %}
+      <div>
+        <label class="epx-flabel">I am registering as</label>
+        <div class="epx-toggle">
+          <input type="radio" name="role" id="role_student" value="student"
+            {% if not request.POST.role or request.POST.role == 'student' %}checked{% endif %} />
+          <label for="role_student">Student</label>
+          <input type="radio" name="role" id="role_guest" value="guest"
+            {% if request.POST.role == 'guest' %}checked{% endif %} />
+          <label for="role_guest">Guest</label>
+        </div>
+      </div>
 
-      <form method="POST" class="ep-form">
-        {% csrf_token %}
+      <div>
+        <label class="epx-flabel" for="rg-uni">University <small>(optional)</small></label>
+        <div class="epx-field">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg>
+          <input id="rg-uni" type="text" name="university" placeholder="e.g. UNIZIK" value="{{ request.POST.university|default:'' }}" />
+        </div>
+      </div>
 
-        <div class="ep-field">
-          <label class="ep-field__label">Full Name</label>
-          <div class="ep-field__input-wrap">
-            <span class="ep-icon ep-icon--user"></span>
-            <input type="text" name="first_name" class="ep-input"
-              placeholder="Your full name" value="{{ request.POST.first_name|default:'' }}" />
+      <div id="studentFields"><div style="display:flex; flex-direction:column; gap:18px;">
+        <div>
+          <label class="epx-flabel" for="rg-course">Course / Programme</label>
+          <div class="epx-field">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+            <input id="rg-course" type="text" name="course" placeholder="e.g. Computer Science" value="{{ request.POST.course|default:'' }}" />
           </div>
         </div>
-
-        <div class="ep-field">
-          <label class="ep-field__label">Username</label>
-          <div class="ep-field__input-wrap">
-            <span class="ep-icon ep-icon--user"></span>
-            <input type="text" name="{{ form.username.html_name }}" id="{{ form.username.id_for_label }}"
-              class="ep-input {% if form.username.errors %}ep-input--error{% endif %}"
-              placeholder="Choose a username" value="{{ form.username.value|default:'' }}" autocomplete="username" />
-          </div>
-          {% if form.username.errors %}<span class="ep-field__error">{{ form.username.errors.0 }}</span>{% endif %}
-        </div>
-
-        <div class="ep-field">
-          <label class="ep-field__label">Email</label>
-          <div class="ep-field__input-wrap">
-            <span class="ep-icon ep-icon--mail"></span>
-            <input type="email" name="{{ form.email.html_name }}" id="{{ form.email.id_for_label }}"
-              class="ep-input {% if form.email.errors %}ep-input--error{% endif %}"
-              placeholder="yourname@example.com" value="{{ form.email.value|default:'' }}" autocomplete="email" />
-          </div>
-          {% if form.email.errors %}<span class="ep-field__error">{{ form.email.errors.0 }}</span>{% endif %}
-        </div>
-
-        <div class="ep-field">
-          <label class="ep-field__label">I am registering as</label>
-          <div class="ep-role-toggle">
-            <input type="radio" name="role" id="role_student" value="student"
-              {% if not request.POST.role or request.POST.role == 'student' %}checked{% endif %} />
-            <label for="role_student">Student</label>
-            <input type="radio" name="role" id="role_guest" value="guest"
-              {% if request.POST.role == 'guest' %}checked{% endif %} />
-            <label for="role_guest">Guest</label>
-          </div>
-        </div>
-
-        <div class="ep-field">
-          <label class="ep-field__label">University <span style="color:var(--muted2);font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></label>
-          <div class="ep-field__input-wrap">
-            <span class="ep-icon ep-icon--home"></span>
-            <input type="text" name="university" class="ep-input"
-              placeholder="e.g. UNIZIK" value="{{ request.POST.university|default:'' }}" />
-          </div>
-        </div>
-
-        <div id="studentFields">
-          <div class="ep-field">
-            <label class="ep-field__label">Course / Programme</label>
-            <div class="ep-field__input-wrap">
-              <span class="ep-icon ep-icon--book"></span>
-              <input type="text" name="course" class="ep-input"
-                placeholder="e.g. Computer Science" value="{{ request.POST.course|default:'' }}" />
-            </div>
-          </div>
-
-          <div class="ep-field">
-            <label class="ep-field__label">Year of Study</label>
-            <select name="year_of_study" class="ep-select">
+        <div>
+          <label class="epx-flabel" for="rg-year">Year of Study</label>
+          <div class="epx-field">
+            <select id="rg-year" name="year_of_study">
               <option value="" disabled {% if not request.POST.year_of_study %}selected{% endif %}>Select your year</option>
               <option value="1"   {% if request.POST.year_of_study == '1'   %}selected{% endif %}>Year 1 — Foundation</option>
               <option value="2"   {% if request.POST.year_of_study == '2'   %}selected{% endif %}>Year 2</option>
@@ -114,72 +105,48 @@
             </select>
           </div>
         </div>
+      </div></div>
 
-        <div class="ep-field">
-          <label class="ep-field__label">Password</label>
-          <div class="ep-field__input-wrap">
-            <span class="ep-icon ep-icon--lock"></span>
-            <input type="password" name="{{ form.password1.html_name }}" id="id_password1"
-              class="ep-input ep-input--has-eye {% if form.password1.errors %}ep-input--error{% endif %}"
-              placeholder="Create a strong password" autocomplete="new-password" />
-            <button type="button" class="ep-field__eye" aria-label="Toggle password">
-              <svg class="eye-show" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-              </svg>
-              <svg class="eye-hide" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:none">
-                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                <line x1="1" y1="1" x2="23" y2="23"/>
-              </svg>
-            </button>
-          </div>
-          {% if form.password1.errors %}<span class="ep-field__error">{{ form.password1.errors.0 }}</span>{% endif %}
-          <div class="ep-strength">
-            <div class="ep-strength__bar"><div class="ep-strength__fill" id="strengthFill"></div></div>
-            <span class="ep-strength__label" id="strengthLabel"></span>
-          </div>
+      <div>
+        <label class="epx-flabel" for="id_password1">Password</label>
+        <div class="epx-field ep-field__input-wrap {% if form.password1.errors %}has-error{% endif %}">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+          <input type="password" name="{{ form.password1.html_name }}" id="id_password1" placeholder="Create a strong password" autocomplete="new-password" />
+          <button type="button" class="ep-field__eye" aria-label="Toggle password">
+            <svg class="eye-show" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="eye-hide" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
         </div>
-
-        <div class="ep-field">
-          <label class="ep-field__label">Confirm Password</label>
-          <div class="ep-field__input-wrap">
-            <span class="ep-icon ep-icon--lock"></span>
-            <input type="password" name="{{ form.password2.html_name }}" id="id_password2"
-              class="ep-input ep-input--has-eye {% if form.password2.errors %}ep-input--error{% endif %}"
-              placeholder="Repeat your password" autocomplete="new-password" />
-            <button type="button" class="ep-field__eye" aria-label="Toggle password">
-              <svg class="eye-show" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-              </svg>
-              <svg class="eye-hide" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:none">
-                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                <line x1="1" y1="1" x2="23" y2="23"/>
-              </svg>
-            </button>
-          </div>
-          {% if form.password2.errors %}<span class="ep-field__error">{{ form.password2.errors.0 }}</span>{% endif %}
+        {% if form.password1.errors %}<span class="epx-ferr">{{ form.password1.errors.0 }}</span>{% endif %}
+        <div class="ep-strength">
+          <div class="ep-strength__bar"><div class="ep-strength__fill" id="strengthFill"></div></div>
+          <span class="ep-strength__label" id="strengthLabel"></span>
         </div>
+      </div>
 
-        <label class="ep-checkbox">
-          <input type="checkbox" name="terms" required />
-          <span class="ep-checkbox__box">
-            <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-              <path d="M2 6l3 3 5-5" stroke="#1A0E02" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </span>
-          <span>I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></span>
-        </label>
+      <div>
+        <label class="epx-flabel" for="id_password2">Confirm Password</label>
+        <div class="epx-field ep-field__input-wrap {% if form.password2.errors %}has-error{% endif %}">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+          <input type="password" name="{{ form.password2.html_name }}" id="id_password2" placeholder="Repeat your password" autocomplete="new-password" />
+          <button type="button" class="ep-field__eye" aria-label="Toggle password">
+            <svg class="eye-show" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="eye-hide" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+        {% if form.password2.errors %}<span class="epx-ferr">{{ form.password2.errors.0 }}</span>{% endif %}
+      </div>
 
-        <button type="submit" class="ep-btn ep-btn--primary ep-btn--full">
-          Join EventPulse →
-        </button>
+      <label class="epx-terms">
+        <input type="checkbox" name="terms" required />
+        <span>I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></span>
+      </label>
 
-      </form>
+      <button type="submit" class="epx-btn" style="width:100%; margin-top:4px;">Join EventPulse →</button>
+    </form>
 
-      <p class="ep-auth__footer">
-        Already have an account? <a href="{% url 'accounts:login' %}">Sign in →</a>
-      </p>
-
-    </div>
+    <p class="epx-authfoot">Already have an account? <a href="{% url 'accounts:login' %}">Sign in →</a></p>
   </div>
+
 </div>
 {% endblock %}
