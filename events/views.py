@@ -20,7 +20,7 @@ from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
-from .models import Event, Category, RSVP, EventMedia
+from .models import Event, Category, RSVP, EventMedia, SavedEvent
 from .validators import MAX_VIDEO_SIZE, classify_media_name, validate_media_size
 
 
@@ -80,6 +80,7 @@ def home_view(request):
         'events':     events,
         'query':      query,
         'active_cat': category,
+        'saved_ids':  set(SavedEvent.objects.filter(user=request.user).values_list('event_id', flat=True)),
         'now':        now,
     })
 
@@ -332,6 +333,25 @@ def local_upload_view(request, key):
 
 
 @login_required(login_url='accounts:login')
+@require_POST
+def toggle_save_view(request, slug):
+    event = get_object_or_404(Event, slug=slug)
+    saved_obj, created = SavedEvent.objects.get_or_create(user=request.user, event=event)
+    if not created:
+        saved_obj.delete()
+
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'saved': created})
+
+    next_url = request.POST.get('next', '')
+    if next_url and url_has_allowed_host_and_scheme(
+        next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        return redirect(next_url)
+    return redirect('events:detail', slug=slug)
+
+
+@login_required(login_url='accounts:login')
 def delete_event_view(request, slug):
     event = get_object_or_404(Event, slug=slug, organiser=request.user)
     if request.method == 'POST':
@@ -370,6 +390,7 @@ def event_detail_view(request, slug):
         'is_ended':       is_ended,
         'is_live':        is_live,
         'is_coming_soon': is_coming_soon,
+        'is_saved':       request.user.is_authenticated and SavedEvent.objects.filter(user=request.user, event=event).exists(),
     })
 
 def profile_view(request, username):
@@ -423,6 +444,13 @@ def profile_view(request, username):
         'rsvp_count':      rsvp_count,
         'is_own_profile':  is_own,
         'viewer_is_following': viewer_is_following,
+        # Saved events are private, so only load them on your own profile.
+        'saved_events': (
+            Event.objects.filter(saves__user=profile_user, status=Event.Status.PUBLISHED)
+            .select_related('category', 'organiser')
+            .order_by('-saves__created_at')
+            if is_own else Event.objects.none()
+        ),
     })
 @login_required(login_url='accounts:login')
 def rsvp_view(request, slug):

@@ -2,192 +2,106 @@
 {% load static %}
 
 {% block title %}{{ profile_user.username }} — EventPulse{% endblock %}
+{% block body_class %}epx{% endblock %}
+{% block navbar %}{% if is_own_profile %}{% include 'partials/nav.html' with nav_active='profile' %}{% else %}{% include 'partials/nav.html' with nav_active='' %}{% endif %}{% endblock %}
 
 {% block content %}
-<div class="ep-profile-page">
+<div class="has-tabbar">
+<div class="epx-profile">
 
-  <div class="ep-profile-hero">
-    <div class="ep-profile-hero__inner">
-
-      <div class="ep-profile-avatar">
-        {% if profile_user.profile_picture %}
-          <img src="{{ profile_user.profile_picture.url }}" alt="{{ profile_user.username }}" />
-        {% else %}
-          <span>{{ profile_user.username|first|upper }}</span>
-        {% endif %}
+  {# ── HEADER ── #}
+  <div class="epx-phead">
+    <span class="epx-pav">
+      {% if profile_user.profile_picture %}<img src="{{ profile_user.profile_picture.url }}" alt="{{ profile_user.username }}" />{% else %}{{ profile_user.username|first|upper }}{% endif %}
+    </span>
+    <div style="flex:1; min-width:160px;">
+      <h1 class="epx-pname">
+        {{ profile_user.get_full_name|default:profile_user.username }}
+        {% if profile_user.is_verified_organiser %}<span title="Verified Organiser" style="color:var(--accent); font-size:1.2rem;">✓</span>{% endif %}
+      </h1>
+      <div class="epx-phandle">@{{ profile_user.username }}{% if profile_user.university %} · {{ profile_user.university }}{% endif %}</div>
+      <div class="epx-pchips">
+        <span>{% if profile_user.role == 'student' %}Student{% elif profile_user.role == 'society' %}Society{% elif profile_user.role == 'staff' %}Staff{% else %}{{ profile_user.role|capfirst }}{% endif %}</span>
+        {% if profile_user.course %}<span>{{ profile_user.course }}</span>{% endif %}
+        {% if profile_user.display_year %}<span>{{ profile_user.display_year }}</span>{% endif %}
       </div>
-
-      <div class="ep-profile-info">
-        <h1 class="ep-profile-name">
-          {{ profile_user.get_full_name|default:profile_user.username }}
-          {% if profile_user.is_verified_organiser %}
-            <span class="ep-profile-verified" title="Verified Organiser">
-              <span class="ep-icon ep-icon--check"></span>
-            </span>
-          {% endif %}
-        </h1>
-        <p class="ep-profile-username">@{{ profile_user.username }}</p>
-
-        <div class="ep-profile-meta">
-          {% if profile_user.university %}
-            <span class="ep-profile-meta-item">
-              <span class="ep-icon ep-icon--home ep-icon--accent"></span>
-              {{ profile_user.university }}
-            </span>
-          {% endif %}
-          {% if profile_user.course %}
-            <span class="ep-profile-meta-item">
-              <span class="ep-icon ep-icon--book ep-icon--accent"></span>
-              {{ profile_user.course }}
-            </span>
-          {% endif %}
-          {% if profile_user.display_year %}
-            <span class="ep-profile-meta-item">
-              <span class="ep-cat-icon ep-cat-icon--academic"></span>
-              {{ profile_user.display_year }}
-            </span>
-          {% endif %}
-          <span class="ep-profile-meta-item ep-profile-role ep-profile-role--{{ profile_user.role }}">
-            <span class="ep-icon ep-icon--user ep-icon--accent"></span>
-            {% if profile_user.role == 'student' %}Student
-            {% elif profile_user.role == 'society' %}Society
-            {% elif profile_user.role == 'staff' %}Staff
-            {% else %}{{ profile_user.role|capfirst }}{% endif %}
-          </span>
-        </div>
-
-        {% if profile_user.bio %}
-          <p class="ep-profile-bio">{{ profile_user.bio }}</p>
-        {% endif %}
-      </div>
-
-      <div class="ep-profile-stats">
-        <div class="ep-profile-stat">
-          <span class="ep-profile-stat__num">{{ posted_events.count }}</span>
-          <span class="ep-profile-stat__label">Events</span>
-        </div>
-        <div class="ep-profile-stat">
-          <span class="ep-profile-stat__num">{{ rsvp_count }}</span>
-          <span class="ep-profile-stat__label">RSVPs</span>
-        </div>
-        <a href="{% url 'social:follow_list' profile_user.username 'followers' %}" class="ep-profile-stat ep-profile-stat--link">
-          <span class="ep-profile-stat__num" id="followerCount">{{ profile_user.followers_count }}</span>
-          <span class="ep-profile-stat__label">Followers</span>
-        </a>
-        <a href="{% url 'social:follow_list' profile_user.username 'following' %}" class="ep-profile-stat ep-profile-stat--link">
-          <span class="ep-profile-stat__num">{{ profile_user.following_count }}</span>
-          <span class="ep-profile-stat__label">Following</span>
-        </a>
-        <!-- <a href="{% url 'social:follow_list' profile_user.username 'following' %}" class="ep-profile-stat ep-profile-stat--link">
-          <span class="ep-profile-stat__num">{{ profile_user.following_count|add:posted_events.count }}</span>
-          <span class="ep-profile-stat__label">Following</span>
-        </a> -->
-      </div>
-
-      {% if is_own_profile %}
-        <a href="{% url 'accounts:edit_profile' %}" class="ep-btn ep-btn--outline ep-btn--sm ep-profile-edit-btn">
-          <span class="ep-icon ep-icon--edit ep-icon--accent"></span>
-          Edit Profile
-        </a>
-      {% elif user.is_authenticated %}
-        <div class="ep-profile-actions">
-          <button
-            id="followBtn"
-            class="ep-btn ep-btn--sm {% if viewer_is_following %}ep-btn--following{% else %}ep-btn--primary{% endif %}"
-            data-username="{{ profile_user.username }}"
-            data-following="{% if viewer_is_following %}1{% else %}0{% endif %}">
-            <span class="ep-icon {% if viewer_is_following %}ep-icon--check{% else %}ep-icon--plus{% endif %}"></span>
-            <span class="ep-followbtn-label">{% if viewer_is_following %}Following{% else %}Follow{% endif %}</span>
-          </button>
-          <a href="{% url 'social:start_conversation' profile_user.username %}" class="ep-btn ep-btn--outline ep-btn--sm">
-            <span class="ep-icon ep-icon--chat ep-icon--accent"></span>
-            Message
-          </a>
-        </div>
-      {% endif %}
-
+      {% if profile_user.bio %}<p class="epx-pbio">{{ profile_user.bio }}</p>{% endif %}
     </div>
+
+    {% if is_own_profile %}
+      <div class="epx-pactions"><a href="{% url 'accounts:edit_profile' %}">Edit Profile</a></div>
+    {% elif user.is_authenticated %}
+      <div class="epx-pactions">
+        <button
+          id="followBtn"
+          class="ep-btn {% if viewer_is_following %}ep-btn--following{% else %}ep-btn--primary{% endif %}"
+          data-username="{{ profile_user.username }}"
+          data-following="{% if viewer_is_following %}1{% else %}0{% endif %}">
+          <span class="ep-icon {% if viewer_is_following %}ep-icon--check{% else %}ep-icon--plus{% endif %}"></span>
+          <span class="ep-followbtn-label">{% if viewer_is_following %}Following{% else %}Follow{% endif %}</span>
+        </button>
+        <a href="{% url 'social:start_conversation' profile_user.username %}">Message</a>
+      </div>
+    {% endif %}
   </div>
 
+  <div class="epx-pstats">
+    <div><div class="epx-pstats__n">{{ posted_events.count }}</div><div class="epx-pstats__k">Events</div></div>
+    <div><div class="epx-pstats__n">{{ rsvp_count }}</div><div class="epx-pstats__k">RSVPs</div></div>
+    <a href="{% url 'social:follow_list' profile_user.username 'followers' %}"><div class="epx-pstats__n" id="followerCount">{{ profile_user.followers_count }}</div><div class="epx-pstats__k">Followers</div></a>
+    <a href="{% url 'social:follow_list' profile_user.username 'following' %}"><div class="epx-pstats__n">{{ profile_user.following_count }}</div><div class="epx-pstats__k">Following</div></a>
+  </div>
+
+  {# ── TABS ── #}
   <div class="ep-profile-tabs">
-    <div class="ep-profile-tabs__inner">
-      <button class="ep-profile-tab active" data-tab="posted">
-        Posted Events <span class="ep-profile-tab__count">{{ posted_events.count }}</span>
-      </button>
-      {% if is_own_profile %}
-        <button class="ep-profile-tab" data-tab="attending">
-          Guests <span class="ep-profile-tab__count">{{ accepted_guests.count }}</span>
-        </button>
-        <button class="ep-profile-tab" data-tab="drafts">
-          Drafts <span class="ep-profile-tab__count">{{ draft_events.count }}</span>
-        </button>
-      {% endif %}
-    </div>
+    <button class="ep-profile-tab active" data-tab="posted">Posted Events <span class="ep-profile-tab__count">{{ posted_events.count }}</span></button>
+    {% if is_own_profile %}
+      <button class="ep-profile-tab" data-tab="attending">Guests <span class="ep-profile-tab__count">{{ accepted_guests.count }}</span></button>
+      <button class="ep-profile-tab" data-tab="drafts">Drafts <span class="ep-profile-tab__count">{{ draft_events.count }}</span></button>
+      <button class="ep-profile-tab" data-tab="saved">Saved <span class="ep-profile-tab__count" id="savedCount">{{ saved_events|length }}</span></button>
+    {% endif %}
   </div>
 
+  {# ── POSTED ── #}
   <div class="ep-profile-content" id="tab-posted">
-    <div class="ep-grid ep-profile-grid">
+    {% if is_own_profile and posted_events %}
+    <div class="epx-hint">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4m0 4h.01M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Z"/></svg>
+      Drag a card to the trash to delete it — on a phone, press and hold first.
+    </div>
+    {% endif %}
+    <div class="epx-mygrid">
       {% for event in posted_events %}
-      <article class="ep-card" data-cat="{{ event.category.slug|default:'all' }}"
-        onclick="window.location.href='{% url 'events:detail' event.slug %}'">
-        <div class="ep-card__img {% if not event.cover_image %}ep-flyerbg--{{ event.category.slug|default:'academic' }}{% endif %}">
-          {% if event.cover_image %}
-            <img src="{{ event.cover_image.url }}" alt="{{ event.title }}" loading="lazy">
-          {% else %}
-            <div class="ep-card__placeholder">
-              <span class="ep-cat-icon ep-cat-icon--{{ event.category.slug|default:'academic' }}" style="width:48px;height:48px;"></span>
-            </div>
-          {% endif %}
-
-          <div class="ep-datestub">
-            <div class="ep-datestub__d">{{ event.start_datetime|date:"d" }}</div>
-            <div class="ep-datestub__m">{{ event.start_datetime|date:"M" }}</div>
-          </div>
-
-          {% if event.status == 'draft' %}
-            <span class="ep-pricechip" style="background:var(--card2);color:var(--muted);">Draft</span>
-          {% elif event.is_past %}
-            <span class="ep-pricechip" style="background:var(--card2);color:var(--muted);">Ended</span>
-          {% elif event.is_free %}
-            <span class="ep-pricechip ep-pricechip--free">Free</span>
-          {% else %}
-            <span class="ep-pricechip">₦{{ event.ticket_price }}</span>
-          {% endif %}
+      <article class="epx-mycard" onclick="window.location.href='{% url 'events:detail' event.slug %}'"
+        {% if is_own_profile %}data-delete-url="{% url 'events:delete' event.slug %}"{% endif %}>
+        <div class="epx-mycard__img epx-cover epx-cover--{{ event.category.slug|default:'academic' }}">
+          {% if event.display_image_url %}<img src="{{ event.display_image_url }}" alt="{{ event.title }}" loading="lazy" draggable="false">{% endif %}
+          {% if event.status == 'draft' %}<span class="epx-mycard__chip">Draft</span>
+          {% elif event.is_past %}<span class="epx-mycard__chip">Ended</span>
+          {% elif event.is_free %}<span class="epx-mycard__chip epx-mycard__chip--price">Free</span>
+          {% else %}<span class="epx-mycard__chip epx-mycard__chip--price">₦{{ event.ticket_price }}</span>{% endif %}
+          {% if event.category %}<span class="epx-tag">{{ event.category.name }}</span>{% endif %}
         </div>
-
-        <div class="ep-perf"></div>
-
-        <div class="ep-card__body">
-          <h3 class="ep-card__title">{{ event.title }}</h3>
-          <div class="ep-card__meta">
-            <div class="ep-card__meta-row">
-              <span class="ep-meta-icon ep-meta-icon--calendar"></span>
-              {{ event.start_datetime|date:"D, d M Y · H:i" }}
-            </div>
-            <div class="ep-card__meta-row">
-              <span class="ep-meta-icon ep-meta-icon--pin"></span>
-              {{ event.location_name }}
-            </div>
+        <div class="epx-mycard__body">
+          <div class="epx-mycard__when">{{ event.start_datetime|date:"D d M Y · H:i" }}</div>
+          <div class="epx-mycard__title">{{ event.title }}</div>
+          <div class="epx-mycard__sub">{{ event.location_name }} · {{ event.rsvps.count }} RSVPs</div>
+          {% if is_own_profile %}
+          <div class="epx-mycard__own" onclick="event.stopPropagation()">
+            <a href="{% url 'events:edit' event.slug %}">Edit</a>
+            <form method="POST" action="{% url 'events:delete' event.slug %}" onsubmit="return confirm('Delete this event? This cannot be undone.')">
+              {% csrf_token %}<button type="submit">Delete</button>
+            </form>
           </div>
-          <div class="ep-card__footer">
-            <div class="ep-card__organiser">
-              <div class="ep-card__organiser-av">{{ event.organiser.username|first|upper }}</div>
-              <span>{{ event.rsvps.count }} RSVPs</span>
-            </div>
-            {% if is_own_profile %}
-              <a href="{% url 'events:edit' event.slug %}" class="ep-btn ep-btn--ghost ep-btn--sm"
-                onclick="event.stopPropagation()" style="font-size:.72rem;padding:.3rem .7rem;">Edit</a>
-            {% endif %}
-          </div>
+          {% endif %}
         </div>
       </article>
       {% empty %}
-      <div class="ep-empty" style="grid-column:1/-1">
-        <div class="ep-empty-icon ep-empty-icon--events"></div>
+      <div class="epx-empty">
         <h3>No events posted yet</h3>
         {% if is_own_profile %}
           <p>Ready to host something?</p>
-          <a href="{% url 'events:create' %}" class="ep-btn ep-btn--primary" style="margin-top:1rem">Post an Event</a>
+          <a href="{% url 'events:create' %}" class="epx-btn">Post an Event</a>
         {% endif %}
       </div>
       {% endfor %}
@@ -195,71 +109,84 @@
   </div>
 
   {% if is_own_profile %}
+  {# ── GUESTS ── #}
   <div class="ep-profile-content" id="tab-attending" style="display:none">
-    <div class="ep-grid ep-profile-grid">
-      {% for rsvp in accepted_guests %}
-      <article class="ep-card" onclick="window.location.href='{% url 'accounts:profile' rsvp.user.username %}'">
-        <div class="ep-card__body" style="display:flex;align-items:center;gap:1rem;padding:1.25rem;">
-          <div class="ep-card__organiser-av" style="width:48px;height:48px;font-size:1.1rem;flex-shrink:0;">
-            {% if rsvp.user.profile_picture %}
-              <img src="{{ rsvp.user.profile_picture.url }}" alt="{{ rsvp.user.username }}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">
-            {% else %}{{ rsvp.user.username|first|upper }}{% endif %}
+    {% for rsvp in accepted_guests %}
+    <a href="{% url 'accounts:profile' rsvp.user.username %}" class="epx-person">
+      <span class="epx-person__av">{% if rsvp.user.profile_picture %}<img src="{{ rsvp.user.profile_picture.url }}" alt="{{ rsvp.user.username }}">{% else %}{{ rsvp.user.username|first|upper }}{% endif %}</span>
+      <div style="flex:1; min-width:0;">
+        <div class="epx-person__name">{{ rsvp.user.get_full_name|default:rsvp.user.username }}</div>
+        <div class="epx-person__meta">@{{ rsvp.user.username }} · Joining {{ rsvp.event.title|truncatechars:32 }}</div>
+      </div>
+      <span class="epx-going">Approved</span>
+    </a>
+    {% empty %}
+    <div class="epx-empty">
+      <h3>No guests yet</h3>
+      <p>When you approve people for your events, they'll show up here.</p>
+    </div>
+    {% endfor %}
+  </div>
+
+  {# ── DRAFTS ── #}
+  <div class="ep-profile-content" id="tab-drafts" style="display:none">
+    <div class="epx-mygrid">
+      {% for event in draft_events %}
+      <article class="epx-mycard" onclick="window.location.href='{% url 'events:detail' event.slug %}'" data-delete-url="{% url 'events:delete' event.slug %}">
+        <div class="epx-mycard__img epx-cover epx-cover--{{ event.category.slug|default:'academic' }}">
+          {% if event.display_image_url %}<img src="{{ event.display_image_url }}" alt="{{ event.title }}" loading="lazy" draggable="false">{% endif %}
+          <span class="epx-mycard__chip">Draft</span>
+        </div>
+        <div class="epx-mycard__body">
+          <div class="epx-mycard__title">{{ event.title }}</div>
+          <div class="epx-mycard__sub">Last edited {{ event.updated_at|date:"d M Y" }}</div>
+          <div class="epx-mycard__own" onclick="event.stopPropagation()">
+            <a href="{% url 'events:edit' event.slug %}" class="is-primary">Publish</a>
+            <form method="POST" action="{% url 'events:delete' event.slug %}" onsubmit="return confirm('Delete this event? This cannot be undone.')">
+              {% csrf_token %}<button type="submit">Delete</button>
+            </form>
           </div>
-          <div style="flex:1;min-width:0;">
-            <h3 class="ep-card__title" style="margin:0 0 .15rem;">{{ rsvp.user.get_full_name|default:rsvp.user.username }}</h3>
-            <div style="font-size:.78rem;color:var(--muted);">@{{ rsvp.user.username }}</div>
-            <div class="ep-card__meta-row" style="margin-top:.5rem;">
-              <span class="ep-meta-icon ep-meta-icon--ticket"></span>
-              Joining {{ rsvp.event.title|truncatechars:32 }}
-            </div>
-          </div>
-          <span class="ep-status-chip ep-status-chip--approved" style="flex-shrink:0;">Approved</span>
         </div>
       </article>
       {% empty %}
-      <div class="ep-empty" style="grid-column:1/-1">
-        <div class="ep-empty-icon ep-empty-icon--people"></div>
-        <h3>No guests yet</h3>
-        <p>When you approve people for your events, they'll show up here.</p>
-      </div>
+      <div class="epx-empty"><h3>No drafts</h3></div>
       {% endfor %}
     </div>
   </div>
 
-  <div class="ep-profile-content" id="tab-drafts" style="display:none">
-    <div class="ep-grid ep-profile-grid">
-      {% for event in draft_events %}
-      <article class="ep-card" onclick="window.location.href='{% url 'events:detail' event.slug %}'">
-        <div class="ep-card__img {% if not event.cover_image %}ep-flyerbg--{{ event.category.slug|default:'academic' }}{% endif %}">
-          {% if event.cover_image %}
-            <img src="{{ event.cover_image.url }}" alt="{{ event.title }}" loading="lazy">
-          {% else %}
-            <div class="ep-card__placeholder">
-              <span class="ep-empty-icon ep-empty-icon--draft" style="width:48px;height:48px;border-radius:12px;"></span>
-            </div>
-          {% endif %}
-          <span class="ep-pricechip" style="background:var(--card2);color:var(--muted);">Draft</span>
+  {# ── SAVED ── #}
+  <div class="ep-profile-content" id="tab-saved" style="display:none">
+    <div class="epx-mygrid">
+      {% for event in saved_events %}
+      <article class="epx-mycard" data-saved-card onclick="window.location.href='{% url 'events:detail' event.slug %}'">
+        <div class="epx-mycard__img epx-cover epx-cover--{{ event.category.slug|default:'academic' }}">
+          {% if event.display_image_url %}<img src="{{ event.display_image_url }}" alt="{{ event.title }}" loading="lazy" draggable="false">{% endif %}
+          {% if event.category %}<span class="epx-tag">{{ event.category.name }}</span>{% endif %}
+          <div class="epx-card__save">{% include 'partials/save_button.html' with saved=True remove_on_unsave=True %}</div>
         </div>
-        <div class="ep-perf"></div>
-        <div class="ep-card__body">
-          <h3 class="ep-card__title">{{ event.title }}</h3>
-          <div class="ep-card__footer">
-            <span style="font-size:.75rem;color:var(--muted2);font-family:var(--font-mono);">Last edited {{ event.updated_at|date:"d M Y" }}</span>
-            <a href="{% url 'events:edit' event.slug %}" class="ep-btn ep-btn--primary ep-btn--sm" onclick="event.stopPropagation()">Publish</a>
-          </div>
+        <div class="epx-mycard__body">
+          <div class="epx-mycard__when">{{ event.start_datetime|date:"D d M Y · H:i" }}</div>
+          <div class="epx-mycard__title">{{ event.title }}</div>
+          <div class="epx-mycard__sub">{{ event.location_name }} · by {{ event.organiser.username }}</div>
         </div>
       </article>
-      {% empty %}
-      <div class="ep-empty" style="grid-column:1/-1">
-        <div class="ep-empty-icon ep-empty-icon--draft"></div>
-        <h3>No drafts</h3>
-      </div>
       {% endfor %}
+      <div class="epx-empty" id="savedEmpty" {% if saved_events %}hidden{% endif %}>
+        <h3>Nothing saved yet</h3>
+        <p>Tap the bookmark on any event to keep it here.</p>
+      </div>
     </div>
   </div>
+
+  <div class="epx-trash" id="epxTrash" hidden aria-hidden="true">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M10 11v6M14 11v6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <form method="POST" id="dragDeleteForm" style="display:none;">{% csrf_token %}</form>
   {% endif %}
 
 </div>
+</div>
+{% if is_own_profile %}{% include 'partials/tabbar.html' with nav_active='profile' %}{% else %}{% include 'partials/tabbar.html' with nav_active='' %}{% endif %}
 {% endblock %}
 
 {% block extra_js %}
@@ -318,6 +245,120 @@ document.querySelectorAll('.ep-profile-tab').forEach(function(tab) {
     } finally {
       btn.disabled = false;
     }
+  });
+})();
+
+// ── Drag a card to the trash to delete it ──
+// Mouse: drag starts after a few pixels of movement.
+// Touch: press and hold first, so normal swipes still scroll the page.
+(function () {
+  var trash = document.getElementById('epxTrash');
+  var form  = document.getElementById('dragDeleteForm');
+  if (!trash || !form || !document.querySelector('[data-delete-url]')) return;
+
+  var st = null;              // current gesture
+  var swallowClick = false;   // a finished drag must not also open the card
+
+  function isControl(el) { return !!el.closest('a, button, form, input'); }
+
+  function overTrash(x, y) {
+    var r = trash.getBoundingClientRect();
+    return Math.hypot(x - (r.left + r.width / 2), y - (r.top + r.height / 2)) < 90;
+  }
+
+  function place() {
+    st.clone.style.left = (st.x - st.offX) + 'px';
+    st.clone.style.top  = (st.y - st.offY) + 'px';
+    st.over = overTrash(st.x, st.y);
+    trash.classList.toggle('is-hot', st.over);
+    st.clone.classList.toggle('is-over', st.over);
+  }
+
+  function begin() {
+    if (!st) return;
+    var r = st.card.getBoundingClientRect();
+    st.dragging = true;
+    st.offX = st.x - r.left;
+    st.offY = st.y - r.top;
+    st.clone = st.card.cloneNode(true);
+    st.clone.classList.add('epx-drag-clone');
+    st.clone.removeAttribute('onclick');
+    st.clone.style.width  = r.width + 'px';
+    st.clone.style.height = r.height + 'px';
+    document.body.appendChild(st.clone);
+    st.card.classList.add('is-held');
+    trash.hidden = false;
+    document.body.classList.add('epx-dragging');
+    if (navigator.vibrate) navigator.vibrate(15);
+    place();
+  }
+
+  function finish() {
+    if (!st) return;
+    clearTimeout(st.timer);
+    var s = st;
+    st = null;
+    if (!s.dragging) return;
+    swallowClick = true;
+    setTimeout(function () { swallowClick = false; }, 400);
+    s.clone.remove();
+    s.card.classList.remove('is-held');
+    trash.hidden = true;
+    trash.classList.remove('is-hot');
+    document.body.classList.remove('epx-dragging');
+    if (s.over && confirm('Delete this event? This cannot be undone.')) {
+      form.action = s.card.dataset.deleteUrl;
+      form.submit();
+    }
+  }
+
+  function moved(x, y) { return Math.hypot(x - st.startX, y - st.startY); }
+
+  document.querySelectorAll('[data-delete-url]').forEach(function (card) {
+    card.addEventListener('dragstart', function (e) { e.preventDefault(); });
+
+    // Mouse / pen
+    card.addEventListener('pointerdown', function (e) {
+      if (e.pointerType === 'touch' || e.button !== 0 || isControl(e.target)) return;
+      st = { card: card, x: e.clientX, y: e.clientY, startX: e.clientX, startY: e.clientY, dragging: false };
+    });
+
+    // Touch: long-press
+    card.addEventListener('touchstart', function (e) {
+      if (e.touches.length !== 1 || isControl(e.target)) return;
+      var t = e.touches[0];
+      st = { card: card, x: t.clientX, y: t.clientY, startX: t.clientX, startY: t.clientY, dragging: false };
+      st.timer = setTimeout(begin, 400);
+    }, { passive: true });
+  });
+
+  window.addEventListener('pointermove', function (e) {
+    if (!st || e.pointerType === 'touch') return;
+    st.x = e.clientX; st.y = e.clientY;
+    if (!st.dragging && moved(st.x, st.y) > 6) begin();
+    if (st.dragging) place();
+  });
+  window.addEventListener('pointerup', function (e) { if (e.pointerType !== 'touch') finish(); });
+
+  window.addEventListener('touchmove', function (e) {
+    if (!st) return;
+    var t = e.touches[0];
+    st.x = t.clientX; st.y = t.clientY;
+    if (!st.dragging) {
+      if (moved(st.x, st.y) > 10) { clearTimeout(st.timer); st = null; }  // it's a scroll
+      return;
+    }
+    e.preventDefault();  // hold the page still while dragging
+    place();
+  }, { passive: false });
+  window.addEventListener('touchend', finish);
+  window.addEventListener('touchcancel', finish);
+
+  document.addEventListener('click', function (e) {
+    if (swallowClick) { e.preventDefault(); e.stopPropagation(); swallowClick = false; }
+  }, true);
+  document.addEventListener('contextmenu', function (e) {
+    if (st && st.dragging) e.preventDefault();
   });
 })();
 </script>

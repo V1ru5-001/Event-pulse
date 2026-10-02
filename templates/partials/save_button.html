@@ -1,0 +1,11 @@
+{# Bookmark toggle. Usage: {% include 'partials/save_button.html' with event=event saved=True|False %} #}
+<form method="POST" action="{% url 'events:save' event.slug %}" class="epx-save-form{% if remove_on_unsave %} js-remove-on-unsave{% endif %}" onclick="event.stopPropagation()">
+  {% csrf_token %}
+  <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+  <button type="submit" class="epx-save{% if saved %} is-saved{% endif %}"
+          aria-pressed="{% if saved %}true{% else %}false{% endif %}"
+          aria-label="{% if saved %}Remove from saved{% else %}Save event{% endif %}"
+          title="{% if saved %}Saved{% else %}Save{% endif %}">
+    <svg width="16" height="16" viewBox="0 0 24 24" stroke-width="2"><path d="M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+  </button>
+</form>

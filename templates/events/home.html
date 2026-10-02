@@ -157,6 +157,7 @@
         {% endif %}
         {% if event.category %}<span class="epx-tag">{{ event.category.name }}</span>{% endif %}
         {% if event.is_past %}<div class="epx-card__ended">This event has ended</div>{% endif %}
+        <div class="epx-card__save">{% if event.pk in saved_ids %}{% include 'partials/save_button.html' with saved=True %}{% else %}{% include 'partials/save_button.html' with saved=False %}{% endif %}</div>
       </div>
 
       <div class="epx-card__body">

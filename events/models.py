@@ -217,6 +217,23 @@ class EventMedia(models.Model):
         return f"{self.event.title} — {self.get_media_type_display()} #{self.order}"
 
 
+class SavedEvent(models.Model):
+    """An event a user has bookmarked to come back to."""
+
+    user       = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="saved_events")
+    event      = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="saves")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together     = ("user", "event")
+        verbose_name        = "Saved Event"
+        verbose_name_plural = "Saved Events"
+        ordering            = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.user.username} saved {self.event.title}"
+
+
 class RSVP(models.Model):
 
     class Status(models.TextChoices):

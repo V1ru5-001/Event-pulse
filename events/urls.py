@@ -14,6 +14,7 @@ urlpatterns = [
     path('events/<slug:slug>/edit/',        views.create_event_view, name='edit'),
     path('events/<slug:slug>/delete/',      views.delete_event_view, name='delete'),
     path('events/<slug:slug>/rsvp/',        views.rsvp_view,         name='rsvp'),
+    path('events/<slug:slug>/save/',        views.toggle_save_view,  name='save'),
     path('events/<slug:slug>/rsvps/',       views.manage_rsvps_view, name='manage_rsvps'),
 ]
 

@@ -45,6 +45,7 @@
       {% endwith %}
       <div class="epx-detail-cover__shade"></div>
       {% if event.category %}<span class="epx-tag">{{ event.category.name }}</span>{% endif %}
+      {% if user.is_authenticated %}<div class="epx-detail-cover__save">{% include 'partials/save_button.html' with saved=is_saved %}</div>{% endif %}
     </div>
   </div>
 

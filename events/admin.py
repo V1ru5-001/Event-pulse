@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Event, EventMedia, Category
+from .models import Event, EventMedia, Category, SavedEvent
 
 
 class EventMediaInline(admin.TabularInline):
@@ -17,3 +17,4 @@ class EventAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Category)
+admin.site.register(SavedEvent)
