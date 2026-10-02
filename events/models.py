@@ -178,12 +178,18 @@ class Event(models.Model):
     @property
     def primary_media(self):
         """First gallery item (image or video) — used by the home slideshow."""
+        if 'gallery' in getattr(self, '_prefetched_objects_cache', {}):
+            return next(iter(self.gallery.all()), None)
         return self.gallery.first()
 
     @property
     def display_image_url(self):
         """Best-effort static image URL for contexts that can't show video (grid/feed cards)."""
-        first_image = self.gallery.filter(media_type=EventMedia.MediaType.IMAGE).first()
+        if 'gallery' in getattr(self, '_prefetched_objects_cache', {}):
+            # Use the prefetched list so feeds don't run one query per card.
+            first_image = next((m for m in self.gallery.all() if m.media_type == EventMedia.MediaType.IMAGE), None)
+        else:
+            first_image = self.gallery.filter(media_type=EventMedia.MediaType.IMAGE).first()
         if first_image:
             return first_image.file.url
         if self.cover_image:

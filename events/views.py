@@ -31,7 +31,7 @@ def landing_view(request):
 
     events = Event.objects.filter(
         status=Event.Status.PUBLISHED
-    ).select_related('organiser', 'category').annotate(
+    ).select_related('organiser', 'category').prefetch_related('gallery').annotate(
         approved_count=Count('rsvps', filter=Q(rsvps__status=RSVP.Status.APPROVED))
     ).order_by('-is_featured', '-created_at')[:6]
 
@@ -55,7 +55,7 @@ def home_view(request):
 
     events = Event.objects.filter(
         status=Event.Status.PUBLISHED
-    ).select_related('organiser', 'category').annotate(
+    ).select_related('organiser', 'category').prefetch_related('gallery').annotate(
         approved_count=Count('rsvps', filter=Q(rsvps__status=RSVP.Status.APPROVED))
     ).order_by('-is_featured', '-created_at')
 
