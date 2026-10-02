@@ -5,15 +5,25 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
+from django.utils.http import url_has_allowed_host_and_scheme
 
 from .forms import RegisterForm
 
 User = get_user_model()
 
 
+def _next_url(request):
+    """The page the user was heading to (?next=), if it's on this site."""
+    url = request.POST.get('next') or request.GET.get('next')
+    if url and url_has_allowed_host_and_scheme(url, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+        return url
+    return None
+
+
 def login_view(request):
+    # Already signed in (e.g. an old tab): skip the form and carry on.
     if request.user.is_authenticated:
-        return redirect('events:home')
+        return redirect(_next_url(request) or 'events:home')
 
     form = AuthenticationForm(request, data=request.POST or None)
 
@@ -22,17 +32,16 @@ def login_view(request):
             user = form.get_user()
             login(request, user)
             messages.success(request, f'Welcome back, {user.first_name or user.username}! 👋')
-            # always go to home after login
-            return redirect('events:home')
+            return redirect(_next_url(request) or 'events:home')
         else:
             messages.error(request, 'Invalid credentials. Please try again.')
 
-    return render(request, 'accounts/login.html', {'form': form})
+    return render(request, 'accounts/login.html', {'form': form, 'next': _next_url(request) or ''})
 
 
 def register_view(request):
     if request.user.is_authenticated:
-        return redirect('events:home')
+        return redirect(_next_url(request) or 'events:home')
 
     form = RegisterForm(request.POST or None)
 

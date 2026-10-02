@@ -42,6 +42,9 @@ CSRF_TRUSTED_ORIGINS = os.environ.get(
     'https://*.vercel.app'
 ).split(',')
 
+# Stale forms (e.g. an old login tab) redirect instead of showing a bare 403.
+CSRF_FAILURE_VIEW = 'core.csrf.csrf_failure'
+
 
 # Application definition
 

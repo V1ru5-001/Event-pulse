@@ -22,6 +22,7 @@
 
     <form method="POST" style="margin-top:28px; display:flex; flex-direction:column; gap:20px;">
       {% csrf_token %}
+      {% if next %}<input type="hidden" name="next" value="{{ next }}" />{% endif %}
 
       <div>
         <label class="epx-flabel" for="{{ form.username.id_for_label }}">Email</label>
