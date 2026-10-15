@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{% if query %}"{{ query }}" — Events{% else %}EventPulse — Campus Events{% endif %}{% endblock %}
+{% block title %}{% if query %}"{{ query }}" — Events{% else %}EventPulse — Events{% endif %}{% endblock %}
 {% block body_class %}epx{% endblock %}
 {% block navbar %}{% include 'partials/nav.html' with nav_active='discover' %}{% endblock %}
 
@@ -137,7 +137,7 @@
 
 <section class="epx-wrap" id="feed" style="padding-top:40px; padding-bottom:60px;">
   <h2 class="epx-h2" style="margin-bottom:22px;">
-    {% if events %}{{ events|length }} Event{{ events|length|pluralize }} on Campus{% else %}Campus Events{% endif %}
+    {% if events %}{{ events|length }} Event{{ events|length|pluralize }}{% else %}Events{% endif %}
   </h2>
 
   <div class="epx-grid3">
@@ -200,7 +200,7 @@
     {% empty %}
     <div class="epx-empty">
       <h3>No events yet</h3>
-      <p>Be the first to post a campus event.</p>
+      <p>Be the first to post an event.</p>
       <a href="{% url 'events:create' %}" class="epx-btn">Post an Event</a>
     </div>
     {% endfor %}

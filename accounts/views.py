@@ -236,7 +236,7 @@ def finish_profile_view(request):
 def logout_view(request):
     name = request.user.first_name or request.user.username
     logout(request)
-    messages.info(request, f'You have been signed out. See you on campus, {name}!')
+    messages.info(request, f'You have been signed out. See you soon, {name}!')
     return redirect('accounts:login')
 
 @login_required

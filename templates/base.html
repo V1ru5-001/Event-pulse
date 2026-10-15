@@ -17,7 +17,7 @@
 
   <div id="ep-preloader">
     <div class="pl-name">EVENT<b>PULSE</b></div>
-    <div class="pl-tagline">Your campus · Your events</div>
+    <div class="pl-tagline">Your events · Your community</div>
     <div class="pl-bar-wrap">
       <div class="pl-bar" id="plBar"></div>
     </div>
@@ -52,12 +52,12 @@
 
       <span class="ep-nav__location">
         <span class="ep-icon ep-icon--pin"></span>
-        {% if user.is_authenticated and user.university %}{{ user.university|truncatechars:16 }}{% else %}Campus{% endif %}
+        {% if user.is_authenticated and user.university %}{{ user.university|truncatechars:16 }}{% else %}Events{% endif %}
       </span>
 
       {% if user.is_authenticated %}
 
-        <a href="{% url 'events:calendar' %}" class="ep-nav__iconbtn" title="Campus calendar">
+        <a href="{% url 'events:calendar' %}" class="ep-nav__iconbtn" title="Event calendar">
           <span class="ep-icon ep-icon--calendar"></span>
         </a>
 
@@ -157,7 +157,7 @@
         <span class="ep-icon ep-icon--search"></span> Browse Events
       </a>
       <a href="{% url 'events:calendar' %}" class="ep-mobilemenu__link">
-        <span class="ep-icon ep-icon--calendar"></span> Campus Calendar
+        <span class="ep-icon ep-icon--calendar"></span> Event Calendar
       </a>
       <a href="{% url 'social:notifications' %}" class="ep-mobilemenu__link">
         <span class="ep-icon ep-icon--bell"></span> Notifications

@@ -18,7 +18,7 @@
   <div class="epx-ticket-rule"></div>
 
   <h1 class="epx-h1" style="font-size:2.6rem; margin:0;">{% if event %}Edit Event{% else %}Post an Event{% endif %}</h1>
-  <p style="color:var(--ink-soft); margin-top:10px;">{% if event %}Update your event details below.{% else %}Fill in the details and let your campus know.{% endif %}</p>
+  <p style="color:var(--ink-soft); margin-top:10px;">{% if event %}Update your event details below.{% else %}Fill in the details and let people know.{% endif %}</p>
 
   {% if form.non_field_errors %}
     {% for error in form.non_field_errors %}
@@ -141,7 +141,7 @@
       <label class="epx-flabel" for="ce-addr">Full Address</label>
       <div class="epx-field">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg>
-        <input id="ce-addr" type="text" name="location_address" placeholder="e.g. University Road, Block C"
+        <input id="ce-addr" type="text" name="location_address" placeholder="e.g. 12 Main Street, Hall B"
           value="{% if event %}{{ request.POST.location_address|default:event.location_address }}{% else %}{{ request.POST.location_address|default:'' }}{% endif %}" />
       </div>
     </div>
