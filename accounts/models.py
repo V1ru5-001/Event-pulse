@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
@@ -102,3 +103,38 @@ class User(AbstractUser):
         if not other or other.pk == self.pk:
             return False
         return self.following_set.filter(following=other).exists()
+
+
+class EmailOTP(models.Model):
+    """
+    A pending email check for an email/password sign-up.
+    While a row exists the account is unverified; it is deleted once the code
+    is confirmed. Users with no row (everyone registered before this, and
+    Google users) are verified.
+    """
+    user      = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+                                     related_name='email_otp')
+    code_hash = models.CharField(max_length=64, blank=True)    # HMAC-SHA256 of the code; '' = invalidated
+    sent_at   = models.DateTimeField()                          # expiry (+10 min) and resend cooldown (+60 s)
+    attempts  = models.PositiveSmallIntegerField(default=0)    # wrong guesses on the current code
+
+    class Meta:
+        verbose_name = 'Email verification code'
+
+    def __str__(self):
+        return f'Pending email check for {self.user}'
+
+
+class AuthThrottle(models.Model):
+    """
+    A database-backed rate-limit counter (Vercel has no shared memory).
+    `key` is a SHA-256 of the rule name plus the IP / email it counts,
+    so no raw IPs or addresses are stored.
+    """
+    key          = models.CharField(max_length=64, unique=True)
+    count        = models.PositiveIntegerField(default=0)
+    window_start = models.DateTimeField()
+    locked_until = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'Rate-limit counter'

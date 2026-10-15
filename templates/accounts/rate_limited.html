@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}Too many attempts — EventPulse{% endblock %}
+{% block body_class %}epx{% endblock %}
+{% block navbar %}{% endblock %}
+{% block content %}
+<div class="epx-authpage">
+  <div class="epx-authcard">
+
+    <div class="epx-ticket"><span>Admit One</span><span>EP-{% now "y" %}</span></div>
+    <div class="epx-perf"><span></span><span></span></div>
+
+    <a href="{% url 'events:landing' %}" class="epx-logo">EVENT<b>PULSE</b></a>
+    <h1 class="epx-h1" style="font-size:2.4rem; margin-top:16px;">Let's take a breather</h1>
+    <p style="color:var(--ink-soft); margin-top:8px; line-height:1.6;">
+      There have been too many attempts, so we've paused this for a little while to keep accounts safe.
+      Please try again in <b style="color:var(--ink);">{{ wait }}</b>.
+    </p>
+    <p style="color:var(--ink-soft); margin-top:14px; line-height:1.6;">
+      Forgotten your password? You can <a href="{% url 'accounts:password_reset' %}" style="color:var(--accent);">reset it</a>
+      once the wait is over.
+    </p>
+
+    <a href="{% url 'events:landing' %}" class="epx-btn epx-btn--ghost" style="width:100%; margin-top:28px;">Back to EventPulse</a>
+  </div>
+</div>
+{% endblock %}

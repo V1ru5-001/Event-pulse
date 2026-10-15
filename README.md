@@ -121,6 +121,9 @@ EventPulse runs on Vercel with a Supabase Postgres database and Supabase Storage
 | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | Supabase Storage S3 access keys. |
 | `AWS_STORAGE_BUCKET_NAME`, `AWS_S3_REGION_NAME`, `AWS_S3_ENDPOINT_URL` | Bucket name, region and Supabase S3 endpoint. |
 | `AWS_S3_CUSTOM_DOMAIN` | Optional public domain for uploaded files. |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google OAuth client. Without both, the "Continue with Google" buttons are hidden. |
+| `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `EMAIL_USE_TLS`, `DEFAULT_FROM_EMAIL` | SMTP for sign-up codes and password resets. Required in production: without them new users can't verify their email. Locally, with `DEBUG=True` and no `EMAIL_HOST`, emails print to the console. |
+| `TRUST_X_FORWARDED_FOR` | Optional. Not needed on Vercel (it's trusted automatically there via `VERCEL=1`); set `True` only behind another proxy that overwrites `X-Forwarded-For`. |
 
 **Migrations:** Vercel does not run `migrate`. After every push that adds a migration, run it against Supabase from your machine:
 

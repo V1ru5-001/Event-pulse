@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Check your email — EventPulse{% endblock %}
+{% block body_class %}epx{% endblock %}
+{% block navbar %}{% endblock %}
+{% block content %}
+<div class="epx-authpage">
+  <div class="epx-authcard">
+
+    <div class="epx-ticket"><span>Admit One</span><span>EP-{% now "y" %}</span></div>
+    <div class="epx-perf"><span></span><span></span></div>
+
+    <a href="{% url 'events:landing' %}" class="epx-logo">EVENT<b>PULSE</b></a>
+    <h1 class="epx-h1" style="font-size:2.4rem; margin-top:16px;">Check your email</h1>
+    <p style="color:var(--ink-soft); margin-top:8px;">
+      Enter the 6-digit code we sent to <b style="color:var(--ink);">{{ masked_email }}</b>. It expires in 10 minutes.
+    </p>
+
+    {% if error %}<div class="epx-error" style="margin-top:18px;">{{ error }}</div>{% endif %}
+
+    <form method="POST" style="margin-top:28px; display:flex; flex-direction:column; gap:20px;">
+      {% csrf_token %}
+      <div>
+        <label class="epx-flabel" for="otp-code">Verification code</label>
+        <div class="epx-field {% if error %}has-error{% endif %}">
+          <input id="otp-code" class="epx-code" type="text" name="code" inputmode="numeric" pattern="[0-9]{6}"
+            maxlength="6" autocomplete="one-time-code" placeholder="••••••" required autofocus />
+        </div>
+      </div>
+      <button type="submit" class="epx-btn" style="width:100%;">Confirm email</button>
+    </form>
+
+    <form method="POST" action="{% url 'accounts:resend_code' %}" style="margin-top:14px;">
+      {% csrf_token %}
+      <button type="submit" id="resendBtn" class="epx-btn epx-btn--ghost" style="width:100%;"
+        data-wait="{{ resend_wait }}" {% if resend_wait %}disabled{% endif %}>
+        Send a new code{% if resend_wait %} ({{ resend_wait }}s){% endif %}
+      </button>
+    </form>
+
+    <p class="epx-authfoot">Wrong account? <a href="{% url 'accounts:login' %}">Back to sign in</a></p>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  var btn = document.getElementById('resendBtn');
+  var left = parseInt(btn.dataset.wait, 10) || 0;
+  if (!left) return;
+  var timer = setInterval(function () {
+    left -= 1;
+    if (left <= 0) {
+      clearInterval(timer);
+      btn.disabled = false;
+      btn.textContent = 'Send a new code';
+    } else {
+      btn.textContent = 'Send a new code (' + left + 's)';
+    }
+  }, 1000);
+})();
+</script>
+{% endblock %}

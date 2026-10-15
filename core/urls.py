@@ -2,12 +2,23 @@ from django.contrib import admin
 from django.urls import path, re_path, include
 from django.conf import settings
 
+from accounts import views as account_views
 from .media_views import serve_media
 
 urlpatterns = [
     path('admin/',    admin.site.urls),
     path('',          include('events.urls')),
     path('accounts/', include('accounts.urls')),
+
+    # ── Google sign-in (django-allauth) ──
+    # Our own login/register/logout above win; these come next so the only
+    # allauth page anyone can reach is Google's callback.
+    path('accounts/google/login/',    account_views.google_login, name='google_login'),
+    path('accounts/3rdparty/signup/', account_views.google_signup_fallback),
+    re_path(r'^accounts/(?:signup|inactive|reauthenticate|email|confirm-email|password|login/code|3rdparty|social|google/login/token)(?:/.*)?$',
+            account_views.allauth_page_redirect),
+    path('accounts/', include('allauth.urls')),
+
     path('payments/', include('payments.urls')),
     path('dashboard/',include('dashboard.urls')),
     path('social/',   include('social.urls')),

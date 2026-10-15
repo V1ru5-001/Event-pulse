@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Finish your profile — EventPulse{% endblock %}
+{% block body_class %}epx{% endblock %}
+{% block navbar %}{% endblock %}
+{% block content %}
+<div class="epx-authpage">
+  <div class="epx-authcard">
+
+    <div class="epx-ticket"><span>Admit One</span><span>EP-{% now "y" %}</span></div>
+    <div class="epx-perf"><span></span><span></span></div>
+
+    <span class="epx-logo">EVENT<b>PULSE</b></span>
+    <h1 class="epx-h1" style="font-size:2.4rem; margin-top:16px;">Finish your profile</h1>
+    <p style="color:var(--ink-soft); margin-top:8px;">
+      You're signed in as <b style="color:var(--ink);">{{ user.email }}</b>. A couple of details and you're in.
+    </p>
+
+    {% if form.non_field_errors %}
+      {% for error in form.non_field_errors %}
+        <div class="epx-error" style="margin-top:18px;">{{ error }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="POST" style="margin-top:28px; display:flex; flex-direction:column; gap:18px;">
+      {% csrf_token %}
+      {% with role=form.role.value|default:'student' %}
+
+      <div>
+        <label class="epx-flabel">I am joining as</label>
+        <div class="epx-toggle">
+          <input type="radio" name="role" id="role_student" value="student" {% if role == 'student' %}checked{% endif %} />
+          <label for="role_student">Student</label>
+          <input type="radio" name="role" id="role_guest" value="guest" {% if role == 'guest' %}checked{% endif %} />
+          <label for="role_guest">Guest</label>
+        </div>
+        {% if form.role.errors %}<span class="epx-ferr">{{ form.role.errors.0 }}</span>{% endif %}
+      </div>
+
+      <div>
+        <label class="epx-flabel" for="fp-uni">University <small>(optional)</small></label>
+        <div class="epx-field {% if form.university.errors %}has-error{% endif %}">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg>
+          <input id="fp-uni" type="text" name="university" placeholder="e.g. UNIZIK" value="{{ form.university.value|default:'' }}" maxlength="200" />
+        </div>
+        {% if form.university.errors %}<span class="epx-ferr">{{ form.university.errors.0 }}</span>{% endif %}
+      </div>
+
+      <div id="studentFields" {% if role != 'student' %}style="display:none"{% endif %}><div style="display:flex; flex-direction:column; gap:18px;">
+        <div>
+          <label class="epx-flabel" for="fp-course">Course / Programme</label>
+          <div class="epx-field {% if form.department.errors %}has-error{% endif %}">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+            <input id="fp-course" type="text" name="department" placeholder="e.g. Computer Science" value="{{ form.department.value|default:'' }}" maxlength="200" />
+          </div>
+          {% if form.department.errors %}<span class="epx-ferr">{{ form.department.errors.0 }}</span>{% endif %}
+        </div>
+        <div>
+          <label class="epx-flabel" for="fp-year">Year of Study</label>
+          <div class="epx-field {% if form.year_of_study.errors %}has-error{% endif %}">
+            <select id="fp-year" name="year_of_study">
+              {% for value, label in form.fields.year_of_study.choices %}
+                <option value="{{ value }}" {% if value == form.year_of_study.value|default:'' %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          {% if form.year_of_study.errors %}<span class="epx-ferr">{{ form.year_of_study.errors.0 }}</span>{% endif %}
+        </div>
+      </div></div>
+
+      {% endwith %}
+      <button type="submit" class="epx-btn" style="width:100%; margin-top:4px;">Continue to EventPulse →</button>
+    </form>
+
+    <p class="epx-authfoot">Not you? <a href="{% url 'accounts:logout' %}">Sign out</a></p>
+  </div>
+</div>
+{% endblock %}

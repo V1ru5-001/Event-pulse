@@ -45,6 +45,13 @@ CSRF_TRUSTED_ORIGINS = os.environ.get(
 # Stale forms (e.g. an old login tab) redirect instead of showing a bare 403.
 CSRF_FAILURE_VIEW = 'core.csrf.csrf_failure'
 
+# Rate limiting needs the visitor's IP. On Vercel every request reaches Django
+# from 127.0.0.1 and Vercel overwrites X-Forwarded-For with the real client IP
+# (client-supplied values are not passed on), so trust that header only there.
+# Vercel sets VERCEL=1 automatically.
+TRUST_X_FORWARDED_FOR = (os.environ.get('VERCEL') == '1'
+                         or os.environ.get('TRUST_X_FORWARDED_FOR', 'False') == 'True')
+
 
 # Application definition
 
@@ -60,7 +67,15 @@ INSTALLED_APPS = [
     'payments',
     'dashboard',
     'social',
+    # Google sign-in
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
 ]
+
+SITE_ID = 1
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -69,7 +84,9 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'accounts.middleware.FinishProfileMiddleware',  # new Google users fill in their details first
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
@@ -152,6 +169,65 @@ USE_TZ = True
 # Custom user model (if you added the accounts/models.py earlier)
 AUTH_USER_MODEL = 'accounts.User'
 
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
+LOGIN_URL          = 'accounts:login'
+LOGIN_REDIRECT_URL = 'events:home'
+
+
+# ─────────────────────────────────────────────────────────
+# Google sign-in (django-allauth)
+# Only the Google flow is used; allauth's own login/signup pages are
+# redirected to ours in core/urls.py. Set GOOGLE_CLIENT_ID and
+# GOOGLE_CLIENT_SECRET to switch the "Continue with Google" buttons on.
+# ─────────────────────────────────────────────────────────
+ACCOUNT_USER_MODEL_USERNAME_FIELD = 'username'
+ACCOUNT_LOGIN_METHODS             = {'email'}
+ACCOUNT_SIGNUP_FIELDS             = ['email*', 'username*', 'password1*', 'password2*']
+ACCOUNT_UNIQUE_EMAIL              = True
+ACCOUNT_EMAIL_VERIFICATION        = 'none'   # our own email checks live in the accounts app
+
+SOCIALACCOUNT_ADAPTER             = 'accounts.adapters.SocialAccountAdapter'
+SOCIALACCOUNT_AUTO_SIGNUP         = True
+SOCIALACCOUNT_EMAIL_REQUIRED      = True
+SOCIALACCOUNT_EMAIL_VERIFICATION  = 'none'   # Google has already verified the address
+SOCIALACCOUNT_EMAIL_AUTHENTICATION = False   # linking is done in the adapter, without wiping passwords
+SOCIALACCOUNT_LOGIN_ON_GET        = False    # the buttons POST with a CSRF token
+SOCIALACCOUNT_STORE_TOKENS        = False
+
+GOOGLE_CLIENT_ID     = os.environ.get('GOOGLE_CLIENT_ID', '')
+GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '')
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': ['profile', 'email'],
+        'AUTH_PARAMS': {'access_type': 'online'},
+        **({'APP': {'client_id': GOOGLE_CLIENT_ID, 'secret': GOOGLE_CLIENT_SECRET, 'key': ''}}
+           if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET else {}),
+    },
+}
+
+
+# ─────────────────────────────────────────────────────────
+# Email (verification codes, password resets)
+# Set EMAIL_HOST etc. on Vercel. Locally, with DEBUG on and no
+# EMAIL_HOST, emails are printed to the runserver console instead.
+# ─────────────────────────────────────────────────────────
+EMAIL_HOST = os.environ.get('EMAIL_HOST', '')
+if EMAIL_HOST:
+    EMAIL_BACKEND       = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_PORT          = int(os.environ.get('EMAIL_PORT', '587'))
+    EMAIL_HOST_USER     = os.environ.get('EMAIL_HOST_USER', '')
+    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+    EMAIL_USE_TLS       = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
+    EMAIL_TIMEOUT       = 10  # don't let a slow mail server hang a serverless request
+elif DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'EventPulse <noreply@localhost>')
+
 
 # ─────────────────────────────────────────────────────────
 # Static files (CSS, JavaScript, Images) — served by WhiteNoise in production
@@ -215,6 +291,7 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https'  # Google callback URL must be https://…/accounts/google/login/callback/
 
 # Where auto-approved RSVPs redirect to (advertising link).
 RSVP_REDIRECT_URL = os.environ.get(

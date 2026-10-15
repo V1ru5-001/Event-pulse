@@ -51,11 +51,13 @@
 
       <div class="epx-authrow">
         <label><input type="checkbox" name="remember_me" /> Remember me</label>
-        <a href="#" style="font-family:var(--fm); font-size:0.82rem; color:var(--accent);">Forgot password?</a>
+        <a href="{% url 'accounts:password_reset' %}" style="font-family:var(--fm); font-size:0.82rem; color:var(--accent);">Forgot password?</a>
       </div>
 
       <button type="submit" class="epx-btn" style="width:100%;">Sign In</button>
     </form>
+
+    {% include 'partials/google_button.html' %}
 
     <p class="epx-authfoot">Don't have an account? <a href="{% url 'accounts:register' %}">Create one →</a></p>
   </div>
