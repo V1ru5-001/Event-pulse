@@ -104,6 +104,36 @@ Visit `http://127.0.0.1:8000` in your browser.
 
 ---
 
+## 🚢 Deploying
+
+EventPulse runs on Vercel with a Supabase Postgres database and Supabase Storage (S3-compatible) for uploads.
+
+**Environment variables** (set in Vercel → Settings → Environment Variables; never commit them):
+
+| Name | Notes |
+|---|---|
+| `SECRET_KEY` | Long random string. Required in production. |
+| `DEBUG` | Leave unset (or `False`) in production. |
+| `DATABASE_URL` | Supabase Postgres connection string. Write special characters in the password URL-encoded (`@` → `%40`). |
+| `ALLOWED_HOSTS` | Optional, comma-separated. `.vercel.app` is always allowed. |
+| `CSRF_TRUSTED_ORIGINS` | Optional, comma-separated. Defaults to `https://*.vercel.app`; add your custom domain here. |
+| `USE_S3` | `True` to store uploads in Supabase Storage. |
+| `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | Supabase Storage S3 access keys. |
+| `AWS_STORAGE_BUCKET_NAME`, `AWS_S3_REGION_NAME`, `AWS_S3_ENDPOINT_URL` | Bucket name, region and Supabase S3 endpoint. |
+| `AWS_S3_CUSTOM_DOMAIN` | Optional public domain for uploaded files. |
+
+**Migrations:** Vercel does not run `migrate`. After every push that adds a migration, run it against Supabase from your machine:
+
+```powershell
+$env:DATABASE_URL = "<your Supabase connection string>"
+python manage.py migrate
+Remove-Item Env:DATABASE_URL
+```
+
+Until you do, pages that use the new tables or columns will return a 500 error.
+
+---
+
 ## 🌟 Key Features
 
 ### For Students

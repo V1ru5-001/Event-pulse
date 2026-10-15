@@ -74,3 +74,9 @@ Thumbs.db
 node_modules/
 npm-debug.log
 yarn-error.log
+
+# --- Added: catch-alls for secrets, local databases and Vercel ---
+.env.*
+!.env.example
+*.sqlite3
+.vercel/
