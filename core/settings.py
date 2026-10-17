@@ -298,6 +298,15 @@ if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https'  # Google callback URL must be https://…/accounts/google/login/callback/
 
+# ─────────────────────────────────────────────────────────
+# Error tracking (optional). Only active when SENTRY_DSN is set; see
+# core/sentry.py for the privacy filters.
+# ─────────────────────────────────────────────────────────
+SENTRY_DSN = os.environ.get('SENTRY_DSN', '')
+if SENTRY_DSN:
+    from core.sentry import init_sentry
+    init_sentry(SENTRY_DSN, environment=os.environ.get('SENTRY_ENVIRONMENT', 'production'))
+
 # Where auto-approved RSVPs redirect to (advertising link).
 RSVP_REDIRECT_URL = os.environ.get(
     'RSVP_REDIRECT_URL',

@@ -107,3 +107,52 @@ class MissingStaticFileTests(TestCase):
             r = self.client.get('/media/profiles/does-not-exist.png')
         self.assertEqual(r.status_code, 404)
 
+
+class SentryTests(TestCase):
+
+    def test_off_without_a_dsn(self):
+        import sentry_sdk
+        self.assertEqual(settings.SENTRY_DSN, '')
+        self.assertFalse(sentry_sdk.get_client().is_active())
+
+    def test_init_uses_privacy_safe_options(self):
+        from . import sentry
+        with mock.patch('sentry_sdk.init') as init:
+            sentry.init_sentry('https://public@example.ingest.sentry.io/1', environment='staging')
+        kwargs = init.call_args.kwargs
+        self.assertEqual(kwargs['environment'], 'staging')
+        self.assertEqual(kwargs['traces_sample_rate'], 0.05)
+        self.assertIs(kwargs['send_default_pii'], False)
+        self.assertEqual(kwargs['max_request_body_size'], 'never')
+        self.assertIs(kwargs['include_local_variables'], False)
+        self.assertIs(kwargs['before_send'], sentry.scrub_event)
+        self.assertIs(kwargs['before_send_transaction'], sentry.scrub_event)
+
+    def test_scrubber_removes_secrets_and_keeps_the_rest(self):
+        from .sentry import FILTERED, scrub_event
+        event = {
+            'request': {
+                'url': 'https://event-pulse-dun.vercel.app/accounts/password-reset/MQ/cx7-abc123/',
+                'query_string': 'next=/home/&token=abc&otp=123456',
+                'data': {'password': 'hunter2', 'code': '123456'},
+                'cookies': {'sessionid': 'xyz'},
+                'headers': {'Authorization': 'Bearer abc', 'X-Csrftoken': 'abc', 'User-Agent': 'Firefox'},
+            },
+            'extra': {'new_password1': 'p', 'otp_code': '1', 'client_secret': 's', 'event_title': 'Gig Night',
+                      'nested': [{'access_token': 't', 'count': 3}]},
+            'transaction': '/accounts/password-reset/MQ/set-password/',
+        }
+        out = scrub_event(event)
+        req = out['request']
+        self.assertNotIn('data', req)
+        self.assertNotIn('cookies', req)
+        self.assertEqual(req['url'], f'https://event-pulse-dun.vercel.app/accounts/password-reset/{FILTERED}/{FILTERED}/')
+        self.assertEqual(req['query_string'], f'next=/home/&token={FILTERED}&otp={FILTERED}')
+        self.assertEqual(req['headers']['Authorization'], FILTERED)
+        self.assertEqual(req['headers']['X-Csrftoken'], FILTERED)
+        self.assertEqual(req['headers']['User-Agent'], 'Firefox')
+        for key in ('new_password1', 'otp_code', 'client_secret'):
+            self.assertEqual(out['extra'][key], FILTERED, key)
+        self.assertEqual(out['extra']['event_title'], 'Gig Night')
+        self.assertEqual(out['extra']['nested'], [{'access_token': FILTERED, 'count': 3}])
+        self.assertEqual(out['transaction'], f'/accounts/password-reset/{FILTERED}/{FILTERED}/')

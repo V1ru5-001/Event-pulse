@@ -19,6 +19,9 @@ boto3==1.29.7
 # Auth (Google sign-in)
 django-allauth[socialaccount]==65.19.7
 
+# Error tracking (optional, only used when SENTRY_DSN is set)
+sentry-sdk[django]==2.72.0
+
 # Payment
 requests==2.31.0
 
