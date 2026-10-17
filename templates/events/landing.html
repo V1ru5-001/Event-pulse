@@ -153,9 +153,12 @@
 <footer class="epx-wrap" style="border-top:1px solid var(--line); padding-top:32px; padding-bottom:36px; display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; font-family:var(--fm); font-size:0.74rem; color:var(--ink-faint);">
   <span class="epx-logo" style="font-size:1.1rem; color:var(--ink);">EVENT<b>PULSE</b></span>
   <span>© {% now "Y" %} EVENTPULSE · Your event hub</span>
+  <span style="display:flex; gap:18px;"><a href="{% url 'events:privacy' %}" style="color:var(--ink-soft);">Privacy</a><a href="{% url 'events:terms' %}" style="color:var(--ink-soft);">Terms</a></span>
 </footer>
 
 {% endblock %}
+
+{% block footer %}{% endblock %}
 
 {% block extra_js %}
 <script>

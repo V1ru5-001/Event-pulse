@@ -674,3 +674,15 @@ def _notify_followers_new_event(event):
 #     draft that gets published later notifies exactly once, at
 #     publish time.
 # ─────────────────────────────────────────────
+
+# ── Legal pages (public) ─────────────────────────────────
+
+LEGAL_LAST_UPDATED = '17 October 2026'
+
+
+def privacy_view(request):
+    return render(request, 'legal/privacy.html', {'last_updated': LEGAL_LAST_UPDATED})
+
+
+def terms_view(request):
+    return render(request, 'legal/terms.html', {'last_updated': LEGAL_LAST_UPDATED})

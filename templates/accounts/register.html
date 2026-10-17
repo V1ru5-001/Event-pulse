@@ -139,10 +139,11 @@
 
       <label class="epx-terms">
         <input type="checkbox" name="terms" required />
-        <span>I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></span>
+        <span>I agree to the <a href="{% url 'events:terms' %}" target="_blank" rel="noopener">Terms of Service</a> and <a href="{% url 'events:privacy' %}" target="_blank" rel="noopener">Privacy Policy</a></span>
       </label>
 
       <button type="submit" class="epx-btn" style="width:100%; margin-top:4px;">Join EventPulse →</button>
+      {% include 'partials/agree_line.html' %}
     </form>
 
     {% include 'partials/google_button.html' %}

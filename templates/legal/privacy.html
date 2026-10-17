@@ -1,0 +1,104 @@
+{% extends 'legal/base_legal.html' %}
+{% block title %}Privacy Policy — EventPulse{% endblock %}
+{% block eyebrow %}Legal{% endblock %}
+{% block heading %}Privacy Policy{% endblock %}
+
+{% block body %}
+<p>This page explains what EventPulse collects about you, why, who can see it, and how to get it deleted. We've tried to keep it short and plain.</p>
+
+<h2>What we collect</h2>
+<h3>When you create an account</h3>
+<ul>
+  <li><b>Your name, username and email address.</b></li>
+  <li><b>Your password</b>, stored only as a one-way hash. We can't see or recover it.</li>
+  <li><b>Whether you joined as a Student or a Guest</b>, and, if you choose to add them, your university, course and year of study.</li>
+</ul>
+
+<h3>What you add to your profile (all optional)</h3>
+<ul>
+  <li>A profile picture, a short bio, your last name and a phone number. Your phone number is not shown on your profile.</li>
+</ul>
+
+<h3>What you do on EventPulse</h3>
+<ul>
+  <li><b>Events you create</b>: title, description, date and time, venue and address, price, capacity, and any photos or videos you upload.</li>
+  <li><b>RSVPs</b> to events, including any note you send the organiser, and <b>check-ins</b> at events.</li>
+  <li><b>Events you save</b>, <b>people you follow</b> and <b>people who follow you</b>.</li>
+  <li><b>Messages</b> you send to and receive from other users.</li>
+  <li><b>Notifications</b> we show you inside the app, for example when someone follows you or responds to your RSVP.</li>
+</ul>
+
+<h3>Technical information</h3>
+<ul>
+  <li>To protect accounts from password guessing and spam, we count recent sign-in, sign-up and password-reset attempts by IP address and email. These counters are stored in a scrambled (hashed) form, not as your actual IP or email. They stop counting after an hour at most, and old ones are deleted automatically.</li>
+  <li>Our hosting provider keeps standard request logs, such as IP address, browser type and the pages requested, to run and secure the service.</li>
+</ul>
+
+<h2>Signing in with Google</h2>
+<p>
+  If you choose "Continue with Google", Google sends us your <b>name</b>, <b>email address</b> and <b>profile picture</b>,
+  plus the ID Google uses for your account so we can recognise you next time. That is all we receive.
+  We do <b>not</b> get access to your Gmail, contacts, Google Drive or anything else in your Google account,
+  and we don't keep any key that would let us act on your behalf.
+</p>
+
+<h2>How we use your information</h2>
+<ul>
+  <li>To run your account and show you events, people and messages.</li>
+  <li>To let organisers manage the people who RSVP to their events.</li>
+  <li>To send the emails listed below.</li>
+  <li>To keep EventPulse secure and fix problems.</li>
+</ul>
+
+<h2>Who can see what</h2>
+<ul>
+  <li><b>Your profile is public.</b> Anyone with the link, including people who aren't signed in, can see your name, username, profile picture, bio, whether you're a Student or Guest, your university and year of study (if you added them), your follower counts and the events you've posted.</li>
+  <li><b>Events you publish</b> appear to other users. Event titles and basic details may also appear on our public home page.</li>
+  <li><b>Organisers</b> can see who has RSVPed to their events, and any note you sent with your RSVP.</li>
+  <li><b>Messages</b> can only be seen by the people in that conversation. Like any online service, they are stored on our servers, and we would only look at them to investigate abuse or keep the service working.</li>
+</ul>
+
+<h2>Emails we send</h2>
+<ul>
+  <li>A <b>verification code</b> when you sign up with an email and password.</li>
+  <li><b>Password reset</b> emails when you ask for one, including a note pointing Google users to the Google button.</li>
+</ul>
+<p>We don't send marketing emails. Updates about events you join, such as RSVP responses, appear as notifications inside EventPulse.</p>
+
+<h2>Cookies</h2>
+<p>We only use the cookies needed for EventPulse to work:</p>
+<ul>
+  <li><b>A session cookie</b> that keeps you signed in.</li>
+  <li><b>A CSRF cookie</b> that protects our forms from being submitted by other websites.</li>
+  <li><b>A short-lived message cookie</b> that carries one-off notices such as "Welcome back".</li>
+</ul>
+<p>
+  There are <b>no advertising or tracking cookies</b>, and no analytics scripts.
+  Our pages load fonts from Google Fonts, so your browser connects to Google's servers to download them.
+</p>
+
+<h2>Where your data is kept</h2>
+<ul>
+  <li>The website is hosted on <b>Vercel</b>.</li>
+  <li>The database and uploaded files (profile pictures, event photos and videos) are stored with <b>Supabase</b>.</li>
+  <li>Emails are delivered through an email-sending provider.</li>
+</ul>
+<p>These services store and process data only to provide EventPulse.</p>
+
+<h2>We don't sell your data</h2>
+<p>We do not sell or rent your personal information, and we don't share it with advertisers.</p>
+
+<h2>How long we keep it, and deleting it</h2>
+<p>
+  We keep your information for as long as your account exists. To have your account and data deleted,
+  or to ask for a copy of what we hold about you, email
+  <a href="mailto:getinformedconcepts@gmail.com?subject=EventPulse%20data%20request">getinformedconcepts@gmail.com</a>
+  from the address on your account. We'll delete it on request. Copies may remain in our providers' backups for a short time before they're overwritten.
+</p>
+
+<h2>Age</h2>
+<p>You must be 13 or older to use EventPulse.</p>
+
+<h2>Changes to this policy</h2>
+<p>If we change this policy, we'll update the date at the top of this page.</p>
+{% endblock %}

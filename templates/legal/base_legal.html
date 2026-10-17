@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block body_class %}epx{% endblock %}
+{% block navbar %}
+<nav class="epx-nav">
+  <div class="epx-nav__inner">
+    <a href="{% if user.is_authenticated %}{% url 'events:home' %}{% else %}{% url 'events:landing' %}{% endif %}" class="epx-logo">EVENT<b>PULSE</b></a>
+    <div class="epx-nav__actions" style="gap:14px;">
+      {% if user.is_authenticated %}
+        <a href="{% url 'events:home' %}" class="epx-btn epx-btn--ghost" style="padding:10px 20px; font-size:0.8rem;">Back to feed</a>
+      {% else %}
+        <a href="{% url 'accounts:login' %}" class="epx-btn epx-btn--ghost" style="padding:10px 20px; font-size:0.8rem;">Sign In</a>
+      {% endif %}
+    </div>
+  </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<main class="epx-wrap epx-legal">
+  <div class="epx-eyebrow">{% block eyebrow %}{% endblock %}</div>
+  <h1 class="epx-h1">{% block heading %}{% endblock %}</h1>
+  <p class="epx-legal__updated">Last updated: {{ last_updated }}</p>
+
+  <div class="epx-legal__note">
+    <b>EventPulse is currently in testing.</b> Features may change, and this page will be updated before a full launch.
+  </div>
+
+  {% block body %}{% endblock %}
+
+  <p class="epx-legal__contact">
+    Questions? Email <a href="mailto:getinformedconcepts@gmail.com">getinformedconcepts@gmail.com</a>.
+  </p>
+</main>
+{% endblock %}

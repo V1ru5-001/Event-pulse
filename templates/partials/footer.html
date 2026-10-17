@@ -1,0 +1,6 @@
+{# Slim site footer, included from base.html (pages can override {% block footer %}). #}
+<footer class="epx-footer">
+  <span>© {% now "Y" %} EventPulse</span>
+  <a href="{% url 'events:privacy' %}">Privacy</a>
+  <a href="{% url 'events:terms' %}">Terms</a>
+</footer>
