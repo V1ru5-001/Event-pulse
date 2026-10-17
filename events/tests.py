@@ -110,3 +110,21 @@ class LegalPageTests(TestCase):
         self.assertNotIn('href="#">Terms', register)
         self.assertIn('href="/terms/" target="_blank"', register)
 
+
+FEEDBACK = 'href="mailto:getinformedconcepts@gmail.com?subject=EventPulse%20feedback"'
+
+
+@override_settings(**LEGAL_SETTINGS)
+class FeedbackLinkTests(TestCase):
+
+    def test_signed_out_pages_have_it_in_the_footer(self):
+        for path in ['/', '/accounts/login/', '/privacy/']:
+            self.assertContains(self.client.get(path), FEEDBACK, msg_prefix=path)
+
+    def test_signed_in_menu_and_footer(self):
+        self.client.force_login(User.objects.create_user(username='ada', email='ada@example.com', password='x'))
+        html = self.client.get('/home/').content.decode()
+        dropdown = html[html.index('id="userDropdown"'):]
+        dropdown = dropdown[:dropdown.index('Sign Out')]
+        self.assertIn(FEEDBACK, dropdown)                                      # account menu
+        self.assertIn(FEEDBACK, html[html.index('class="epx-footer"'):])        # footer

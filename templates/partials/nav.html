@@ -30,6 +30,7 @@
           <a href="{% url 'social:inbox' %}">Messages{% if unread_messages_count %}<span class="epx-iconbtn__badge" style="position:static;">{% if unread_messages_count > 9 %}9+{% else %}{{ unread_messages_count }}{% endif %}</span>{% endif %}</a>
           <a href="{% url 'events:create' %}">Post an Event</a>
           <a href="{% url 'payments:pricing' %}">Upgrade Plan</a>
+          <a href="mailto:getinformedconcepts@gmail.com?subject=EventPulse%20feedback">Send feedback</a>
           <a href="{% url 'accounts:logout' %}" class="is-danger">Sign Out</a>
         </div>
       </div>
