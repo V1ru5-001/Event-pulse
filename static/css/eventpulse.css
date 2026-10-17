@@ -443,6 +443,7 @@ body.epx { background:var(--bg); color:var(--ink); font-family:var(--fb); line-h
 .epx-google:hover { border-color:var(--accent); }
 .epx .epx-field .epx-code { font-family:var(--fm); font-size:1.6rem; letter-spacing:0.5em; text-align:center; }
 .epx-btn[disabled] { opacity:0.5; cursor:not-allowed; }
+.epx-errcode { font-family:var(--fd); font-weight:800; font-size:5.5rem; line-height:1; color:var(--accent); margin-top:24px; letter-spacing:-0.02em; }
 .epx-reg { display:grid; grid-template-columns:1fr 1fr; min-height:100vh; }
 .epx-reg__promo { position:relative; padding:64px; display:flex; flex-direction:column; justify-content:space-between; overflow:hidden; border-right:1px solid var(--line); }
 .epx-reg__glow { position:absolute; inset:0; background:radial-gradient(ellipse 60% 50% at 60% 30%, rgba(242,107,33,0.25), transparent 70%), radial-gradient(ellipse 50% 40% at 20% 80%, rgba(28,107,92,0.2), transparent 70%); pointer-events:none; }

@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+{% block title %}Page not found — EventPulse{% endblock %}
+{% block body_class %}epx{% endblock %}
+{% block navbar %}{% endblock %}
+{% block content %}
+{% include 'partials/error_card.html' with code=404 heading="That page doesn't exist." message="The link may be broken, or the page may have been moved or deleted." %}
+{% endblock %}

@@ -237,6 +237,11 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
+# If a {% static %} file is missing from the collected manifest, link to the
+# plain path (the browser just gets a 404 for that file) instead of raising
+# an error that would turn the whole page into a 500.
+WHITENOISE_MANIFEST_STRICT = False
+
 
 # ─────────────────────────────────────────────────────────
 # Media files (user uploads — event galleries, profile pictures)
@@ -265,7 +270,7 @@ if USE_S3:
             'BACKEND': 'storages.backends.s3.S3Storage',
         },
         'staticfiles': {
-            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+            'BACKEND': 'core.storage.ForgivingStaticFilesStorage',  # WhiteNoise, minus 500s on a missing file
         },
     }
     MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN or f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"}/'
@@ -275,7 +280,7 @@ else:
             'BACKEND': 'django.core.files.storage.FileSystemStorage',
         },
         'staticfiles': {
-            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+            'BACKEND': 'core.storage.ForgivingStaticFilesStorage',  # WhiteNoise, minus 500s on a missing file
         },
     }
     MEDIA_URL = '/media/'

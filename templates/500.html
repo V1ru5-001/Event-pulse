@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Something broke — EventPulse</title>
+  <!-- Deliberately self-contained: no template tags, no database, no static files.
+       If the fonts can't load, the fallbacks below still look right. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=Hanken+Grotesk:wght@400;600&family=Space+Mono&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:#15110D; --surface:#1E1915; --ink:#F4EFE8; --ink-soft:#ABA092; --ink-faint:#756B5E;
+      --accent:#F26B21; --accent-soft:#F28A4C; --accent-ink:#15110D;
+      --line:rgba(244,239,232,0.1); --line-strong:rgba(244,239,232,0.2);
+      --fd:'Bricolage Grotesque','Trebuchet MS',sans-serif;
+      --fb:'Hanken Grotesk',system-ui,-apple-system,'Segoe UI',sans-serif;
+      --fm:'Space Mono','Courier New',monospace;
+    }
+    * { box-sizing:border-box; }
+    html, body { margin:0; }
+    body { background:var(--bg); color:var(--ink); font-family:var(--fb); line-height:1.5;
+           min-height:100vh; display:flex; align-items:center; justify-content:center; padding:40px 16px; }
+    .card { width:100%; max-width:460px; background:var(--surface); border:1px solid var(--line); border-radius:6px;
+            padding:40px; text-align:center; box-shadow:0 30px 60px -30px rgba(0,0,0,0.7); }
+    .ticket { display:flex; justify-content:space-between; font-family:var(--fm); font-size:0.66rem;
+              letter-spacing:0.12em; color:var(--ink-faint); text-transform:uppercase; }
+    .rule { border-top:1.5px dashed var(--line-strong); margin:14px 0 24px; }
+    .logo { font-family:var(--fd); font-weight:800; font-size:1.3rem; letter-spacing:0.02em; text-transform:uppercase;
+            color:var(--ink); text-decoration:none; }
+    .logo b { color:var(--accent); font-weight:inherit; }
+    .code { font-family:var(--fd); font-weight:800; font-size:5.5rem; line-height:1; color:var(--accent); margin-top:24px; }
+    h1 { font-family:var(--fd); font-weight:800; font-size:2.2rem; text-transform:uppercase; line-height:1; margin:4px 0 0; }
+    p { color:var(--ink-soft); margin:12px 0 0; line-height:1.6; }
+    .btn { display:block; margin-top:28px; background:linear-gradient(135deg,var(--accent),var(--accent-soft));
+           color:var(--accent-ink); border-radius:999px; padding:14px 26px; font-family:var(--fm); font-size:0.85rem;
+           font-weight:700; text-transform:uppercase; text-decoration:none;
+           box-shadow:0 8px 24px -8px rgba(242,107,33,0.6); }
+    @media (max-width:480px) { .card { padding:28px 22px; } h1 { font-size:1.8rem; } .code { font-size:4.5rem; } }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="ticket"><span>Error 500</span><span>EventPulse</span></div>
+    <div class="rule"></div>
+    <a href="/" class="logo">EVENT<b>PULSE</b></a>
+    <div class="code">500</div>
+    <h1>Something broke on our side.</h1>
+    <p>We've been notified, try again in a minute.</p>
+    <a href="/" class="btn">Back to EventPulse</a>
+  </main>
+</body>
+</html>

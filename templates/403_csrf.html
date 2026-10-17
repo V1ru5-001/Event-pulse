@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% comment %}
+  Shown by Django's CSRF check (via core/csrf.py) when a stale form can't be
+  recovered automatically. Rendered without the request, so no user context.
+{% endcomment %}
+{% block title %}Page expired — EventPulse{% endblock %}
+{% block body_class %}epx{% endblock %}
+{% block navbar %}{% endblock %}
+{% block content %}
+{% include 'partials/error_card.html' with code=403 heading="This page expired." message="For your security, forms stop working after a while. Go back, refresh the page and try again." %}
+{% endblock %}
