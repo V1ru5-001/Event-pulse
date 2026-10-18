@@ -245,9 +245,9 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# If a {% static %} file is missing from the collected manifest, link to the
-# plain path (the browser just gets a 404 for that file) instead of raising
-# an error that would turn the whole page into a 500.
+# Don't raise for a file that exists but is missing from the manifest.
+# (A reference to a file that doesn't exist at all is caught by
+# core/tests.py, which checks every {% static %} path in the templates.)
 WHITENOISE_MANIFEST_STRICT = False
 
 
@@ -278,7 +278,9 @@ if USE_S3:
             'BACKEND': 'storages.backends.s3.S3Storage',
         },
         'staticfiles': {
-            'BACKEND': 'core.storage.ForgivingStaticFilesStorage',  # WhiteNoise, minus 500s on a missing file
+            # Must be this exact class path: Vercel only ships the hashed-file manifest
+            # (staticfiles.json) to the running app for the backends it recognises.
+            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
         },
     }
     MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN or f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"}/'
@@ -288,7 +290,9 @@ else:
             'BACKEND': 'django.core.files.storage.FileSystemStorage',
         },
         'staticfiles': {
-            'BACKEND': 'core.storage.ForgivingStaticFilesStorage',  # WhiteNoise, minus 500s on a missing file
+            # Must be this exact class path: Vercel only ships the hashed-file manifest
+            # (staticfiles.json) to the running app for the backends it recognises.
+            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
         },
     }
     MEDIA_URL = '/media/'
