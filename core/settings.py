@@ -14,6 +14,8 @@ from pathlib import Path
 import os
 import dj_database_url
 
+from core.env import env_bool, env_str
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -216,17 +218,23 @@ SOCIALACCOUNT_PROVIDERS = {
 # Set EMAIL_HOST etc. on Vercel. Locally, with DEBUG on and no
 # EMAIL_HOST, emails are printed to the runserver console instead.
 # ─────────────────────────────────────────────────────────
-EMAIL_HOST = os.environ.get('EMAIL_HOST', '')
+# Values are read with env_str(), which trims stray spaces, newlines and
+# surrounding quotes that often come along with a pasted App Password.
+# Port 587 + STARTTLS (EMAIL_USE_TLS, the default) or port 465 + implicit
+# SSL (EMAIL_USE_SSL=True); the two are mutually exclusive, SSL wins.
+# Check a configuration with:  python manage.py test_email you@example.com
+EMAIL_HOST = env_str('EMAIL_HOST')
 if EMAIL_HOST:
     EMAIL_BACKEND       = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_PORT          = int(os.environ.get('EMAIL_PORT', '587'))
-    EMAIL_HOST_USER     = os.environ.get('EMAIL_HOST_USER', '')
-    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-    EMAIL_USE_TLS       = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
+    EMAIL_USE_SSL       = env_bool('EMAIL_USE_SSL', False)
+    EMAIL_USE_TLS       = False if EMAIL_USE_SSL else env_bool('EMAIL_USE_TLS', True)
+    EMAIL_PORT          = int(env_str('EMAIL_PORT') or (465 if EMAIL_USE_SSL else 587))
+    EMAIL_HOST_USER     = env_str('EMAIL_HOST_USER')
+    EMAIL_HOST_PASSWORD = env_str('EMAIL_HOST_PASSWORD')
     EMAIL_TIMEOUT       = 10  # don't let a slow mail server hang a serverless request
 elif DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'EventPulse <noreply@localhost>')
+DEFAULT_FROM_EMAIL = env_str('DEFAULT_FROM_EMAIL') or 'EventPulse <noreply@localhost>'
 
 
 # ─────────────────────────────────────────────────────────
