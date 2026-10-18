@@ -676,7 +676,7 @@ class OtherThrottleTests(TestCase):
             self.assertEqual(r.status_code, 200)
         r = self.client.post('/accounts/register/', {'username': 'x', 'email': 'bad'})
         self.assertEqual(r.status_code, 429)
-        self.assertContains(r, '1 hour', status_code=429)
+        self.assertContains(r, '60 minutes', status_code=429)
 
     def pending(self):
         self.client.post('/accounts/register/', REGISTER)

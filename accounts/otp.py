@@ -15,6 +15,7 @@ from django.db import transaction
 from django.utils import timezone
 from django.utils.crypto import constant_time_compare, salted_hmac
 
+from .emailing import log_send_failure
 from .models import EmailOTP
 
 logger = logging.getLogger(__name__)
@@ -76,9 +77,9 @@ def send_code(user):
     )
     try:
         send_mail(f'{code} is your EventPulse code', body, settings.DEFAULT_FROM_EMAIL, [user.email])
-    except Exception:
-        # Never log the code itself.
-        logger.exception('Could not send verification email to user %s', user.pk)
+    except Exception as exc:
+        # Never log the code itself, or the full address.
+        log_send_failure(logger, 'verification email', user.email, exc)
         # Nothing reached the user, so let them retry straight away.
         EmailOTP.objects.filter(pk=otp.pk).update(sent_at=otp.sent_at - RESEND_COOLDOWN)
         return False, 0

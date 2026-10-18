@@ -137,6 +137,24 @@ Remove-Item Env:DATABASE_URL
 
 Until you do, pages that use the new tables or columns will return a 500 error.
 
+### Email troubleshooting
+
+Sign-up codes and password resets are sent over SMTP using these env vars (names only):
+`EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USE_TLS` (port 587, the default) or `EMAIL_USE_SSL` (port 465),
+`EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `DEFAULT_FROM_EMAIL`.
+
+To test a configuration step by step (it never prints the password), set the same env vars locally and run:
+
+```powershell
+python manage.py test_email you@example.com
+```
+
+It shows each step (connect, EHLO, STARTTLS, login, send) as OK or FAIL, with the server's exact reply.
+Failed sends are logged on Vercel as `Could not send … to a***@domain: <ErrorType>: <message>`.
+
+If you're locked out while testing, clear the rate-limit counters in the Supabase SQL editor:
+`delete from accounts_auththrottle;`
+
 ---
 
 ## 🌟 Key Features

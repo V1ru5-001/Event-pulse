@@ -109,9 +109,8 @@ def _prune(now):
 def locked_response(request, seconds):
     """Friendly 'slow down' page in the EventPulse design (HTTP 429)."""
     minutes = max(1, (seconds + 59) // 60)
-    if minutes >= 60:
-        hours = (minutes + 59) // 60
-        wait = f"{hours} hour{'s' if hours != 1 else ''}"
-    else:
-        wait = f"{minutes} minute{'s' if minutes != 1 else ''}"
-    return render(request, 'accounts/rate_limited.html', {'wait': wait}, status=429)
+    response = render(request, 'accounts/rate_limited.html', {
+        'wait': f"{minutes} minute{'s' if minutes != 1 else ''}",
+    }, status=429)
+    response['Retry-After'] = str(max(1, seconds))
+    return response

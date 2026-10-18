@@ -12,9 +12,16 @@
     <a href="{% url 'events:landing' %}" class="epx-logo">EVENT<b>PULSE</b></a>
     <h1 class="epx-h1" style="font-size:2.4rem; margin-top:16px;">Check your email</h1>
     <p style="color:var(--ink-soft); margin-top:8px;">
-      Enter the 6-digit code we sent to <b style="color:var(--ink);">{{ masked_email }}</b>. It expires in 10 minutes.
+      {% if send_failed %}Your 6-digit code will go to <b style="color:var(--ink);">{{ masked_email }}</b>.
+      {% else %}Enter the 6-digit code we sent to <b style="color:var(--ink);">{{ masked_email }}</b>. It expires in 10 minutes.{% endif %}
     </p>
 
+    {% if send_failed %}
+      <div class="epx-error" style="margin-top:18px;" role="alert">
+        We couldn't send your code: our email service isn't working right now.
+        Please try again in a few minutes with <b>Send a new code</b> below.
+      </div>
+    {% endif %}
     {% if error %}<div class="epx-error" style="margin-top:18px;">{{ error }}</div>{% endif %}
 
     <form method="POST" style="margin-top:28px; display:flex; flex-direction:column; gap:20px;">

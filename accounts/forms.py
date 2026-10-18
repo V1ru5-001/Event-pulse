@@ -1,9 +1,16 @@
+import logging
+
 from django import forms
 from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm, UserCreationForm
 from django.contrib.auth import get_user_model
+from django.core.mail import EmailMultiAlternatives
+from django.template import loader
 from django.urls import reverse
 
 from . import otp
+from .emailing import log_send_failure
+
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
@@ -78,7 +85,26 @@ class EventPulsePasswordResetForm(PasswordResetForm):
     """
     Django's reset form, plus a "you signed up with Google" email for accounts
     that have no password. The page shows the same message either way.
+
+    Django's own send_mail() logs and swallows delivery errors, so the person
+    would be told "check your email" when nothing was sent. This version
+    records the failure in `send_failed` so the view can say so.
     """
+
+    send_failed = False
+
+    def send_mail(self, subject_template_name, email_template_name, context,
+                  from_email, to_email, html_email_template_name=None):
+        subject = ''.join(loader.render_to_string(subject_template_name, context).splitlines())
+        body = loader.render_to_string(email_template_name, context)
+        message = EmailMultiAlternatives(subject, body, from_email, [to_email])
+        if html_email_template_name is not None:
+            message.attach_alternative(loader.render_to_string(html_email_template_name, context), 'text/html')
+        try:
+            message.send()
+        except Exception as exc:
+            self.send_failed = True
+            log_send_failure(logger, 'password reset email', to_email, exc)
 
     def save(self, **kwargs):
         request = kwargs.get('request')

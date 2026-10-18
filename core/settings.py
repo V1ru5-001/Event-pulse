@@ -307,6 +307,18 @@ if not DEBUG:
     ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https'  # Google callback URL must be https://…/accounts/google/login/callback/
 
 # ─────────────────────────────────────────────────────────
+# Logging: warnings and errors from the app (e.g. "Could not send password
+# reset email to a***@gmail.com: SMTPServerDisconnected: …") go to stderr,
+# which is what Vercel's runtime logs show.
+# ─────────────────────────────────────────────────────────
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {'stderr': {'class': 'logging.StreamHandler'}},
+    'root': {'handlers': ['stderr'], 'level': 'WARNING'},
+}
+
+# ─────────────────────────────────────────────────────────
 # Error tracking (optional). Only active when SENTRY_DSN is set; see
 # core/sentry.py for the privacy filters.
 # ─────────────────────────────────────────────────────────

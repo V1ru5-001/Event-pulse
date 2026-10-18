@@ -91,18 +91,28 @@ def register_view(request):
 
 OTP_USER_SESSION_KEY = 'otp_user_id'
 OTP_NEXT_SESSION_KEY = 'otp_next'
+OTP_SEND_FAILED_KEY  = 'otp_send_failed'
+
+EMAIL_SEND_ERROR = "We couldn't send email right now. Please try again in a few minutes."
+
+
+def _record_send(request, sent, wait):
+    """Remember whether the last code email failed, so the verify page can say so."""
+    if sent:
+        request.session.pop(OTP_SEND_FAILED_KEY, None)
+    elif not wait:
+        request.session[OTP_SEND_FAILED_KEY] = True
 
 
 def _start_email_check(request, user, next_url):
     request.session[OTP_USER_SESSION_KEY] = user.pk
     request.session[OTP_NEXT_SESSION_KEY] = next_url or ''
     sent, wait = otp.send_code(user)
+    _record_send(request, sent, wait)
     if sent:
         messages.info(request, f'We sent a 6-digit code to {user.email}.')
     elif wait:
         messages.info(request, 'We already sent you a code. Check your inbox, or ask for a new one in a moment.')
-    else:
-        messages.error(request, "We couldn't send the email just now. Please try again in a moment.")
     return redirect('accounts:verify_email')
 
 
@@ -136,7 +146,7 @@ def verify_email_view(request):
         result, left = otp.verify_code(user, request.POST.get('code'))
         if result == otp.OK:
             next_url = request.session.get(OTP_NEXT_SESSION_KEY) or 'events:home'
-            for key in (OTP_USER_SESSION_KEY, OTP_NEXT_SESSION_KEY):
+            for key in (OTP_USER_SESSION_KEY, OTP_NEXT_SESSION_KEY, OTP_SEND_FAILED_KEY):
                 request.session.pop(key, None)
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             messages.success(request, f'Email confirmed. Welcome to EventPulse, {user.first_name or user.username}! 🎉')
@@ -151,6 +161,7 @@ def verify_email_view(request):
         'masked_email': _mask_email(user.email),
         'error': error,
         'resend_wait': otp.seconds_until_resend(user),
+        'send_failed': request.session.get(OTP_SEND_FAILED_KEY, False),
     })
 
 
@@ -163,30 +174,48 @@ def resend_code_view(request):
     locked_for = throttle.seconds_locked(('otp_resend_ip', ip), ('otp_resend_user', user.pk))
     if locked_for:
         return throttle.locked_response(request, locked_for)
-    throttle.hit('otp_resend_ip', ip)
-    throttle.hit('otp_resend_user', user.pk)
 
     sent, wait = otp.send_code(user)
+    _record_send(request, sent, wait)
     if sent:
+        # Only codes that actually went out count towards the resend limit.
+        throttle.hit('otp_resend_ip', ip)
+        throttle.hit('otp_resend_user', user.pk)
         messages.info(request, 'New code sent. Check your inbox.')
     elif wait:
         messages.info(request, f'Please wait {wait} seconds before asking for another code.')
-    else:
-        messages.error(request, "We couldn't send the email just now. Please try again in a moment.")
     return redirect('accounts:verify_email')
 
 
 class ThrottledPasswordResetView(PasswordResetView):
-    """Django's reset-request view, limited per IP and per email address."""
+    """
+    Django's reset-request view, limited per IP and per email address.
+
+    Every request counts towards the limits (including unknown addresses, so
+    the limit itself doesn't reveal which addresses have accounts), except
+    one whose email failed to send: that isn't the person's fault, and
+    counting it would lock them out while email is broken.
+    """
+
+    send_failed = False
 
     def post(self, request, *args, **kwargs):
         ip, email = throttle.client_ip(request), request.POST.get('email', '')
         wait = throttle.seconds_locked(('reset_ip', ip), ('reset_email', email))
         if wait:
             return throttle.locked_response(request, wait)
-        throttle.hit('reset_ip', ip)
-        throttle.hit('reset_email', email)
-        return super().post(request, *args, **kwargs)
+        response = super().post(request, *args, **kwargs)
+        if not self.send_failed:
+            throttle.hit('reset_ip', ip)
+            throttle.hit('reset_email', email)
+        return response
+
+    def form_valid(self, form):
+        response = super().form_valid(form)  # sends the email(s)
+        if form.send_failed:
+            self.send_failed = True
+            return self.render_to_response(self.get_context_data(form=form, send_error=EMAIL_SEND_ERROR))
+        return response
 
 
 # ── Google sign-in (django-allauth) ──────────────────────

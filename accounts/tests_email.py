@@ -130,3 +130,138 @@ class TestEmailCommandTests(SimpleTestCase):
     def test_missing_host_is_explained(self):
         out, error = run('me@example.com')
         self.assertIn('EMAIL_HOST is not set', str(error))
+
+
+# ═══════════════ Part B: failed sends are visible and don't lock people out ═══════════════
+
+import re  # noqa: E402
+
+from django.contrib.auth import get_user_model  # noqa: E402
+from django.core import mail  # noqa: E402
+from django.test import TestCase  # noqa: E402
+
+from accounts import throttle  # noqa: E402
+from accounts.emailing import mask_email  # noqa: E402
+from accounts.models import AuthThrottle  # noqa: E402
+
+BROKEN = mock.patch('django.core.mail.backends.locmem.EmailBackend.send_messages',
+                    side_effect=smtplib.SMTPServerDisconnected('Connection unexpectedly closed'))
+
+APP = dict(
+    SECURE_SSL_REDIRECT=False,
+    STORAGES={'default': {'BACKEND': 'django.core.files.storage.InMemoryStorage'},
+              'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'}},
+    PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'],
+    EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
+    TRUST_X_FORWARDED_FOR=False,
+)
+SEND_ERROR = "We couldn&#x27;t send email right now. Please try again in a few minutes."
+
+
+class MaskTests(SimpleTestCase):
+    def test_mask_email(self):
+        self.assertEqual(mask_email('alice@gmail.com'), 'a***@gmail.com')
+        self.assertEqual(mask_email('not-an-email'), '***')
+        self.assertEqual(mask_email(''), '***')
+
+
+@override_settings(**APP)
+class ResetSendFailureTests(TestCase):
+
+    def setUp(self):
+        get_user_model().objects.create_user(username='alice', email='alice@gmail.com', password='Str0ng!Pass99')
+
+    def reset(self, email):
+        return self.client.post('/accounts/password-reset/', {'email': email})
+
+    def test_failed_send_is_shown_and_logged_without_the_full_address(self):
+        with BROKEN, self.assertLogs('accounts.forms', 'ERROR') as logs:
+            r = self.reset('alice@gmail.com')
+        self.assertEqual(r.status_code, 200)              # stays on the form, not "check your email"
+        self.assertContains(r, SEND_ERROR)
+        line = ' '.join(logs.output)
+        self.assertIn('a***@gmail.com', line)
+        self.assertIn('SMTPServerDisconnected', line)
+        self.assertNotIn('alice@gmail.com', line)
+
+    def test_unknown_address_gets_the_normal_page(self):
+        with BROKEN:
+            r = self.reset('nobody@example.com')
+        self.assertRedirects(r, '/accounts/password-reset/sent/', fetch_redirect_response=False)
+
+    def test_failed_sends_do_not_use_up_the_limits(self):
+        with BROKEN, self.assertLogs('accounts.forms', 'ERROR'):
+            for _ in range(8):
+                self.assertEqual(self.reset('alice@gmail.com').status_code, 200)
+        self.assertFalse(AuthThrottle.objects.exists())
+        # Once email works again, the person still has their full allowance.
+        for _ in range(3):
+            self.assertEqual(self.reset('alice@gmail.com').status_code, 302)
+        self.assertEqual(len(mail.outbox), 3)
+        self.assertEqual(self.reset('alice@gmail.com').status_code, 429)
+
+    def test_unknown_addresses_still_count(self):
+        for _ in range(3):
+            self.reset('ghost@example.com')
+        self.assertEqual(self.reset('ghost@example.com').status_code, 429)
+
+    def test_google_only_notice_failure_is_also_reported(self):
+        from allauth.socialaccount.models import SocialAccount
+        gina = get_user_model().objects.create_user(username='gina', email='gina@gmail.com', password=None)
+        SocialAccount.objects.create(user=gina, provider='google', uid='g-1')
+        with BROKEN, self.assertLogs('accounts.forms', 'ERROR'):
+            r = self.reset('gina@gmail.com')
+        self.assertContains(r, SEND_ERROR)
+
+
+REGISTER = {'first_name': 'Cara', 'username': 'cara', 'email': 'cara@example.com', 'role': 'guest',
+            'password1': 'Str0ng!Pass99', 'password2': 'Str0ng!Pass99', 'terms': 'on'}
+
+
+@override_settings(**APP)
+class CodeSendFailureTests(TestCase):
+
+    def test_register_with_broken_email_says_so_and_keeps_resend_available(self):
+        with BROKEN, self.assertLogs('accounts.otp', 'ERROR') as logs:
+            self.client.post('/accounts/register/', REGISTER)
+        self.assertIn('c***@example.com', ' '.join(logs.output))
+        self.assertNotIn('cara@example.com', ' '.join(logs.output))
+        page = self.client.get('/accounts/verify-email/')
+        self.assertContains(page, "We couldn't send your code")
+        self.assertContains(page, 'data-wait="0" >')  # resend button rendered without `disabled`
+
+    def test_failed_resends_do_not_count(self):
+        with BROKEN, self.assertLogs('accounts.otp', 'ERROR'):
+            self.client.post('/accounts/register/', REGISTER)
+            for _ in range(8):
+                self.assertEqual(self.client.post('/accounts/verify-email/resend/').status_code, 302)
+        user = get_user_model().objects.get(email='cara@example.com')
+        resend_keys = [throttle._key('otp_resend_user', user.pk), throttle._key('otp_resend_ip', '127.0.0.1')]
+        self.assertFalse(AuthThrottle.objects.filter(key__in=resend_keys).exists())
+        # Email works again: the resend goes out and the failure notice disappears.
+        r = self.client.post('/accounts/verify-email/resend/', follow=True)
+        self.assertContains(r, 'New code sent')
+        self.assertNotContains(r, "We couldn't send your code")
+        code = re.search(r'\b(\d{6})\b', mail.outbox[-1].body).group(1)
+        r = self.client.post('/accounts/verify-email/', {'code': code})
+        self.assertRedirects(r, '/home/', fetch_redirect_response=False)
+
+    def test_wrong_guesses_still_count(self):
+        self.client.post('/accounts/register/', REGISTER)
+        for _ in range(15):
+            self.client.post('/accounts/verify-email/', {'code': 'abcdef'})
+        self.assertEqual(self.client.post('/accounts/verify-email/', {'code': 'abcdef'}).status_code, 429)
+
+
+@override_settings(**APP)
+class LockoutPageTests(TestCase):
+
+    def test_429_uses_the_design_with_minutes_and_retry_after(self):
+        get_user_model().objects.create_user(username='ada', email='ada@example.com', password='Str0ng!Pass99')
+        for _ in range(5):
+            r = self.client.post('/accounts/login/', {'username': 'ada@example.com', 'password': 'wrong'})
+        self.assertEqual(r.status_code, 429)
+        self.assertContains(r, "Let's take a breather", status_code=429)
+        self.assertContains(r, '15 minutes', status_code=429)
+        self.assertNotContains(r, 'Too Many Requests', status_code=429)
+        self.assertTrue(880 <= int(r['Retry-After']) <= 901, r['Retry-After'])
