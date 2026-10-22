@@ -9,7 +9,7 @@
 <div class="has-tabbar">
 <div class="epx-form-col">
 
-  <a href="{% if event %}{% url 'events:detail' event.slug %}{% else %}{% url 'events:home' %}{% endif %}" class="epx-back" style="margin-bottom:22px;">
+  <a href="{% if event %}{% url 'events:detail' event.slug %}{% else %}{% url 'events:home' %}{% endif %}" class="epx-back epx-form-back">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/></svg>
     Back
   </a>
@@ -17,21 +17,23 @@
   <div class="epx-ticket"><span>{% if event %}Editing listing{% else %}New listing{% endif %}</span><span>EP-{% now "y" %}</span></div>
   <div class="epx-ticket-rule"></div>
 
-  <h1 class="epx-h1" style="font-size:2.6rem; margin:0;">{% if event %}Edit Event{% else %}Post an Event{% endif %}</h1>
-  <p style="color:var(--ink-soft); margin-top:10px;">{% if event %}Update your event details below.{% else %}Fill in the details and let people know.{% endif %}</p>
+  <h1 class="epx-h1 epx-form-h1">{% if event %}Edit Event{% else %}Post an Event{% endif %}</h1>
+  <p class="epx-form-sub">{% if event %}Update your event details below.{% else %}Fill in the details and let people know.{% endif %}</p>
 
   {% if form.non_field_errors %}
     {% for error in form.non_field_errors %}
-      <div class="epx-error" style="margin-top:18px;">{{ error }}</div>
+      <div class="epx-error epx-error--top">{{ error }}</div>
     {% endfor %}
   {% endif %}
 
   <form method="POST" class="epx-form" id="createForm">
     {% csrf_token %}
 
+    <div class="epx-fsec"><span class="epx-fsec__n">01</span><h2 class="epx-fsec__t">Cover &amp; gallery</h2></div>
+
     {# ── Photos & videos (uploaded straight to storage by the script below) ── #}
     <div>
-      <label class="epx-flabel">Photos &amp; Videos</label>
+      <label class="epx-flabel" for="id_gallery">Photos &amp; Videos</label>
       {% if event and event.gallery.all %}
       <div class="epx-existing">
         {% for media in event.gallery.all %}
@@ -54,7 +56,7 @@
       {# No name attribute: files go straight to storage, never through the form POST. #}
       <input type="file" id="id_gallery" accept="image/*,video/*" multiple style="display:none;" />
       <div class="epx-upload" id="uploadZone" role="button" tabindex="0">
-        <div id="uploadPlaceholder" style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+        <div id="uploadPlaceholder" class="epx-upload__ph">
           <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 17-5-5L5 20" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <div class="epx-upload__t">Click to upload or drag and drop</div>
           <div class="epx-upload__s">Images up to 5MB, videos up to 50MB — add as many as you like</div>
@@ -62,6 +64,8 @@
         <div id="uploadPreview" class="ep-upload-preview-grid" style="display:none;"></div>
       </div>
     </div>
+
+    <div class="epx-fsec"><span class="epx-fsec__n">02</span><h2 class="epx-fsec__t">The basics</h2></div>
 
     <div>
       <label class="epx-flabel" for="ce-title">Event Title *</label>
@@ -111,6 +115,17 @@
       </div>
     </div>
 
+    <div>
+      <label class="epx-flabel" for="ce-desc">Description *</label>
+      <div class="epx-field epx-field--top">
+        <textarea id="ce-desc" name="description" rows="4"
+          placeholder="Tell people what to expect, who it's for, what to bring..."
+          required>{% if event %}{{ request.POST.description|default:event.description }}{% else %}{{ request.POST.description|default:'' }}{% endif %}</textarea>
+      </div>
+    </div>
+
+    <div class="epx-fsec"><span class="epx-fsec__n">03</span><h2 class="epx-fsec__t">When &amp; where</h2></div>
+
     <div class="epx-frow">
       <div>
         <label class="epx-flabel" for="ce-start">Start Date &amp; Time *</label>
@@ -146,6 +161,8 @@
       </div>
     </div>
 
+    <div class="epx-fsec"><span class="epx-fsec__n">04</span><h2 class="epx-fsec__t">Tickets</h2></div>
+
     <div>
       <label class="epx-flabel">Price Type</label>
       <div class="epx-toggle">
@@ -162,7 +179,7 @@
       <div id="priceField">
         <label class="epx-flabel" for="ce-price">Ticket Price (₦)</label>
         <div class="epx-field">
-          <span style="color:var(--ink-faint); font-family:var(--fm);">₦</span>
+          <span class="epx-field__unit">₦</span>
           <input id="ce-price" type="number" name="ticket_price" placeholder="0.00" min="0" step="0.01"
             value="{% if event %}{{ request.POST.ticket_price|default:event.ticket_price }}{% else %}{{ request.POST.ticket_price|default:'' }}{% endif %}" />
         </div>
@@ -177,14 +194,7 @@
       </div>
     </div>
 
-    <div>
-      <label class="epx-flabel" for="ce-desc">Description *</label>
-      <div class="epx-field" style="align-items:flex-start;">
-        <textarea id="ce-desc" name="description" rows="4"
-          placeholder="Tell people what to expect, who it's for, what to bring..."
-          required>{% if event %}{{ request.POST.description|default:event.description }}{% else %}{{ request.POST.description|default:'' }}{% endif %}</textarea>
-      </div>
-    </div>
+    <div class="epx-fsec"><span class="epx-fsec__n">05</span><h2 class="epx-fsec__t">Who can come</h2></div>
 
     <div>
       <label class="epx-flabel">Visibility</label>
@@ -199,7 +209,7 @@
     </div>
 
     <div class="epx-settings">
-      <div class="epx-flabel" style="margin:0;">RSVP settings</div>
+      <div class="epx-flabel epx-flabel--flush">RSVP settings</div>
       <label class="epx-checkrow">
         <input type="checkbox" name="require_rsvp_approval" value="true"
           {% if request.POST %}{% if request.POST.require_rsvp_approval == 'true' %}checked{% endif %}{% elif event.require_rsvp_approval %}checked{% endif %} />
