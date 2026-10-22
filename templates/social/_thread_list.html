@@ -36,6 +36,7 @@
     <div class="wa-empty">
       <div class="wa-empty__t">No conversations yet.</div>
       <div>Visit someone's profile and tap Message to start chatting.</div>
+      <a href="{% url 'accounts:search_people' %}" class="epx-btn epx-btn--ghost epx-btn--sm wa-empty__cta">Find people</a>
     </div>
     {% endfor %}
     <div class="wa-empty" id="threadFilterEmpty" hidden>No chats match.</div>

@@ -19,7 +19,11 @@ body.epx {
   --shadow-pop:0 28px 56px -24px rgba(0,0,0,0.8);
   --ease-out:cubic-bezier(0.23,1,0.32,1);
   --ease-in-out:cubic-bezier(0.77,0,0.175,1);
+  /* main.css components still read these; point them at the new fonts so the old ones needn't load */
+  --font-display:var(--fd); --font-body:var(--fb); --font-mono:var(--fm);
 }
+.epx .ep-inbox__title { font-family:var(--fd); }
+.epx .ep-convo__input { font-family:var(--fb); }
 
 body.epx { background:var(--bg); color:var(--ink); font-family:var(--fb); line-height:1.5; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; text-rendering:optimizeLegibility; }
 .epx input::placeholder, .epx textarea::placeholder { color:var(--ink-faint); }
@@ -526,6 +530,67 @@ body.epx #ep-preloader .pl-bar { background:var(--accent); }
   .epx-pactions { width:100%; }
   .epx-trash { bottom:92px; }
 }
+
+/* ── Profile / calendar / inbox / pricing polish ── */
+.epx-profile { position:relative; }
+.epx-profile::before { content:""; position:absolute; left:0; right:0; top:-40px; height:340px; background:radial-gradient(ellipse 45% 55% at 20% 30%, rgba(242,107,33,0.14), transparent 70%); pointer-events:none; z-index:-1; }
+.epx-pav { box-shadow:0 0 0 4px var(--bg), 0 0 0 5.5px rgba(242,107,33,0.5); }
+.epx .ep-profile-tab { transition:background-color 150ms ease, color 150ms ease, border-color 150ms ease, transform 160ms var(--ease-out); }
+.epx .ep-profile-tab:active { transform:scale(0.97); }
+/* Profile cards: the lift only on real hover, so it can't stick on a tap */
+.epx-mycard:nth-child(4n+1):hover { transform:rotate(-2.5deg); } .epx-mycard:nth-child(4n+2):hover { transform:rotate(2deg); }
+.epx-mycard:nth-child(4n+3):hover { transform:rotate(-1.2deg); } .epx-mycard:nth-child(4n):hover { transform:rotate(1.6deg); }
+@media (hover:hover) and (pointer:fine) {
+  .epx-mycard:hover, .epx-mycard:nth-child(n):hover { transform:rotate(0deg) translateY(-5px); box-shadow:var(--shadow-pop); z-index:2; }
+  .epx-day:hover { background:var(--surface-raised); }
+  .epx-calnav a:hover { border-color:var(--line-strong); }
+  .epx .wa-convo:hover { background:var(--surface); }
+  .epx-plan { transition:transform 240ms var(--ease-out), border-color 200ms ease; }
+  .epx-plan:hover { transform:translateY(-3px); border-color:var(--line-strong); }
+}
+/* Calendar: days with events read as filled tiles, today gets a ring, selection is solid */
+.epx-day { transition:background-color 140ms ease, transform 140ms var(--ease-out); }
+.epx-day:active { transform:scale(0.95); }
+.epx-day.has-events { background:var(--surface); border-color:var(--line); font-weight:700; }
+.epx-day.is-today:not(.is-sel) { border-color:var(--accent); color:var(--accent); }
+.epx-day.is-sel { box-shadow:0 8px 20px -8px rgba(242,107,33,0.7); }
+.epx-dot { width:6px; height:6px; }
+.epx-calnav a { transition:border-color 150ms ease, background-color 150ms ease; }
+.epx-calnav a:active { transform:scale(0.95); }
+.epx-daypanel__ev { transition:opacity 150ms ease; }
+.epx-daypanel__ev:hover { opacity:0.85; }
+/* Inbox */
+.epx .wa-empty__cta { margin-top:16px; }
+.epx .wa-compose__field { transition:border-color 150ms ease, box-shadow 150ms ease; }
+.epx .wa-compose__field:focus-within { border-color:rgba(242,107,33,0.6); box-shadow:0 0 0 3px rgba(242,107,33,0.14); }
+.epx .wa-compose__field textarea { font-size:1rem; }
+.epx .wa-pick svg { width:56px; height:56px; padding:14px; border-radius:50%; background:var(--surface); color:var(--accent); }
+/* Pricing */
+.epx-plan { border-radius:var(--r-lg); box-shadow:var(--shadow-card); }
+.epx-notify input { font-size:1rem; }
+
+/* ── Page: edit profile ──────────────────── */
+.epx-avrow { display:flex; align-items:center; gap:20px; padding:18px; background:var(--surface); border:1px solid var(--line); border-radius:var(--r-md); }
+.epx-avrow__av { width:80px; height:80px; font-size:2rem; }
+.epx-avrow__actions { display:flex; flex-direction:column; align-items:flex-start; gap:8px; }
+.epx-avrow__actions .epx-btn { cursor:pointer; }
+.epx-fhint--right { text-align:right; font-variant-numeric:tabular-nums; }
+.epx-actions--row { flex-direction:row; justify-content:flex-end; gap:12px; padding-top:6px; }
+.epx-actions--row .epx-btn { width:auto; padding:15px 28px; }
+@media (max-width: 560px) {
+  .epx-actions--row { flex-direction:column-reverse; }
+  .epx-actions--row .epx-btn { width:100%; }
+}
+
+/* ── Page: search people ─────────────────── */
+.epx-people-h1 { font-size:clamp(1.9rem, 5vw, 2.4rem); }
+.epx-people-results { margin-top:22px; }
+.epx-people-count { margin:0 0 12px; }
+.epx-person__link { display:flex; align-items:center; gap:14px; flex:1; min-width:0; color:inherit; }
+.epx-person__who { min-width:0; }
+.epx-person__name--clip { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.epx-list .epx-person { transition:background-color 150ms ease; }
+@media (hover:hover) and (pointer:fine) { .epx-list .epx-person:hover { background:var(--surface); } }
 
 /* ── Page: follow list ───────────────────── */
 .epx-ftabs { display:flex; border-bottom:1px solid var(--line); margin-bottom:18px; }
