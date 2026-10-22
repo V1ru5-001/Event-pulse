@@ -10,29 +10,29 @@
   {# ── PROMO (hidden on phones) ── #}
   <div class="epx-reg__promo">
     <div class="epx-reg__glow"></div>
-    <a href="{% url 'events:landing' %}" class="epx-logo" style="position:relative;">EVENT<b>PULSE</b></a>
-    <div style="position:relative;">
-      <h2 style="font-family:var(--fd); font-weight:800; font-size:3.4rem; text-transform:uppercase; line-height:0.95;">Your people.<br>Your events.<br>Your community.</h2>
-      <p style="color:var(--ink-soft); margin-top:20px; font-size:1.05rem; line-height:1.6; max-width:38ch;">Find talks, meetups, sports, career events and parties near you.</p>
+    <a href="{% url 'events:landing' %}" class="epx-logo epx-reg__lift">EVENT<b>PULSE</b></a>
+    <div class="epx-reg__lift">
+      <h2 class="epx-reg__h">Your people.<br><em>Your events.</em><br>Your community.</h2>
+      <p class="epx-reg__p">Find talks, meetups, sports, career events and parties near you.</p>
     </div>
   </div>
 
   {# ── FORM ── #}
   <div class="epx-reg__form">
     <div class="epx-ticket"><span>Admit One</span><span>EP-{% now "y" %}</span></div>
-    <div class="epx-ticket-rule" style="margin-bottom:24px;"></div>
+    <div class="epx-ticket-rule epx-ticket-rule--auth"></div>
 
-    <a href="{% url 'events:landing' %}" class="epx-logo">EVENT<b>PULSE</b></a>
-    <h1 class="epx-h1" style="font-size:2.6rem; margin-top:16px;">Create Account</h1>
-    <p style="color:var(--ink-soft); margin-top:8px;">Join your community today.</p>
+    <a href="{% url 'events:landing' %}" class="epx-logo epx-reg__formlogo">EVENT<b>PULSE</b></a>
+    <h1 class="epx-h1 epx-auth-h1">Create Account</h1>
+    <p class="epx-auth-sub">Join your community today.</p>
 
     {% if form.non_field_errors %}
       {% for error in form.non_field_errors %}
-        <div class="epx-error" style="margin-top:18px;">{{ error }}</div>
+        <div class="epx-error epx-error--top" role="alert">{{ error }}</div>
       {% endfor %}
     {% endif %}
 
-    <form method="POST" style="margin-top:28px; display:flex; flex-direction:column; gap:18px;">
+    <form method="POST" class="epx-authform epx-authform--tight">
       {% csrf_token %}
 
       <div>
@@ -64,8 +64,8 @@
       </div>
 
       <div>
-        <label class="epx-flabel">I am registering as</label>
-        <div class="epx-toggle">
+        <span class="epx-flabel" id="rg-role">I am registering as</span>
+        <div class="epx-toggle" role="radiogroup" aria-labelledby="rg-role">
           <input type="radio" name="role" id="role_student" value="student"
             {% if not request.POST.role or request.POST.role == 'student' %}checked{% endif %} />
           <label for="role_student">Student</label>
@@ -83,7 +83,7 @@
         </div>
       </div>
 
-      <div id="studentFields"><div style="display:flex; flex-direction:column; gap:18px;">
+      <div id="studentFields"><div class="epx-stack">
         <div>
           <label class="epx-flabel" for="rg-course">Course / Programme</label>
           <div class="epx-field">
@@ -142,7 +142,7 @@
         <span>I agree to the <a href="{% url 'events:terms' %}" target="_blank" rel="noopener">Terms of Service</a> and <a href="{% url 'events:privacy' %}" target="_blank" rel="noopener">Privacy Policy</a></span>
       </label>
 
-      <button type="submit" class="epx-btn" style="width:100%; margin-top:4px;">Join EventPulse →</button>
+      <button type="submit" class="epx-btn epx-btn--block epx-authform__submit">Join EventPulse →</button>
       {% include 'partials/agree_line.html' %}
     </form>
 

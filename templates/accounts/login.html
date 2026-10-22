@@ -5,29 +5,30 @@
 {% block navbar %}{% endblock %}
 {% block content %}
 <div class="epx-authpage">
+  <div class="epx-authpage__glow" aria-hidden="true"></div>
   <div class="epx-authcard">
 
     <div class="epx-ticket"><span>Admit One</span><span>EP-{% now "y" %}</span></div>
     <div class="epx-perf"><span></span><span></span></div>
 
     <a href="{% url 'events:landing' %}" class="epx-logo">EVENT<b>PULSE</b></a>
-    <h1 class="epx-h1" style="font-size:2.6rem; margin-top:16px;">Welcome Back</h1>
-    <p style="color:var(--ink-soft); margin-top:8px;">Sign in to see what's happening today.</p>
+    <h1 class="epx-h1 epx-auth-h1">Welcome Back</h1>
+    <p class="epx-auth-sub">Sign in to see what's happening today.</p>
 
     {% if form.non_field_errors %}
       {% for error in form.non_field_errors %}
-        <div class="epx-error" style="margin-top:18px;">{{ error }}</div>
+        <div class="epx-error epx-error--top" role="alert">{{ error }}</div>
       {% endfor %}
     {% endif %}
 
-    <form method="POST" style="margin-top:28px; display:flex; flex-direction:column; gap:20px;">
+    <form method="POST" class="epx-authform">
       {% csrf_token %}
       {% if next %}<input type="hidden" name="next" value="{{ next }}" />{% endif %}
 
       <div>
         <label class="epx-flabel" for="{{ form.username.id_for_label }}">Email</label>
         <div class="epx-field ep-field__input-wrap {% if form.username.errors %}has-error{% endif %}">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
           <input type="email" id="{{ form.username.id_for_label }}" name="{{ form.username.html_name }}"
             placeholder="yourname@example.com"
             value="{{ form.username.value|default:'' }}" autocomplete="email" required />
@@ -51,10 +52,10 @@
 
       <div class="epx-authrow">
         <label><input type="checkbox" name="remember_me" /> Remember me</label>
-        <a href="{% url 'accounts:password_reset' %}" style="font-family:var(--fm); font-size:0.82rem; color:var(--accent);">Forgot password?</a>
+        <a href="{% url 'accounts:password_reset' %}" class="epx-authrow__link">Forgot password?</a>
       </div>
 
-      <button type="submit" class="epx-btn" style="width:100%;">Sign In</button>
+      <button type="submit" class="epx-btn epx-btn--block">Sign In</button>
     </form>
 
     {% include 'partials/google_button.html' %}

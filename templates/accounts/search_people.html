@@ -2,62 +2,86 @@
 {% load static %}
 
 {% block title %}{% if query %}"{{ query }}" — People{% else %}Search People{% endif %} — EventPulse{% endblock %}
+{% block body_class %}epx{% endblock %}
+{% block navbar %}{% include 'partials/nav.html' with nav_active='' %}{% endblock %}
 
 {% block content %}
-<div class="ep-chat-page">
-  <div class="ep-chat-container ep-search-results">
+<div class="has-tabbar">
+<div class="epx-notifs">
 
-    <header class="ep-inbox__header">
-      <h1 class="ep-inbox__title">
-        <span class="ep-icon ep-icon--user ep-icon--purple"></span>
-        {% if query %}People matching "{{ query }}"{% else %}Search People{% endif %}
-      </h1>
-    </header>
+  <div class="epx-eyebrow">{% if query %}Search results{% else %}People{% endif %}</div>
+  <h1 class="epx-h1 epx-people-h1">{% if query %}People matching "{{ query }}"{% else %}Search People{% endif %}</h1>
 
-    {% if not query %}
-      <div class="ep-chat-empty">
-        <span class="ep-icon ep-icon--search ep-icon--purple"></span>
-        <p>Search for people by name or username.</p>
-        <span class="ep-chat-empty__hint">Use the search bar above and pick the "People" tab.</span>
+  {# Same id as the feed's search so base.html wires up the Events/People toggle (it defaults to People on this page). #}
+  <form id="navSearchForm" method="get" action="{% url 'accounts:search_people' %}"
+        data-events-url="{% url 'events:home' %}"
+        data-people-url="{% url 'accounts:search_people' %}"
+        class="epx-feedsearch">
+    <div class="epx-search">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2" style="flex-shrink:0;" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3" stroke-linecap="round"/></svg>
+      <input type="search" name="q" id="navSearchInput" aria-label="Search" placeholder="Search people…" value="{{ query|default:'' }}" autocomplete="off" />
+      <div class="epx-search__scope" role="tablist" aria-label="Search scope">
+        <button type="button" class="ep-search-scope__btn" data-scope="events">Events</button>
+        <button type="button" class="ep-search-scope__btn is-active" data-scope="people">People</button>
       </div>
-    {% elif people %}
-      <ul class="ep-people-list">
-        {% for person in people %}
-        <li class="ep-person">
-          <a href="{% url 'accounts:profile' person.username %}" class="ep-person__main">
-            <div class="ep-person__avatar">
-              {% if person.profile_picture %}
-                <img src="{{ person.profile_picture.url }}" alt="{{ person.username }}">
-              {% else %}
-                <span>{{ person.username|first|upper }}</span>
-              {% endif %}
-            </div>
-            <div class="ep-person__info">
-              <span class="ep-person__name">{{ person.get_full_name|default:person.username }}</span>
-              <span class="ep-person__handle">@{{ person.username }}</span>
-            </div>
-          </a>
-          <div class="ep-person__actions">
-            <a href="{% url 'social:start_conversation' person.username %}"
-               class="ep-btn ep-btn--outline ep-btn--sm" aria-label="Message {{ person.username }}">
-              <span class="ep-icon ep-icon--chat ep-icon--purple"></span>
-            </a>
-            <a href="{% url 'accounts:profile' person.username %}"
-               class="ep-btn ep-btn--sm {% if person.id in following_ids %}ep-btn--following{% else %}ep-btn--primary{% endif %}">
-              {% if person.id in following_ids %}Following{% else %}Follow{% endif %}
-            </a>
+    </div>
+  </form>
+
+  <div class="epx-people-results">
+  {% if not query %}
+    <div class="epx-dashed">Search for people by name or username.</div>
+  {% elif people %}
+    <div class="epx-resultmeta epx-people-count">{{ people|length }} {% if people|length == 1 %}person{% else %}people{% endif %} found</div>
+    <div class="epx-list">
+      {% for person in people %}
+      <div class="epx-person">
+        <a href="{% url 'accounts:profile' person.username %}" class="epx-person__link">
+          <span class="epx-person__av">{% if person.profile_picture %}<img src="{{ person.profile_picture.url }}" alt="{{ person.username }}">{% else %}{{ person.username|first|upper }}{% endif %}</span>
+          <div class="epx-person__who">
+            <div class="epx-person__name epx-person__name--clip">{{ person.get_full_name|default:person.username }}</div>
+            <div class="epx-person__meta">@{{ person.username }}</div>
           </div>
-        </li>
-        {% endfor %}
-      </ul>
-    {% else %}
-      <div class="ep-chat-empty">
-        <span class="ep-icon ep-icon--user ep-icon--purple"></span>
-        <p>No people found for "{{ query }}".</p>
-        <span class="ep-chat-empty__hint">Try a different name or username.</span>
+        </a>
+        {% if user.is_authenticated and person != user %}
+          <a href="{% url 'social:start_conversation' person.username %}" class="epx-iconlink" aria-label="Message {{ person.username }}" title="Message">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </a>
+          <button type="button" class="epx-fbtn {% if person.id in following_ids %}is-following{% endif %}"
+                  data-url="{% url 'social:toggle_follow' person.username %}">{% if person.id in following_ids %}Following{% else %}Follow{% endif %}</button>
+        {% endif %}
       </div>
-    {% endif %}
-
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="epx-empty">
+      <h3>No people found for "{{ query }}"</h3>
+      <p>Try a different name or username.</p>
+    </div>
+  {% endif %}
   </div>
+
 </div>
+</div>
+{% include 'partials/tabbar.html' with nav_active='' %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  function csrf() { var m = document.cookie.match(/csrftoken=([^;]+)/); return m ? m[1] : ''; }
+  document.querySelectorAll('.epx-fbtn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      btn.disabled = true;
+      fetch(btn.dataset.url, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': csrf() } })
+        .then(function (res) { if (!res.ok) throw new Error(); return res.json(); })
+        .then(function (data) {
+          btn.classList.toggle('is-following', data.followed);
+          btn.textContent = data.followed ? 'Following' : 'Follow';
+        })
+        .catch(function () {})
+        .finally(function () { btn.disabled = false; });
+    });
+  });
+})();
+</script>
 {% endblock %}

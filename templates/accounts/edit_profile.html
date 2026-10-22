@@ -2,114 +2,125 @@
 {% load static %}
 
 {% block title %}Edit Profile — EventPulse{% endblock %}
+{% block body_class %}epx{% endblock %}
+{% block navbar %}{% include 'partials/nav.html' with nav_active='profile' %}{% endblock %}
 
 {% block content %}
-<div class="ep-edit-page">
-  <div class="ep-edit-card">
+<div class="has-tabbar">
+<div class="epx-form-col">
 
-    <div class="ep-edit-head">
-      <h1 class="ep-edit-title">Edit Profile</h1>
-      <p class="ep-edit-sub">Update how you appear across EventPulse</p>
+  <a href="{% url 'accounts:profile' user.username %}" class="epx-back epx-form-back">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Back to profile
+  </a>
+
+  <h1 class="epx-h1 epx-form-h1">Edit Profile</h1>
+  <p class="epx-form-sub">Update how you appear across EventPulse</p>
+
+  <form method="POST" enctype="multipart/form-data" class="epx-form" novalidate>
+    {% csrf_token %}
+
+    <div class="epx-avrow">
+      <div class="epx-pav epx-avrow__av" id="avatarPreviewWrap">
+        {% if user.profile_picture %}
+          <img id="avatarPreview" src="{{ user.profile_picture.url }}" alt="{{ user.username }}" />
+        {% else %}
+          <img id="avatarPreview" src="" alt="" style="display:none;" />
+          <span id="avatarInitial">{{ user.username|first|upper }}</span>
+        {% endif %}
+      </div>
+      <div class="epx-avrow__actions">
+        <label for="id_profile_picture" class="epx-btn epx-btn--ghost epx-btn--sm" tabindex="0">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" stroke-linejoin="round"/></svg>
+          Change Photo
+        </label>
+        <input type="file" name="profile_picture" id="id_profile_picture" accept="image/*" hidden />
+        <span class="epx-fhint">JPG or PNG, square works best</span>
+      </div>
     </div>
 
-    <form method="POST" enctype="multipart/form-data" class="ep-edit-form" novalidate>
-      {% csrf_token %}
+    <div class="epx-fsec"><span class="epx-fsec__n">01</span><h2 class="epx-fsec__t">You</h2></div>
 
-      <div class="ep-edit-avatar-row">
-        <div class="ep-edit-avatar" id="avatarPreviewWrap">
-          {% if user.profile_picture %}
-            <img id="avatarPreview" src="{{ user.profile_picture.url }}" alt="{{ user.username }}" />
-          {% else %}
-            <img id="avatarPreview" src="" alt="" style="display:none;" />
-            <span id="avatarInitial">{{ user.username|first|upper }}</span>
-          {% endif %}
-        </div>
-        <div class="ep-edit-avatar-actions">
-          <label for="id_profile_picture" class="ep-btn ep-btn--outline ep-btn--sm">
-            <span class="ep-icon ep-icon--edit ep-icon--accent"></span>
-            Change Photo
-          </label>
-          <input type="file" name="profile_picture" id="id_profile_picture" accept="image/*" hidden />
-          <span class="ep-edit-hint">JPG or PNG, square works best</span>
-        </div>
+    <div class="epx-frow">
+      <div>
+        <label class="epx-flabel" for="id_first_name">First name</label>
+        <div class="epx-field"><input type="text" name="first_name" id="id_first_name" value="{{ user.first_name }}" placeholder="First name" autocomplete="given-name"></div>
       </div>
-
-      <div class="ep-edit-grid-2">
-        <div class="ep-field">
-          <label class="ep-label" for="id_first_name">First name</label>
-          <input class="ep-input" type="text" name="first_name" id="id_first_name"
-                 value="{{ user.first_name }}" placeholder="First name">
-        </div>
-        <div class="ep-field">
-          <label class="ep-label" for="id_last_name">Last name</label>
-          <input class="ep-input" type="text" name="last_name" id="id_last_name"
-                 value="{{ user.last_name }}" placeholder="Last name">
-        </div>
+      <div>
+        <label class="epx-flabel" for="id_last_name">Last name</label>
+        <div class="epx-field"><input type="text" name="last_name" id="id_last_name" value="{{ user.last_name }}" placeholder="Last name" autocomplete="family-name"></div>
       </div>
+    </div>
 
-      <div class="ep-field">
-        <label class="ep-label" for="id_username">Username</label>
-        <div class="ep-input-prefix">
-          <span>@</span>
-          <input class="ep-input" type="text" name="username" id="id_username"
-                 value="{{ user.username }}" placeholder="username">
-        </div>
+    <div>
+      <label class="epx-flabel" for="id_username">Username</label>
+      <div class="epx-field">
+        <span class="epx-field__unit">@</span>
+        <input type="text" name="username" id="id_username" value="{{ user.username }}" placeholder="username" autocomplete="username">
       </div>
+    </div>
 
-      <div class="ep-edit-grid-2">
-        <div class="ep-field">
-          <label class="ep-label" for="id_university">University</label>
-          <input class="ep-input" type="text" name="university" id="id_university"
-                 value="{{ user.university }}" placeholder="e.g. UNIZIK">
-        </div>
-        <div class="ep-field">
-          <label class="ep-label" for="id_department">Department</label>
-          <input class="ep-input" type="text" name="department" id="id_department"
-                 value="{{ user.department }}" placeholder="e.g. Computer Science">
-        </div>
+    <div>
+      <label class="epx-flabel" for="id_bio">Bio</label>
+      <div class="epx-field epx-field--top">
+        <textarea name="bio" id="id_bio" rows="4" maxlength="300" placeholder="Tell people a little about yourself…">{{ user.bio }}</textarea>
       </div>
+      <span class="epx-fhint epx-fhint--right" id="bioCount">0 / 300</span>
+    </div>
 
-      <div class="ep-edit-grid-2">
-        <div class="ep-field">
-          <label class="ep-label" for="id_year_of_study">Year of study</label>
-          <select class="ep-input ep-select" name="year_of_study" id="id_year_of_study">
+    <div class="epx-fsec"><span class="epx-fsec__n">02</span><h2 class="epx-fsec__t">Study</h2></div>
+
+    <div class="epx-frow">
+      <div>
+        <label class="epx-flabel" for="id_university">University</label>
+        <div class="epx-field"><input type="text" name="university" id="id_university" value="{{ user.university }}" placeholder="e.g. UNIZIK"></div>
+      </div>
+      <div>
+        <label class="epx-flabel" for="id_department">Department</label>
+        <div class="epx-field"><input type="text" name="department" id="id_department" value="{{ user.department }}" placeholder="e.g. Computer Science"></div>
+      </div>
+    </div>
+
+    <div class="epx-frow">
+      <div>
+        <label class="epx-flabel" for="id_year_of_study">Year of study</label>
+        <div class="epx-field">
+          <select name="year_of_study" id="id_year_of_study">
             <option value="">Select year</option>
             {% for val, label in year_choices %}
               <option value="{{ val }}" {% if user.year_of_study == val %}selected{% endif %}>{{ label }}</option>
             {% endfor %}
           </select>
         </div>
-        <div class="ep-field">
-          <label class="ep-label" for="id_role">Role</label>
-          <select class="ep-input ep-select" name="role" id="id_role">
+      </div>
+      <div>
+        <label class="epx-flabel" for="id_role">Role</label>
+        <div class="epx-field">
+          <select name="role" id="id_role">
             {% for val, label in role_choices %}
               <option value="{{ val }}" {% if user.role == val %}selected{% endif %}>{{ label }}</option>
             {% endfor %}
           </select>
         </div>
       </div>
+    </div>
 
-      <div class="ep-field">
-        <label class="ep-label" for="id_phone_number">Phone number</label>
-        <input class="ep-input" type="tel" name="phone_number" id="id_phone_number"
-               value="{{ user.phone_number }}" placeholder="Optional">
-      </div>
+    <div class="epx-fsec"><span class="epx-fsec__n">03</span><h2 class="epx-fsec__t">Contact</h2></div>
 
-      <div class="ep-field">
-        <label class="ep-label" for="id_bio">Bio</label>
-        <textarea class="ep-input ep-textarea" name="bio" id="id_bio" rows="4"
-                  maxlength="300" placeholder="Tell people a little about yourself…">{{ user.bio }}</textarea>
-        <span class="ep-edit-hint" id="bioCount">0 / 300</span>
-      </div>
+    <div>
+      <label class="epx-flabel" for="id_phone_number">Phone number</label>
+      <div class="epx-field"><input type="tel" name="phone_number" id="id_phone_number" value="{{ user.phone_number }}" placeholder="Optional" autocomplete="tel"></div>
+    </div>
 
-      <div class="ep-edit-actions">
-        <a href="{% url 'accounts:profile' user.username %}" class="ep-btn ep-btn--ghost">Cancel</a>
-        <button type="submit" class="ep-btn ep-btn--primary">Save Changes</button>
-      </div>
+    <div class="epx-actions epx-actions--row">
+      <a href="{% url 'accounts:profile' user.username %}" class="epx-btn epx-btn--ghost">Cancel</a>
+      <button type="submit" class="epx-btn">Save Changes</button>
+    </div>
 
-    </form>
-  </div>
+  </form>
 </div>
+</div>
+{% include 'partials/tabbar.html' with nav_active='profile' %}
 {% endblock %}
 
 {% block extra_js %}
@@ -129,6 +140,14 @@ if (fileInput) {
       if (initial) initial.style.display = 'none';
     };
     reader.readAsDataURL(file);
+  });
+}
+
+// Keyboard users: Enter/Space on the "Change Photo" label opens the file picker
+const photoLabel = document.querySelector('label[for="id_profile_picture"]');
+if (photoLabel && fileInput) {
+  photoLabel.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); }
   });
 }
 

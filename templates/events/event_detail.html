@@ -10,16 +10,16 @@
 {% with going=event.approved_rsvp_count left=event.spots_remaining %}
 
   {# ── COVER (gallery carousel / cover image / category fallback) ── #}
-  <div class="epx-wrap" style="padding-top:24px;">
+  <div class="epx-wrap epx-detail-top">
     <a href="{% url 'events:home' %}" class="epx-back">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/></svg>
       Back
     </a>
 
-    <div class="epx-detail-cover" style="margin-top:16px;">
+    <div class="epx-detail-cover">
       {% with gallery=event.gallery.all %}
       {% if gallery %}
-        <div class="js-carousel" id="eventGallery" style="position:absolute; inset:0;">
+        <div class="js-carousel epx-detail-cover__car" id="eventGallery">
           {% for media in gallery %}
           <div class="epx-feat__slide js-car-slide {% if forloop.first %}is-active{% endif %}">
             {% if media.media_type == 'video' %}
@@ -50,7 +50,7 @@
   </div>
 
   {# ── TITLE BAND ── #}
-  <div class="epx-wrap" style="padding-top:28px;">
+  <div class="epx-wrap epx-detail-band">
     <div class="epx-detail-when">
       {{ event.start_datetime|date:"D d M" }} · {{ event.start_datetime|date:"H:i" }}{% if event.end_datetime %} — {{ event.end_datetime|date:"H:i" }}{% endif %}
     </div>
@@ -70,7 +70,7 @@
     <div class="epx-ownerbar">
       <a href="{% url 'events:edit' event.slug %}">Edit</a>
       <a href="{% url 'events:manage_rsvps' event.slug %}">Manage RSVPs ({{ event.rsvps.count }})</a>
-      <form method="POST" action="{% url 'events:delete' event.slug %}" style="margin:0;"
+      <form method="POST" action="{% url 'events:delete' event.slug %}" class="epx-inlineform"
         onsubmit="return confirm('Delete this event? This cannot be undone.')">
         {% csrf_token %}
         <button type="submit">Delete</button>
@@ -82,7 +82,7 @@
     <div class="epx-live">
       <span class="epx-live__dot"></span>
       <span>This event is happening <strong>right now</strong></span>
-      {% if event.location_name %}<span style="font-family:var(--fm); font-size:0.78rem; color:var(--ink-soft);">{{ event.location_name }}</span>{% endif %}
+      {% if event.location_name %}<span class="epx-live__where">{{ event.location_name }}</span>{% endif %}
     </div>
     {% endif %}
 
@@ -98,7 +98,7 @@
   </div>
 
   {# ── BODY: details + RSVP card (stacks to one column on mobile) ── #}
-  <div class="epx-wrap epx-detail-body" style="padding-top:36px; padding-bottom:60px;">
+  <div class="epx-wrap epx-detail-body">
 
     <div>
       <div class="epx-label">About this Event</div>
@@ -126,7 +126,7 @@
       </div>
 
       {# No stored coordinates are filled in, so this stays a styled placeholder. #}
-      <div class="epx-label" style="margin-top:36px;">Where</div>
+      <div class="epx-label epx-label--gap">Where</div>
       <div class="epx-map">
         <div class="epx-map__grid"></div>
         <div class="epx-map__pin">
@@ -137,8 +137,8 @@
     </div>
 
     {# ── RSVP CARD ── #}
-    <div class="epx-detail-rsvp">
-      <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
+    <div class="epx-detail-rsvp" id="rsvp">
+      <div class="epx-rsvp__top">
         <div>
           {% if event.is_free %}
             <div class="epx-rsvp__price">Free</div>
@@ -185,15 +185,15 @@
             <form method="POST" action="{% url 'events:rsvp' event.slug %}">
               {% csrf_token %}
               <input type="hidden" name="action" value="waitlist" />
-              <button type="submit" class="epx-btn epx-btn--wait" style="width:100%;">Join Waitlist</button>
+              <button type="submit" class="epx-btn epx-btn--wait epx-btn--block">Join Waitlist</button>
             </form>
           {% elif event.is_premium_only and not user.is_premium %}
             <div class="epx-premlock">
               <p>This event is for Premium members only.</p>
-              <a href="{% url 'payments:pricing' %}" class="epx-btn" style="width:100%;">Upgrade to Premium</a>
+              <a href="{% url 'payments:pricing' %}" class="epx-btn epx-btn--block">Upgrade to Premium</a>
             </div>
           {% else %}
-            <form method="POST" action="{% url 'events:rsvp' event.slug %}" style="display:flex; flex-direction:column; gap:10px;">
+            <form method="POST" action="{% url 'events:rsvp' event.slug %}" class="epx-rsvp__form">
               {% csrf_token %}
               <input type="hidden" name="action" value="rsvp" />
               <textarea name="note" class="epx-rsvp__note" placeholder="Optional message to the organiser..." rows="2"></textarea>
@@ -218,10 +218,10 @@
             <form method="POST" action="{% url 'events:rsvp' event.slug %}">
               {% csrf_token %}
               <input type="hidden" name="action" value="waitlist" />
-              <button type="submit" class="epx-btn epx-btn--wait" style="width:100%;">Join Waitlist</button>
+              <button type="submit" class="epx-btn epx-btn--wait epx-btn--block">Join Waitlist</button>
             </form>
           {% else %}
-            <form method="POST" action="{% url 'events:rsvp' event.slug %}" style="display:flex; flex-direction:column; gap:10px;">
+            <form method="POST" action="{% url 'events:rsvp' event.slug %}" class="epx-rsvp__form">
               {% csrf_token %}
               <input type="hidden" name="action" value="rsvp" />
               <button type="submit" class="epx-btn">{% if event.require_rsvp_approval %}Request to Join{% else %}Join — Happening Now{% endif %}</button>
@@ -232,18 +232,18 @@
 
         <div class="epx-share">
           <a href="https://wa.me/?text={{ event.title|urlencode }}%20{{ request.build_absolute_uri|urlencode }}" target="_blank" rel="noopener noreferrer">WhatsApp</a>
-          <button type="button" onclick="navigator.clipboard.writeText(window.location.href);alert('Copied!')">
+          <button type="button" class="js-copy-link" aria-live="polite">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5 15.4 17.5M15.4 6.5 8.6 10.5"/></svg>
-            Copy Link
+            <span class="js-copy-label">Copy Link</span>
           </button>
         </div>
       </div>
 
       <div class="epx-host-card">
-        <div class="epx-label" style="margin-bottom:12px;">Organiser</div>
+        <div class="epx-label">Organiser</div>
         <div class="epx-host-card__row">
           <span class="epx-host-card__av">{% if event.organiser.profile_picture %}<img src="{{ event.organiser.profile_picture.url }}" alt="{{ event.organiser.username }}">{% else %}{{ event.organiser.username|first|upper }}{% endif %}</span>
-          <div style="min-width:0;">
+          <div class="epx-host-card__who">
             <div class="epx-host-card__name">{{ event.organiser.get_full_name|default:event.organiser.username }}</div>
             <div class="epx-host-card__sub">@{{ event.organiser.username }}{% if event.organiser.university %} · {{ event.organiser.university }}{% endif %}</div>
           </div>
@@ -259,12 +259,58 @@
 
   </div>
 
+  {# ── Phone-only RSVP bar: the RSVP card sits far below the fold on small screens ── #}
+  {% if not is_ended and not user_rsvp %}
+  <div class="epx-rsvpbar" id="rsvpBar">
+    <div class="epx-rsvpbar__price">
+      {% if event.is_free %}Free{% else %}₦{{ event.ticket_price }}{% endif %}
+      <small>{{ going }} going</small>
+    </div>
+    {% if not user.is_authenticated %}
+      <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="epx-btn">Sign in to RSVP</a>
+    {% elif event.is_full %}
+      <a href="#rsvp" class="epx-btn epx-btn--wait">Join Waitlist</a>
+    {% elif event.is_premium_only and not user.is_premium and not is_live %}
+      <a href="#rsvp" class="epx-btn">Upgrade to Premium</a>
+    {% else %}
+      <a href="#rsvp" class="epx-btn">{% if event.require_rsvp_approval %}Request to Join{% elif is_live %}Join — Happening Now{% else %}Reserve My Spot{% endif %}</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
 {% endwith %}
 </div>
 {% include 'partials/tabbar.html' with nav_active='discover' %}
 {% endblock %}
 
 {% block extra_js %}
+<script>
+(function () {
+  // Copy link: confirm in the button itself instead of an alert() box
+  document.querySelectorAll('.js-copy-link').forEach(function (btn) {
+    var label = btn.querySelector('.js-copy-label'), timer;
+    btn.addEventListener('click', function () {
+      var show = function (text, ok) {
+        label.textContent = text;
+        btn.classList.toggle('is-done', ok);
+        clearTimeout(timer);
+        timer = setTimeout(function () { label.textContent = 'Copy Link'; btn.classList.remove('is-done'); }, 1800);
+      };
+      var fail = function () { window.prompt('Copy this link:', window.location.href); };
+      if (navigator.clipboard) navigator.clipboard.writeText(window.location.href).then(function () { show('Copied', true); }, fail);
+      else fail();
+    });
+  });
+
+  // Hide the phone RSVP bar while the real RSVP card is on screen
+  var bar = document.getElementById('rsvpBar'), card = document.getElementById('rsvp');
+  if (bar && card && 'IntersectionObserver' in window) {
+    new IntersectionObserver(function (entries) {
+      bar.classList.toggle('is-hidden', entries[0].isIntersecting);
+    }, { rootMargin: '0px 0px -80px 0px' }).observe(card);
+  }
+})();
+</script>
 {% if is_coming_soon %}
 <script>
 (function() {

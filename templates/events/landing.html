@@ -13,8 +13,8 @@
       <a href="#categories">Categories</a>
       <a href="#how">How it works</a>
     </div>
-    <div class="epx-nav__actions" style="gap:14px;">
-      <a href="{% url 'accounts:login' %}" class="epx-btn epx-btn--ghost epx-lnav-signin" style="padding:10px 20px; font-size:0.8rem;">Sign In</a>
+    <div class="epx-nav__actions epx-lnav-actions">
+      <a href="{% url 'accounts:login' %}" class="epx-btn epx-btn--ghost epx-btn--sm epx-lnav-signin">Sign In</a>
       <a href="{% url 'accounts:register' %}" class="epx-host">Join Free</a>
     </div>
   </div>
@@ -24,57 +24,65 @@
 {% block content %}
 
 {# ── HERO ── #}
-<div class="epx-wrap epx-hero">
-  <div>
-    <div class="epx-eyebrow">Find it. Post it. <span style="color:var(--accent); font-weight:700;">Show up.</span></div>
-    <h1 class="epx-hero__h1">Your people.<br><em>Your events.</em><br>Your community.</h1>
-    <p style="font-size:1.1rem; line-height:1.6; color:var(--ink-soft); max-width:46ch; margin-top:22px;">
-      Discover talks, meetups, sports, career events and parties happening near you — all in one place.
-    </p>
-    <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:28px;">
-      <a href="{% url 'accounts:register' %}" class="epx-btn">Join Free →</a>
-      <a href="{% url 'accounts:login' %}" class="epx-btn epx-btn--ghost">Sign In</a>
+<div class="epx-hero-wrap">
+  <div class="epx-hero__glow" aria-hidden="true"></div>
+  <div class="epx-wrap epx-hero">
+    <div>
+      <div class="epx-eyebrow epx-rise">Find it. Post it. <span class="epx-hero__kicker">Show up.</span></div>
+      <h1 class="epx-hero__h1 epx-rise">Your people.<br><em>Your events.</em><br>Your community.</h1>
+      <p class="epx-hero__lede epx-rise">
+        Discover talks, meetups, sports, career events and parties happening near you — all in one place.
+      </p>
+      <div class="epx-hero__ctas epx-rise">
+        <a href="{% url 'accounts:register' %}" class="epx-btn">Join Free →</a>
+        <a href="{% url 'accounts:login' %}" class="epx-btn epx-btn--ghost">Sign In</a>
+      </div>
+      {# Only show a counter once its real number reaches 10; hide the row if none do. #}
+      {% if stats.students >= 10 or stats.events >= 10 or stats.societies >= 10 %}
+      <div class="epx-lstats">
+        {% if stats.students >= 10 %}<div><div class="epx-lstats__n land-stat__num" data-target="{{ stats.students }}">0</div><div class="epx-lstats__k">Students</div></div>{% endif %}
+        {% if stats.events >= 10 %}<div><div class="epx-lstats__n land-stat__num" data-target="{{ stats.events }}">0</div><div class="epx-lstats__k">Events Posted</div></div>{% endif %}
+        {% if stats.societies >= 10 %}<div><div class="epx-lstats__n land-stat__num" data-target="{{ stats.societies }}">0</div><div class="epx-lstats__k">Societies</div></div>{% endif %}
+      </div>
+      {% endif %}
     </div>
-    {# Only show a counter once its real number reaches 10; hide the row if none do. #}
-    {% if stats.students >= 10 or stats.events >= 10 or stats.societies >= 10 %}
-    <div class="epx-lstats">
-      {% if stats.students >= 10 %}<div><div class="epx-lstats__n land-stat__num" data-target="{{ stats.students }}">0</div><div class="epx-lstats__k">Students</div></div>{% endif %}
-      {% if stats.events >= 10 %}<div><div class="epx-lstats__n land-stat__num" data-target="{{ stats.events }}">0</div><div class="epx-lstats__k">Events Posted</div></div>{% endif %}
-      {% if stats.societies >= 10 %}<div><div class="epx-lstats__n land-stat__num" data-target="{{ stats.societies }}">0</div><div class="epx-lstats__k">Societies</div></div>{% endif %}
+
+    {% with e=events.0 %}
+    {% if e %}
+    <div class="epx-hero__stack epx-rise">
+      <a href="{% url 'accounts:register' %}" class="epx-card pin-card epx-hero__card">
+        <div class="epx-card__img epx-cover epx-cover--{{ e.category.slug|default:'academic' }}">
+          {% if e.display_image_url %}<img src="{{ e.display_image_url }}" alt="{{ e.title }}">{% endif %}
+          {% if e.category %}<span class="epx-tag">{{ e.category.name }}</span>{% endif %}
+          {% if e.is_past %}<div class="epx-card__ended">This event has ended</div>{% endif %}
+        </div>
+        <div class="epx-card__body">
+          <div class="epx-card__when">{{ e.start_datetime|date:"D d M · H:i" }}</div>
+          <div class="epx-card__title">{{ e.title }}</div>
+          <div class="epx-card__venue">{{ e.location_name }}</div>
+          <div class="epx-card__foot">
+            <span>{{ e.approved_count }} going</span>
+            {% if e.is_past %}<span class="epx-price epx-price--ended">Ended</span>
+            {% elif e.is_free %}<span class="epx-price epx-price--free">Free</span>
+            {% else %}<span class="epx-price">₦{{ e.ticket_price }}</span>{% endif %}
+          </div>
+        </div>
+      </a>
     </div>
     {% endif %}
+    {% endwith %}
   </div>
-
-  {% with e=events.0 %}
-  {% if e %}
-  <a href="{% url 'accounts:register' %}" class="epx-card" style="box-shadow:0 20px 44px -22px rgba(0,0,0,0.6);">
-    <div class="epx-card__img epx-cover epx-cover--{{ e.category.slug|default:'academic' }}" style="height:160px;">
-      {% if e.display_image_url %}<img src="{{ e.display_image_url }}" alt="{{ e.title }}">{% endif %}
-      {% if e.category %}<span class="epx-tag">{{ e.category.name }}</span>{% endif %}
-    </div>
-    <div class="epx-card__body" style="padding:22px;">
-      <div class="epx-card__when">{{ e.start_datetime|date:"D d M · H:i" }}</div>
-      <div class="epx-card__title" style="font-size:1.5rem; font-weight:800;">{{ e.title }}</div>
-      <div class="epx-card__venue">{{ e.location_name }}</div>
-      <div class="epx-card__foot">
-        <span>{{ e.approved_count }} going</span>
-        {% if e.is_free %}<span class="epx-price epx-price--free">Free</span>{% else %}<span class="epx-price">₦{{ e.ticket_price }}</span>{% endif %}
-      </div>
-    </div>
-  </a>
-  {% endif %}
-  {% endwith %}
 </div>
 
 {# ── BOARD: real upcoming events ── #}
-<section id="board" class="epx-wrap epx-lsection" style="margin-top:20px;">
-  <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:36px;">
+<section id="board" class="epx-wrap epx-lsection">
+  <div class="epx-lhead epx-lhead--split">
     <div>
       <div class="epx-eyebrow">Happening this week</div>
-      <h2 class="epx-h1" style="font-size:2.6rem;">See what's happening now</h2>
-      <p style="color:var(--ink-soft); margin-top:10px;">Sign in or register to RSVP, create events and connect with people near you.</p>
+      <h2 class="epx-h1 epx-lhead__h">See what's happening now</h2>
+      <p class="epx-lhead__p">Sign in or register to RSVP, create events and connect with people near you.</p>
     </div>
-    {% if events %}<a href="{% url 'accounts:register' %}" style="font-family:var(--fm); font-size:0.8rem; text-transform:uppercase; color:var(--accent); border-bottom:1px solid var(--accent); padding-bottom:2px;">See all events — sign up free →</a>{% endif %}
+    {% if events %}<a href="{% url 'accounts:register' %}" class="epx-arrowlink">See all events — sign up free →</a>{% endif %}
   </div>
 
   <div class="epx-grid3">
@@ -109,51 +117,51 @@
 
 {# ── CATEGORIES ── #}
 <section id="categories" class="epx-wrap epx-lsection">
-  <div style="margin-bottom:36px;">
+  <div class="epx-lhead">
     <div class="epx-eyebrow">Why EventPulse?</div>
-    <h2 class="epx-h1" style="font-size:2.6rem;">Everything happening, in one feed</h2>
+    <h2 class="epx-h1 epx-lhead__h">Everything happening, in one feed</h2>
   </div>
   <div class="epx-cats6">
-    <div><h3>Academic</h3><p>Talks, seminars, workshops and study groups.</p></div>
-    <div><h3>Social</h3><p>Parties, game nights, movie screenings and casual meetups organised by your community.</p></div>
-    <div><h3>Sports</h3><p>Tournaments, training sessions and fun runs hosted by local clubs and teams.</p></div>
-    <div><h3>Career</h3><p>Job fairs, networking nights, CV workshops and employer talks.</p></div>
-    <div><h3>Arts</h3><p>Theatre, exhibitions, spoken word and creative showcases.</p></div>
-    <div><h3>International</h3><p>Cultural celebrations, language exchange and international community events.</p></div>
+    <div><span class="epx-cats6__sw epx-cover--academic" aria-hidden="true"></span><h3>Academic</h3><p>Talks, seminars, workshops and study groups.</p></div>
+    <div><span class="epx-cats6__sw epx-cover--social" aria-hidden="true"></span><h3>Social</h3><p>Parties, game nights, movie screenings and casual meetups organised by your community.</p></div>
+    <div><span class="epx-cats6__sw epx-cover--sports" aria-hidden="true"></span><h3>Sports</h3><p>Tournaments, training sessions and fun runs hosted by local clubs and teams.</p></div>
+    <div><span class="epx-cats6__sw epx-cover--career" aria-hidden="true"></span><h3>Career</h3><p>Job fairs, networking nights, CV workshops and employer talks.</p></div>
+    <div><span class="epx-cats6__sw epx-cover--arts" aria-hidden="true"></span><h3>Arts</h3><p>Theatre, exhibitions, spoken word and creative showcases.</p></div>
+    <div><span class="epx-cats6__sw epx-cover--international" aria-hidden="true"></span><h3>International</h3><p>Cultural celebrations, language exchange and international community events.</p></div>
   </div>
 </section>
 
 {# ── HOW IT WORKS ── #}
 <section id="how" class="epx-wrap epx-lsection">
-  <div style="margin-bottom:36px;">
+  <div class="epx-lhead">
     <div class="epx-eyebrow">How it works</div>
-    <h2 class="epx-h1" style="font-size:2.6rem;">From feed to front row</h2>
+    <h2 class="epx-h1 epx-lhead__h">From feed to front row</h2>
   </div>
-  <div class="epx-grid3 epx-how" style="gap:40px;">
-    <div><div style="font-family:var(--fm); font-size:0.78rem; color:var(--accent); letter-spacing:0.08em;">01 — FIND</div><h3>Scroll what's on</h3><p>Everything happening near you in one place — filter by category or search by name.</p></div>
-    <div><div style="font-family:var(--fm); font-size:0.78rem; color:var(--accent); letter-spacing:0.08em;">02 — RSVP</div><h3>Grab your spot</h3><p>One tap to RSVP, or join the waitlist when an event fills up.</p></div>
-    <div><div style="font-family:var(--fm); font-size:0.78rem; color:var(--accent); letter-spacing:0.08em;">03 — HOST</div><h3>Throw your own</h3><p>Post an event in minutes, set a capacity or approve each guest, and watch the RSVPs roll in.</p></div>
-  </div>
+  <ol class="epx-how">
+    <li><div class="epx-how__n">01</div><div class="epx-how__k">Find</div><h3>Scroll what's on</h3><p>Everything happening near you in one place — filter by category or search by name.</p></li>
+    <li><div class="epx-how__n">02</div><div class="epx-how__k">RSVP</div><h3>Grab your spot</h3><p>One tap to RSVP, or join the waitlist when an event fills up.</p></li>
+    <li><div class="epx-how__n">03</div><div class="epx-how__k">Host</div><h3>Throw your own</h3><p>Post an event in minutes, set a capacity or approve each guest, and watch the RSVPs roll in.</p></li>
+  </ol>
 </section>
 
 {# ── CTA ── #}
-<section class="epx-wrap" style="padding-top:20px; padding-bottom:60px;">
+<section class="epx-wrap epx-cta-wrap">
   <div class="epx-cta">
     <div>
       <h2>Ready to join in?</h2>
-      <p style="margin-top:12px; font-size:1.05rem; max-width:40ch;">Create a free account in 30 seconds and never miss an event again.</p>
+      <p class="epx-cta__p">Create a free account in 30 seconds and never miss an event again.</p>
     </div>
-    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+    <div class="epx-cta__btns">
       <a href="{% url 'accounts:register' %}">Create Free Account →</a>
       <a href="{% url 'accounts:login' %}" class="is-ghost">Already have an account?</a>
     </div>
   </div>
 </section>
 
-<footer class="epx-wrap" style="border-top:1px solid var(--line); padding-top:32px; padding-bottom:36px; display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; font-family:var(--fm); font-size:0.74rem; color:var(--ink-faint);">
-  <span class="epx-logo" style="font-size:1.1rem; color:var(--ink);">EVENT<b>PULSE</b></span>
+<footer class="epx-wrap epx-lfoot">
+  <span class="epx-logo epx-lfoot__logo">EVENT<b>PULSE</b></span>
   <span>© {% now "Y" %} EVENTPULSE · Your event hub</span>
-  <span style="display:flex; gap:18px;"><a href="{% url 'events:privacy' %}" style="color:var(--ink-soft);">Privacy</a><a href="{% url 'events:terms' %}" style="color:var(--ink-soft);">Terms</a><a href="mailto:getinformedconcepts@gmail.com?subject=EventPulse%20feedback" style="color:var(--ink-soft);">Send feedback</a></span>
+  <span class="epx-lfoot__links"><a href="{% url 'events:privacy' %}">Privacy</a><a href="{% url 'events:terms' %}">Terms</a><a href="mailto:getinformedconcepts@gmail.com?subject=EventPulse%20feedback">Send feedback</a></span>
 </footer>
 
 {% endblock %}
